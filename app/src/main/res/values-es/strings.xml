@@ -5,4 +5,41 @@
     <string name="nav_fleet">Flota</string>
     <string name="nav_producers">Productores</string>
     <string name="nav_more">Más</string>
+
+    <!-- Top Bar -->
+    <string name="topbar_title">FruitLogix</string>
+    <string name="topbar_subtitle">COMANDO DISTRIBUIDOR</string>
+
+    <!-- Greeting -->
+    <string name="greeting_welcome">Bienvenido, %1$s</string>
+    <string name="greeting_active_shift">Turno Activo Matutino</string>
+
+    <!-- Priority Actions -->
+    <string name="priority_actions_label">ACCIONES PRIORITARIAS</string>
+    <string name="priority_ready_count">%1$d Listas</string>
+    <string name="action_assign_producer">Asignar Productor</string>
+    <string name="action_link_new_lots">Vincular nuevos lotes</string>
+    <string name="action_dispatch_fleet">Despachar Flota</string>
+    <string name="action_reefers_ready">%1$d reefers listos</string>
+    <string name="action_alerts">Alertas</string>
+    <string name="action_anomalies">%1$d anomalías</string>
+
+    <!-- Critical Alert -->
+    <string name="alert_critical_thermal">DESVIACIÓN TÉRMICA CRÍTICA</string>
+    <string name="alert_immediate_action">ACCIÓN INMEDIATA</string>
+    <string name="alert_unit_label">Unidad %1$s</string>
+    <string name="alert_review_reefer">REVISAR REEFER</string>
+
+    <!-- KPI -->
+    <string name="kpi_active_orders">Órdenes Activas</string>
+    <string name="kpi_daily_deliveries">Entregas Día</string>
+    <string name="kpi_fruit_quality">Calidad Fruta</string>
+    <string name="kpi_iot_alerts">Alertas IoT</string>
+    <string name="kpi_vs_yesterday">vs ayer</string>
+    <string name="kpi_avg_eta">ETA Prom: %1$s</string>
+    <string name="kpi_on_time">A Tiempo</string>
+    <string name="kpi_last_lots">Últimos %1$d lotes</string>
+    <string name="kpi_grade_a">Grado A Certificado</string>
+    <string name="kpi_critical_warning">%1$d Críticas • %2$d Aviso</string>
 </resources>
+

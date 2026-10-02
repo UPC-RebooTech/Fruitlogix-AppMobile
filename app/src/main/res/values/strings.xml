@@ -5,4 +5,40 @@
     <string name="nav_fleet">Fleet</string>
     <string name="nav_producers">Producers</string>
     <string name="nav_more">More</string>
-</resources>
+
+    <!-- Top Bar -->
+    <string name="topbar_title">FruitLogix</string>
+    <string name="topbar_subtitle">DISTRIBUTOR COMMAND</string>
+
+    <!-- Greeting -->
+    <string name="greeting_welcome">Welcome, %1$s</string>
+    <string name="greeting_active_shift">Active Morning Shift</string>
+
+    <!-- Priority Actions -->
+    <string name="priority_actions_label">PRIORITY ACTIONS</string>
+    <string name="priority_ready_count">%1$d Ready</string>
+    <string name="action_assign_producer">Assign Producer</string>
+    <string name="action_link_new_lots">Link new lots</string>
+    <string name="action_dispatch_fleet">Dispatch Fleet</string>
+    <string name="action_reefers_ready">%1$d reefers ready</string>
+    <string name="action_alerts">Alerts</string>
+    <string name="action_anomalies">%1$d anomalies</string>
+
+    <!-- Critical Alert -->
+    <string name="alert_critical_thermal">CRITICAL THERMAL DEVIATION</string>
+    <string name="alert_immediate_action">IMMEDIATE ACTION</string>
+    <string name="alert_unit_label">Unit %1$s</string>
+    <string name="alert_review_reefer">REVIEW REEFER</string>
+
+    <!-- KPI -->
+    <string name="kpi_active_orders">Active Orders</string>
+    <string name="kpi_daily_deliveries">Daily Deliveries</string>
+    <string name="kpi_fruit_quality">Fruit Quality</string>
+    <string name="kpi_iot_alerts">IoT Alerts</string>
+    <string name="kpi_vs_yesterday">vs yesterday</string>
+    <string name="kpi_avg_eta">Avg ETA: %1$s</string>
+    <string name="kpi_on_time">On time</string>
+    <string name="kpi_last_lots">Last %1$d lots</string>
+    <string name="kpi_grade_a">Grade A Certified</string>
+    <string name="kpi_critical_warning">%1$d Critical • %2$d Warning</string>
+</resources>
