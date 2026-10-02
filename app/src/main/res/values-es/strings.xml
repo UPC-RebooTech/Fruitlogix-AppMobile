@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">FruitLogix</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_orders">Pedidos</string>
+    <string name="nav_fleet">Flota</string>
+    <string name="nav_producers">Productores</string>
+    <string name="nav_more">Más</string>
+</resources>
