@@ -19,6 +19,11 @@ object FruitLogixTheme {
         @ReadOnlyComposable
         get() = LocalFruitLogixColors.current
 
+    val typography: androidx.compose.material3.Typography
+        @Composable
+        @ReadOnlyComposable
+        get() = MaterialTheme.typography
+
     val spacing: Spacing
         get() = Spacing
 
