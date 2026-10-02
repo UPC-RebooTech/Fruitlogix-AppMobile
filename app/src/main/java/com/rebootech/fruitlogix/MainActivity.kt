@@ -10,6 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.rebootech.fruitlogix.navigation.AppNavHost
+import com.rebootech.fruitlogix.navigation.BottomNavBar
 import com.rebootech.fruitlogix.ui.theme.FruitLogixTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,7 +21,10 @@ class MainActivity : ComponentActivity() {
             FruitLogixTheme {
                 val navController = rememberNavController()
                 Scaffold(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        BottomNavBar(navController = navController)
+                    }
                 ) { innerPadding ->
                     AppNavHost(
                         navController = navController,
@@ -30,4 +34,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
+}
