@@ -33,9 +33,9 @@ class FakeDashboardRepository {
 
         val predictiveAlert = predictUseCase.execute(
             readings = fakeReadings,
-            thresholdCelsius = 4.0,
+            thresholdCelsius = 3.5,
             unitId = "FL-408",
-            cargoDescription = "Michoacán Hass avocado"
+            cargoDescription = "Hass avocado from Chav\u00edn de Hu\u00e1ntar"
         )
 
         val actionItems = listOf(
@@ -65,44 +65,44 @@ class FakeDashboardRepository {
             FleetUnitSummary(
                 unitId = "FL-102",
                 truckModel = "Kenworth T680",
-                routeDescription = "Guadalajara ⇄ Querétaro Hub",
+                routeDescription = "Ica \u21c4 Lima Central Hub",
                 statusTextRes = R.string.fleet_status_on_time,
                 statusType = FleetStatusType.ON_TIME,
-                reeferTemp = "3.4°C",
+                reeferTemp = "3.4\u00b0C",
                 humidity = "88% RH",
-                destEtaOrDelay = "14:15",
+                destEtaOrDelay = "14:30 PET",
                 isDelay = false,
                 mileageText = "284 / 395 km",
                 progressPercent = 0.72f,
                 progressLabel = "72% Completed"
             ),
             FleetUnitSummary(
-                unitId = "FL-305",
+                unitId = "FL-408",
                 truckModel = "International LT",
-                routeDescription = "Uruapan ⇄ CDMX Hub",
+                routeDescription = "KM 184 \u2022 Panamericana Norte",
                 statusTextRes = R.string.fleet_status_on_time,
                 statusType = FleetStatusType.ON_TIME,
-                reeferTemp = "3.8°C",
-                humidity = "86% RH",
-                destEtaOrDelay = "16:30",
+                reeferTemp = "4.3\u00b0C",
+                humidity = "84% RH",
+                destEtaOrDelay = "14:50 PET",
                 isDelay = false,
-                mileageText = "195 / 300 km",
-                progressPercent = 0.65f,
-                progressLabel = "65% Completed"
+                mileageText = "182 / 223 km",
+                progressPercent = 0.82f,
+                progressLabel = "82% \u2022 Gateway Delay"
             ),
             FleetUnitSummary(
                 unitId = "FL-219",
                 truckModel = "Freightliner M2",
-                routeDescription = "Manzanillo Port ⇄ Zapopan Hub #14",
+                routeDescription = "Piura \u21c4 Lima Central Hub",
                 statusTextRes = R.string.fleet_status_delay,
                 statusType = FleetStatusType.DELAYED,
-                reeferTemp = "4.1°C",
+                reeferTemp = "2.1\u00b0C",
                 humidity = "91% RH",
                 destEtaOrDelay = "+45m",
                 isDelay = true,
                 mileageText = "112 / 280 km",
                 progressPercent = 0.40f,
-                progressLabel = "40% Stalled At Gate"
+                progressLabel = "40% Weigh station delay"
             )
         )
 
@@ -119,7 +119,7 @@ class FakeDashboardRepository {
                 dateLine = "Thursday, Oct 1, 2026",
                 shiftLabel = "Active Morning Shift",
                 userName = "Carlos",
-                hubDescription = "Fruit Distribution Tactical Hub • Pacific Sector"
+                hubDescription = "Lima Central Hub \u2022 Panamericana Operations"
             ),
             priorityActions = listOf(
                 PriorityAction(
@@ -190,9 +190,9 @@ class FakeDashboardRepository {
         )
         return predictUseCase.execute(
             readings = fakeReadings,
-            thresholdCelsius = 4.0,
+            thresholdCelsius = 3.5,
             unitId = "FL-408",
-            cargoDescription = "Michoacán Hass avocado"
+            cargoDescription = "Hass avocado from Chav\u00edn de Hu\u00e1ntar"
         )
     }
 
@@ -205,9 +205,9 @@ class FakeDashboardRepository {
         )
         return predictUseCase.execute(
             readings = fakeReadings,
-            thresholdCelsius = 4.0,
+            thresholdCelsius = 3.5,
             unitId = "FL-408",
-            cargoDescription = "Michoacán Hass avocado"
+            cargoDescription = "Hass avocado from Chav\u00edn de Hu\u00e1ntar"
         )
     }
 }
