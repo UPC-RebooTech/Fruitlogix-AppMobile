@@ -28,7 +28,11 @@ class HomeViewModel : ViewModel() {
                 priorityActions = data.priorityActions,
                 priorityReadyCount = data.priorityActions.size,
                 predictiveAlert = data.predictiveAlert,
-                kpis = data.kpis
+                kpis = data.kpis,
+                actionItems = data.actionItems,
+                fleetUnits = data.fleetUnits,
+                fleetInTransitCount = data.fleetInTransitCount,
+                complianceSummary = data.complianceSummary
             )
         }
     }

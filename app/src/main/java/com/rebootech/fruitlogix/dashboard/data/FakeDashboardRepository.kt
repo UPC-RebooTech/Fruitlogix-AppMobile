@@ -1,7 +1,12 @@
 package com.rebootech.fruitlogix.dashboard.data
 
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.dashboard.domain.ActionItem
+import com.rebootech.fruitlogix.dashboard.domain.ActionItemStyle
+import com.rebootech.fruitlogix.dashboard.domain.ComplianceSummary
 import com.rebootech.fruitlogix.dashboard.domain.DashboardData
+import com.rebootech.fruitlogix.dashboard.domain.FleetStatusType
+import com.rebootech.fruitlogix.dashboard.domain.FleetUnitSummary
 import com.rebootech.fruitlogix.dashboard.domain.GreetingInfo
 import com.rebootech.fruitlogix.dashboard.domain.KpiBadgeType
 import com.rebootech.fruitlogix.dashboard.domain.KpiData
@@ -18,15 +23,11 @@ class FakeDashboardRepository {
 
     fun getDashboardData(): DashboardData {
         val fakeReadings = listOf(
+            TemperatureReading(minutesAgo = 45, celsius = 0.20),
+            TemperatureReading(minutesAgo = 36, celsius = 0.80),
+            TemperatureReading(minutesAgo = 27, celsius = 1.40),
             TemperatureReading(minutesAgo = 18, celsius = 2.00),
-            TemperatureReading(minutesAgo = 16, celsius = 2.13),
-            TemperatureReading(minutesAgo = 14, celsius = 2.27),
-            TemperatureReading(minutesAgo = 12, celsius = 2.40),
-            TemperatureReading(minutesAgo = 10, celsius = 2.53),
-            TemperatureReading(minutesAgo = 8, celsius = 2.67),
-            TemperatureReading(minutesAgo = 6, celsius = 2.80),
-            TemperatureReading(minutesAgo = 4, celsius = 2.93),
-            TemperatureReading(minutesAgo = 2, celsius = 3.07),
+            TemperatureReading(minutesAgo = 9, celsius = 2.60),
             TemperatureReading(minutesAgo = 0, celsius = 3.20)
         )
 
@@ -35,6 +36,82 @@ class FakeDashboardRepository {
             thresholdCelsius = 4.0,
             unitId = "FL-408",
             cargoDescription = "Michoacán Hass avocado"
+        )
+
+        val actionItems = listOf(
+            ActionItem(
+                id = "action-1",
+                titleRes = R.string.action_cfdi_seal_title,
+                subtitleRes = R.string.action_cfdi_seal_sub,
+                captionRes = R.string.action_cfdi_seal_caption,
+                buttonTextRes = R.string.action_cfdi_seal_btn,
+                iconRes = R.drawable.ic_verified,
+                hasRedDot = true,
+                style = ActionItemStyle.LIME_BUTTON
+            ),
+            ActionItem(
+                id = "action-2",
+                titleRes = R.string.action_precooling_title,
+                subtitleRes = R.string.action_precooling_sub,
+                captionRes = R.string.action_precooling_caption,
+                buttonTextRes = R.string.action_precooling_btn,
+                iconRes = R.drawable.ic_inventory,
+                hasRedDot = false,
+                style = ActionItemStyle.DARK_BUTTON
+            )
+        )
+
+        val fleetUnits = listOf(
+            FleetUnitSummary(
+                unitId = "FL-102",
+                truckModel = "Kenworth T680",
+                routeDescription = "Guadalajara ⇄ Querétaro Hub",
+                statusTextRes = R.string.fleet_status_on_time,
+                statusType = FleetStatusType.ON_TIME,
+                reeferTemp = "3.4°C",
+                humidity = "88% RH",
+                destEtaOrDelay = "14:15",
+                isDelay = false,
+                mileageText = "284 / 395 km",
+                progressPercent = 0.72f,
+                progressLabel = "72% Completed"
+            ),
+            FleetUnitSummary(
+                unitId = "FL-305",
+                truckModel = "International LT",
+                routeDescription = "Uruapan ⇄ CDMX Hub",
+                statusTextRes = R.string.fleet_status_on_time,
+                statusType = FleetStatusType.ON_TIME,
+                reeferTemp = "3.8°C",
+                humidity = "86% RH",
+                destEtaOrDelay = "16:30",
+                isDelay = false,
+                mileageText = "195 / 300 km",
+                progressPercent = 0.65f,
+                progressLabel = "65% Completed"
+            ),
+            FleetUnitSummary(
+                unitId = "FL-219",
+                truckModel = "Freightliner M2",
+                routeDescription = "Manzanillo Port ⇄ Zapopan Hub #14",
+                statusTextRes = R.string.fleet_status_delay,
+                statusType = FleetStatusType.DELAYED,
+                reeferTemp = "4.1°C",
+                humidity = "91% RH",
+                destEtaOrDelay = "+45m",
+                isDelay = true,
+                mileageText = "112 / 280 km",
+                progressPercent = 0.40f,
+                progressLabel = "40% Stalled At Gate"
+            )
+        )
+
+        val complianceSummary = ComplianceSummary(
+            compliancePercent = 87,
+            transitIntegrityPercent = 94,
+            coldBreachesToday = 0,
+            predictiveRiskThermalCount = 1,
+            predictiveRiskUnitId = "FL-408"
         )
 
         return DashboardData(
@@ -67,7 +144,7 @@ class FakeDashboardRepository {
                     caption = "Active Orders",
                     iconRes = R.drawable.ic_orders,
                     value = "48",
-                    deltaText = "+12.5% vs yesterday",
+                    deltaText = "+12.5% vs yday",
                     deltaIsPositive = true,
                     progress = 0.72f
                 ),
@@ -96,7 +173,11 @@ class FakeDashboardRepository {
                         SegmentedBarSegment(weight = 1f, type = KpiBadgeType.WARNING)
                     )
                 )
-            )
+            ),
+            actionItems = actionItems,
+            fleetUnits = fleetUnits,
+            fleetInTransitCount = 18,
+            complianceSummary = complianceSummary
         )
     }
 

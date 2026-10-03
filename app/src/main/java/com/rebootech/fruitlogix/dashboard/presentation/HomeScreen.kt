@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.dashboard.data.FakeDashboardRepository
@@ -54,6 +55,9 @@ import com.rebootech.fruitlogix.dashboard.domain.PriorityAction
 import com.rebootech.fruitlogix.dashboard.domain.PriorityActionStyle
 import com.rebootech.fruitlogix.dashboard.domain.SegmentedBarSegment
 import com.rebootech.fruitlogix.dashboard.domain.TemperatureReading
+import com.rebootech.fruitlogix.dashboard.presentation.components.ActionCenterSection
+import com.rebootech.fruitlogix.dashboard.presentation.components.ComplianceCard
+import com.rebootech.fruitlogix.dashboard.presentation.components.LiveFleetSection
 import com.rebootech.fruitlogix.ui.components.AppIcon
 import com.rebootech.fruitlogix.ui.components.AppLanguage
 import com.rebootech.fruitlogix.ui.components.FruitLogixTopBar
@@ -64,6 +68,7 @@ import com.rebootech.fruitlogix.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.ui.theme.FruitLogixExtraTypography
 import com.rebootech.fruitlogix.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.ui.theme.RobotoFontFamily
 import com.rebootech.fruitlogix.ui.theme.Spacing
 
 @Composable
@@ -130,9 +135,35 @@ private fun HomeScreenContent(
             KpiGrid(kpis = state.kpis)
         }
 
-        // Bottom spacer for nav bar clearance
+        // 6. Action Center
         item {
-            Spacer(modifier = Modifier.height(Spacing.md))
+            ActionCenterSection(
+                items = state.actionItems,
+                onClearAllClick = {},
+                onActionClick = {}
+            )
+        }
+
+        // 7. Live Fleet
+        item {
+            LiveFleetSection(
+                fleetUnits = state.fleetUnits,
+                inTransitCount = state.fleetInTransitCount,
+                onMapViewClick = {},
+                onFleetUnitClick = {}
+            )
+        }
+
+        // 8. Cold-Chain Compliance
+        item {
+            state.complianceSummary?.let { summary ->
+                ComplianceCard(summary = summary)
+            }
+        }
+
+        // Bottom spacer so bottom navigation bar never covers the last card
+        item {
+            Spacer(modifier = Modifier.height(88.dp))
         }
     }
 }
@@ -182,7 +213,7 @@ private fun GreetingSection(greeting: GreetingInfo) {
                 Text(
                     text = greeting.hubDescription,
                     style = FruitLogixTheme.typography.bodySmall,
-                    color = FruitLogixTheme.colors.textMuted
+                    color = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f)
                 )
             }
             // Sensor icon button
@@ -480,7 +511,7 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
                 ceilingLabel = ceilingLabel,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .height(130.dp)
             )
 
             Spacer(modifier = Modifier.height(Spacing.sm))
@@ -519,7 +550,31 @@ private fun SparklineCanvas(
     val textMeasurer = rememberTextMeasurer()
     val lineColor = FruitLogixTheme.colors.primary
     val thresholdColor = FruitLogixTheme.colors.warning
+    val dangerColor = FruitLogixTheme.colors.dangerStrong
+
     val labelStyle = FruitLogixTheme.typography.labelSmall.copy(color = FruitLogixTheme.colors.textMuted)
+    val nowLabelStyle = FruitLogixTheme.typography.bodySmall.copy(
+        color = FruitLogixTheme.colors.primary,
+        fontWeight = FontWeight.Bold,
+        fontFamily = RobotoFontFamily
+    )
+    val breachLabelStyle = FruitLogixTheme.typography.bodySmall.copy(
+        color = FruitLogixTheme.colors.dangerStrong,
+        fontWeight = FontWeight.Bold,
+        fontFamily = RobotoFontFamily
+    )
+    val xAxisStyle = FruitLogixTheme.typography.bodySmall.copy(
+        color = FruitLogixTheme.colors.textMuted,
+        fontSize = 11.sp,
+        fontFamily = RobotoFontFamily
+    )
+
+    val historyMinMinutesAgo = readings.maxOfOrNull { it.minutesAgo } ?: 45
+
+    val nowLabelText = stringResource(R.string.alert_predictive_now_label, "${currentCelsius}°C")
+    val plusMinText = stringResource(R.string.alert_predictive_plus_min, minutesToBreach)
+    val minusMinText = stringResource(R.string.alert_predictive_minus_min, historyMinMinutesAgo)
+    val nowCaptionText = stringResource(R.string.alert_predictive_now_caption)
 
     Canvas(modifier = modifier) {
         if (readings.isEmpty()) return@Canvas
@@ -527,23 +582,30 @@ private fun SparklineCanvas(
         val canvasWidth = size.width
         val canvasHeight = size.height
 
-        val historyMinMinutesAgo = readings.maxOfOrNull { it.minutesAgo } ?: 18
         val totalMinutes = (historyMinMinutesAgo + minutesToBreach).toDouble()
         if (totalMinutes <= 0.0) return@Canvas
 
+        val xAxisHeight = 20.dp.toPx()
+        val topMargin = 22.dp.toPx()
+        val leftMargin = 16.dp.toPx()
+        val rightMargin = 48.dp.toPx()
+
+        val usableWidth = canvasWidth - leftMargin - rightMargin
+        val usableHeight = canvasHeight - topMargin - xAxisHeight
+
         val minTemp = (readings.minOfOrNull { it.celsius } ?: currentCelsius) - 0.4
-        val maxTemp = thresholdCelsius + 0.4
+        val maxTemp = thresholdCelsius + 0.6
         val tempRange = maxTemp - minTemp
         if (tempRange <= 0.0) return@Canvas
 
         fun getX(minutesAgo: Double): Float {
             val progress = (historyMinMinutesAgo - minutesAgo) / totalMinutes
-            return (progress * canvasWidth).toFloat()
+            return (leftMargin + (progress * usableWidth)).toFloat()
         }
 
         fun getY(temp: Double): Float {
             val progress = (temp - minTemp) / tempRange
-            return (canvasHeight - (progress * canvasHeight)).toFloat()
+            return (topMargin + ((1.0 - progress) * usableHeight)).toFloat()
         }
 
         // 1. Dashed threshold ceiling line
@@ -552,20 +614,22 @@ private fun SparklineCanvas(
 
         drawLine(
             color = thresholdColor,
-            start = Offset(0f, thresholdY),
-            end = Offset(canvasWidth, thresholdY),
+            start = Offset(leftMargin, thresholdY),
+            end = Offset(canvasWidth - rightMargin + 16.dp.toPx(), thresholdY),
             strokeWidth = 2f,
             pathEffect = dashEffect
         )
 
-        // Draw ceiling text label
-        val textLayout = textMeasurer.measure(
+        // Draw "Critical ceiling 4.0°C" label ABOVE threshold line at right end
+        val ceilingLayout = textMeasurer.measure(
             text = ceilingLabel,
             style = labelStyle
         )
+        val ceilingX = (canvasWidth - rightMargin + 16.dp.toPx() - ceilingLayout.size.width).coerceAtLeast(leftMargin)
+        val ceilingY = thresholdY - ceilingLayout.size.height - 3.dp.toPx()
         drawText(
-            textLayoutResult = textLayout,
-            topLeft = Offset(8f, (thresholdY - textLayout.size.height - 4f).coerceAtLeast(0f))
+            textLayoutResult = ceilingLayout,
+            topLeft = Offset(ceilingX, ceilingY)
         )
 
         // Sort readings from past to present
@@ -590,9 +654,34 @@ private fun SparklineCanvas(
             style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
 
-        // 3. Dashed line for projection
+        // 3. Current reading dot & label ("Now 3.2°C")
         val currentX = getX(0.0)
         val currentY = getY(currentCelsius)
+
+        drawCircle(
+            color = lineColor,
+            radius = 5.dp.toPx(),
+            center = Offset(currentX, currentY)
+        )
+        drawCircle(
+            color = Color.Black,
+            radius = 2.dp.toPx(),
+            center = Offset(currentX, currentY)
+        )
+
+        val nowLayout = textMeasurer.measure(
+            text = nowLabelText,
+            style = nowLabelStyle
+        )
+        drawText(
+            textLayoutResult = nowLayout,
+            topLeft = Offset(
+                currentX - (nowLayout.size.width / 2f),
+                currentY + 6.dp.toPx()
+            )
+        )
+
+        // 4. Dashed line for projection continuing trend until crossing threshold
         val breachX = getX(-minutesToBreach.toDouble())
         val breachY = getY(thresholdCelsius)
 
@@ -605,16 +694,44 @@ private fun SparklineCanvas(
             cap = StrokeCap.Round
         )
 
-        // 4. Dot marking current reading
+        // 5. Small red dot where projection crosses threshold with "+12 min" label
         drawCircle(
-            color = lineColor,
-            radius = 5.dp.toPx(),
-            center = Offset(currentX, currentY)
+            color = dangerColor,
+            radius = 4.5.dp.toPx(),
+            center = Offset(breachX, breachY)
         )
-        drawCircle(
-            color = Color.Black,
-            radius = 2.dp.toPx(),
-            center = Offset(currentX, currentY)
+
+        val breachLayout = textMeasurer.measure(
+            text = plusMinText,
+            style = breachLabelStyle
+        )
+        drawText(
+            textLayoutResult = breachLayout,
+            topLeft = Offset(
+                breachX + 6.dp.toPx(),
+                breachY - (breachLayout.size.height / 2f)
+            )
+        )
+
+        // 6. X-axis captions below chart: "-45 min", "Now", "+12 min" in Roboto 11sp textMuted
+        val captionY = canvasHeight - xAxisHeight + 4.dp.toPx()
+
+        val leftCapLayout = textMeasurer.measure(minusMinText, xAxisStyle)
+        drawText(
+            textLayoutResult = leftCapLayout,
+            topLeft = Offset(leftMargin, captionY)
+        )
+
+        val nowCapLayout = textMeasurer.measure(nowCaptionText, xAxisStyle)
+        drawText(
+            textLayoutResult = nowCapLayout,
+            topLeft = Offset(currentX - (nowCapLayout.size.width / 2f), captionY)
+        )
+
+        val rightCapLayout = textMeasurer.measure(plusMinText, xAxisStyle)
+        drawText(
+            textLayoutResult = rightCapLayout,
+            topLeft = Offset(breachX - (rightCapLayout.size.width / 2f), captionY)
         )
     }
 }
@@ -717,7 +834,11 @@ private fun KpiTile(kpi: KpiData) {
                     Spacer(modifier = Modifier.width(4.dp))
                     StatusBadge(
                         text = delta,
-                        type = if (kpi.deltaIsPositive) StatusBadgeType.SUCCESS else StatusBadgeType.DANGER
+                        type = if (kpi.deltaIsPositive) StatusBadgeType.SUCCESS else StatusBadgeType.DANGER,
+                        maxLines = 1,
+                        softWrap = false,
+                        horizontalPadding = 6.dp,
+                        verticalPadding = 2.dp
                     )
                 }
             }
@@ -798,7 +919,7 @@ private fun SegmentedBar(segments: List<SegmentedBarSegment>) {
 // =============================================================================
 // Previews for all 3 States
 // =============================================================================
-@Preview(name = "HomeScreen - Predictive State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
+@Preview(name = "HomeScreen - Predictive State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 1800)
 @Composable
 private fun HomeScreenPreview_Predictive() {
     val repo = FakeDashboardRepository()
@@ -809,7 +930,11 @@ private fun HomeScreenPreview_Predictive() {
         priorityActions = data.priorityActions,
         priorityReadyCount = 3,
         predictiveAlert = data.predictiveAlert,
-        kpis = data.kpis
+        kpis = data.kpis,
+        actionItems = data.actionItems,
+        fleetUnits = data.fleetUnits,
+        fleetInTransitCount = data.fleetInTransitCount,
+        complianceSummary = data.complianceSummary
     )
 
     FruitLogixTheme {
@@ -820,7 +945,7 @@ private fun HomeScreenPreview_Predictive() {
     }
 }
 
-@Preview(name = "HomeScreen - Nominal State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
+@Preview(name = "HomeScreen - Nominal State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 1800)
 @Composable
 private fun HomeScreenPreview_Nominal() {
     val repo = FakeDashboardRepository()
@@ -831,7 +956,11 @@ private fun HomeScreenPreview_Nominal() {
         priorityActions = data.priorityActions,
         priorityReadyCount = 3,
         predictiveAlert = repo.getNominalAlertData(),
-        kpis = data.kpis
+        kpis = data.kpis,
+        actionItems = data.actionItems,
+        fleetUnits = data.fleetUnits,
+        fleetInTransitCount = data.fleetInTransitCount,
+        complianceSummary = data.complianceSummary
     )
 
     FruitLogixTheme {
@@ -842,7 +971,7 @@ private fun HomeScreenPreview_Nominal() {
     }
 }
 
-@Preview(name = "HomeScreen - Breached State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
+@Preview(name = "HomeScreen - Breached State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 1800)
 @Composable
 private fun HomeScreenPreview_Breached() {
     val repo = FakeDashboardRepository()
@@ -853,7 +982,11 @@ private fun HomeScreenPreview_Breached() {
         priorityActions = data.priorityActions,
         priorityReadyCount = 3,
         predictiveAlert = repo.getBreachedAlertData(),
-        kpis = data.kpis
+        kpis = data.kpis,
+        actionItems = data.actionItems,
+        fleetUnits = data.fleetUnits,
+        fleetInTransitCount = data.fleetInTransitCount,
+        complianceSummary = data.complianceSummary
     )
 
     FruitLogixTheme {

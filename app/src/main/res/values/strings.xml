@@ -28,6 +28,10 @@
     <string name="alert_predictive_headline">Will exceed %1$s in %2$d min</string>
     <string name="alert_predictive_subline">Rising %1$s/min • Now %2$s</string>
     <string name="alert_predictive_ceiling">Critical ceiling %1$s</string>
+    <string name="alert_predictive_now_label">Now %1$s</string>
+    <string name="alert_predictive_plus_min">+%1$d min</string>
+    <string name="alert_predictive_minus_min">-%1$d min</string>
+    <string name="alert_predictive_now_caption">Now</string>
     <string name="alert_immediate_action">IMMEDIATE ACTION</string>
     <string name="alert_review_reefer">Review reefer →</string>
     <string name="alert_nominal_title">All cold chains nominal</string>
@@ -38,10 +42,45 @@
     <string name="kpi_daily_deliveries">Daily Deliveries</string>
     <string name="kpi_fruit_quality">Fruit Quality</string>
     <string name="kpi_iot_alerts">IoT Alerts</string>
-    <string name="kpi_vs_yesterday">vs yesterday</string>
+    <string name="kpi_vs_yesterday">+12.5% vs yday</string>
     <string name="kpi_avg_eta">Avg ETA: %1$s</string>
     <string name="kpi_on_time">On time</string>
     <string name="kpi_last_lots">Last %1$d lots</string>
     <string name="kpi_grade_a">Grade A Certified</string>
     <string name="kpi_critical_warning">%1$d Critical • %2$d Warning</string>
-</resources>
+
+    <!-- Action Center -->
+    <string name="action_center_title">Action Center</string>
+    <string name="action_center_clear_all">Clear all</string>
+    <string name="action_cfdi_seal_title">CFDI 4.0 seal missing</string>
+    <string name="action_cfdi_seal_sub">Order #ORD-1048 • Finca Santa Cruz</string>
+    <string name="action_cfdi_seal_caption">EXPORT CUSTOMS REQUIREMENT</string>
+    <string name="action_cfdi_seal_btn">Approve seal</string>
+    <string name="action_precooling_title">Pre-cooling intake Gate 3</string>
+    <string name="action_precooling_sub">320 crates Persian lime</string>
+    <string name="action_precooling_caption">COLD DOCK RECEIVING</string>
+    <string name="action_precooling_btn">Verify intake</string>
+
+    <!-- Live Fleet -->
+    <string name="fleet_title">Live Fleet</string>
+    <string name="fleet_in_transit_count">(%1$d in transit)</string>
+    <string name="fleet_map_view">Map view ></string>
+    <string name="fleet_status_on_time">On time</string>
+    <string name="fleet_status_delay">Customs delay</string>
+    <string name="fleet_label_reefer_temp">REEFER TEMP</string>
+    <string name="fleet_label_humidity">HUMIDITY</string>
+    <string name="fleet_label_dest_eta">DEST ETA</string>
+    <string name="fleet_label_delay_delta">DELAY DELTA</string>
+    <string name="fleet_mileage_format">Transit Mileage: %1$s</string>
+
+    <!-- Cold-Chain Compliance -->
+    <string name="compliance_title">Cold-Chain Compliance</string>
+    <string name="compliance_subtitle">24-hour fleet adherence index</string>
+    <string name="compliance_label_compliant">Compliant</string>
+    <string name="compliance_line_integrity">TRANSIT INTEGRITY</string>
+    <string name="compliance_line_integrity_sub">94%% Nominal Trajectory</string>
+    <string name="compliance_line_breaches">TOLERANCE VIOLATIONS</string>
+    <string name="compliance_line_breaches_sub">0 Cold Breaches Today</string>
+    <string name="compliance_risk_label">PREDICTIVE RISK</string>
+    <string name="compliance_risk_format">%1$d Thermal Warning (%2$s)</string>
+</resources>

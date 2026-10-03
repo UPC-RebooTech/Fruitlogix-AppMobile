@@ -38,6 +38,10 @@ fun StatusBadge(
     text: String,
     type: StatusBadgeType,
     modifier: Modifier = Modifier,
+    maxLines: Int = Int.MAX_VALUE,
+    softWrap: Boolean = true,
+    horizontalPadding: androidx.compose.ui.unit.Dp = 10.dp,
+    verticalPadding: androidx.compose.ui.unit.Dp = 4.dp,
     icon: (@Composable () -> Unit)? = null
 ) {
     val (backgroundColor, textColor) = when (type) {
@@ -67,7 +71,7 @@ fun StatusBadge(
         modifier = modifier
             .clip(FruitLogixTheme.shapes.Pill)
             .background(backgroundColor)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -79,7 +83,9 @@ fun StatusBadge(
                 text = text.uppercase(),
                 color = textColor,
                 style = FruitLogixTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = maxLines,
+                softWrap = softWrap
             )
         }
     }

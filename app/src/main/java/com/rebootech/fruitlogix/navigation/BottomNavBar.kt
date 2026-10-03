@@ -25,13 +25,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.rebootech.fruitlogix.ui.components.AppIcon
 import com.rebootech.fruitlogix.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.ui.theme.RobotoFontFamily
 
 /**
  * FruitLogix Bottom Navigation Bar.
@@ -102,7 +103,7 @@ private fun BottomNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .defaultMinSize(minWidth = 56.dp, minHeight = 48.dp)
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -131,10 +132,10 @@ private fun BottomNavItem(
         Text(
             text = stringResource(id = routeItem.labelRes),
             color = labelTextColor,
-            fontFamily = PoppinsFontFamily,
+            fontFamily = RobotoFontFamily,
+            fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            style = FruitLogixTheme.typography.labelSmall
+            style = FruitLogixTheme.typography.bodySmall
         )
     }
 }
-

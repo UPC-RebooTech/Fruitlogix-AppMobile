@@ -56,5 +56,9 @@ data class DashboardData(
     val greeting: GreetingInfo,
     val priorityActions: List<PriorityAction>,
     val predictiveAlert: PredictiveAlert?,
-    val kpis: List<KpiData>
+    val kpis: List<KpiData>,
+    val actionItems: List<ActionItem>,
+    val fleetUnits: List<FleetUnitSummary>,
+    val fleetInTransitCount: Int,
+    val complianceSummary: ComplianceSummary
 )

@@ -28,6 +28,10 @@
     <string name="alert_predictive_headline">Excederá %1$s en %2$d min</string>
     <string name="alert_predictive_subline">Sube %1$s/min • Ahora %2$s</string>
     <string name="alert_predictive_ceiling">Límite crítico %1$s</string>
+    <string name="alert_predictive_now_label">Ahora %1$s</string>
+    <string name="alert_predictive_plus_min">+%1$d min</string>
+    <string name="alert_predictive_minus_min">-%1$d min</string>
+    <string name="alert_predictive_now_caption">Ahora</string>
     <string name="alert_immediate_action">ACCIÓN INMEDIATA</string>
     <string name="alert_review_reefer">Revisar reefer →</string>
     <string name="alert_nominal_title">Todas las cadenas de frío nominales</string>
@@ -38,11 +42,46 @@
     <string name="kpi_daily_deliveries">Entregas Día</string>
     <string name="kpi_fruit_quality">Calidad Fruta</string>
     <string name="kpi_iot_alerts">Alertas IoT</string>
-    <string name="kpi_vs_yesterday">vs ayer</string>
+    <string name="kpi_vs_yesterday">+12.5% vs ayer</string>
     <string name="kpi_avg_eta">ETA Prom: %1$s</string>
     <string name="kpi_on_time">A Tiempo</string>
     <string name="kpi_last_lots">Últimos %1$d lotes</string>
     <string name="kpi_grade_a">Grado A Certificado</string>
     <string name="kpi_critical_warning">%1$d Críticas • %2$d Aviso</string>
+
+    <!-- Action Center -->
+    <string name="action_center_title">Centro de Acción</string>
+    <string name="action_center_clear_all">Borrar todo</string>
+    <string name="action_cfdi_seal_title">Falta sello CFDI 4.0</string>
+    <string name="action_cfdi_seal_sub">Orden #ORD-1048 • Finca Santa Cruz</string>
+    <string name="action_cfdi_seal_caption">REQUISITO ADUANERO DE EXPORTACIÓN</string>
+    <string name="action_cfdi_seal_btn">Aprobar sello</string>
+    <string name="action_precooling_title">Ingreso precooling Puerta 3</string>
+    <string name="action_precooling_sub">320 cajas Limón Persa en espera</string>
+    <string name="action_precooling_caption">RECEPCIÓN ANDÉN FRÍO</string>
+    <string name="action_precooling_btn">Verificar ingreso</string>
+
+    <!-- Live Fleet -->
+    <string name="fleet_title">Flota en Vivo</string>
+    <string name="fleet_in_transit_count">(%1$d en tránsito)</string>
+    <string name="fleet_map_view">Ver mapa ></string>
+    <string name="fleet_status_on_time">A tiempo</string>
+    <string name="fleet_status_delay">Retraso aduana</string>
+    <string name="fleet_label_reefer_temp">TEMP REEFER</string>
+    <string name="fleet_label_humidity">HUMEDAD</string>
+    <string name="fleet_label_dest_eta">ETA DESTINO</string>
+    <string name="fleet_label_delay_delta">RETRASO</string>
+    <string name="fleet_mileage_format">Kilometraje tránsito: %1$s</string>
+
+    <!-- Cold-Chain Compliance -->
+    <string name="compliance_title">Cumplimiento Cadena de Frío</string>
+    <string name="compliance_subtitle">Índice de adherencia 24h</string>
+    <string name="compliance_label_compliant">Cumplimiento</string>
+    <string name="compliance_line_integrity">INTEGRIDAD DE TRÁNSITO</string>
+    <string name="compliance_line_integrity_sub">94%% Trayectoria Nominal</string>
+    <string name="compliance_line_breaches">VIOLACIONES DE TOLERANCIA</string>
+    <string name="compliance_line_breaches_sub">0 Brechas Frías Hoy</string>
+    <string name="compliance_risk_label">RIESGO PREDICTIVO</string>
+    <string name="compliance_risk_format">%1$d Alerta Térmica (%2$s)</string>
 </resources>
 
