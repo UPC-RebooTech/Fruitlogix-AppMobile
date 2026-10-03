@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,18 +27,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.rebootech.fruitlogix.ui.components.AppIcon
 import com.rebootech.fruitlogix.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.ui.theme.RobotoFontFamily
 
 /**
  * FruitLogix Bottom Navigation Bar.
  * Background: Appbar dark color (#2D3F33).
- * 5 tabs: Home, Orders, Fleet, Producers, More.
+ * 5 tabs: Home, Orders, Fleet, Invoices, More.
+ * Height: 72dp + system navigation bars inset.
  * Active tab shows a lime pill highlight behind icon (on-primary icon, white label).
  * Inactive tab uses textMuted icon & label.
  */
@@ -48,31 +52,39 @@ fun BottomNavBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(FruitLogixTheme.colors.appbar)
-            .padding(vertical = FruitLogixTheme.spacing.xs),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = FruitLogixTheme.colors.appbar,
+        tonalElevation = 0.dp
     ) {
-        bottomNavRoutes.forEach { routeItem ->
-            val isSelected = currentDestination?.hierarchy?.any { it.route == routeItem.route } == true
-            BottomNavItem(
-                routeItem = routeItem,
-                isSelected = isSelected,
-                onClick = {
-                    if (!isSelected) {
-                        navController.navigate(routeItem.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(72.dp)
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            bottomNavRoutes.forEach { routeItem ->
+                val isSelected = currentDestination?.hierarchy?.any { it.route == routeItem.route } == true
+                BottomNavItem(
+                    routeItem = routeItem,
+                    isSelected = isSelected,
+                    onClick = {
+                        if (!isSelected) {
+                            navController.navigate(routeItem.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
-                    }
-                }
-            )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
@@ -81,7 +93,8 @@ fun BottomNavBar(
 private fun BottomNavItem(
     routeItem: Route,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val pillBackgroundColor by animateColorAsState(
         targetValue = if (isSelected) FruitLogixTheme.colors.primary else Color.Transparent,
@@ -101,8 +114,8 @@ private fun BottomNavItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .defaultMinSize(minWidth = 56.dp, minHeight = 48.dp)
+        modifier = modifier
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -112,10 +125,9 @@ private fun BottomNavItem(
     ) {
         Box(
             modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 2.dp)
                 .clip(FruitLogixTheme.shapes.Pill)
                 .background(pillBackgroundColor)
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 14.dp, vertical = 5.dp),
             contentAlignment = Alignment.Center
         ) {
             AppIcon(
@@ -126,15 +138,16 @@ private fun BottomNavItem(
             )
         }
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
         Text(
             text = stringResource(id = routeItem.labelRes),
             color = labelTextColor,
-            fontFamily = PoppinsFontFamily,
+            fontFamily = RobotoFontFamily,
+            fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-            style = FruitLogixTheme.typography.labelSmall
+            maxLines = 1,
+            softWrap = false
         )
     }
 }
-
