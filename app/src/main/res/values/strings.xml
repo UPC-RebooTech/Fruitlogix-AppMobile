@@ -82,5 +82,5 @@
     <string name="compliance_line_breaches">TOLERANCE VIOLATIONS</string>
     <string name="compliance_line_breaches_sub">0 Cold Breaches Today</string>
     <string name="compliance_risk_label">PREDICTIVE RISK</string>
-    <string name="compliance_risk_format">%1$d Thermal Warning (%2$s)</string>
+    <string name="compliance_risk_format">%1$d Thermal Warning</string>
 </resources>

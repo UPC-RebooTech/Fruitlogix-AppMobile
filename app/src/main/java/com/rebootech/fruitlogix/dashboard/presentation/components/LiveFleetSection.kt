@@ -20,17 +20,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.dashboard.domain.FleetStatusType
 import com.rebootech.fruitlogix.dashboard.domain.FleetUnitSummary
 import com.rebootech.fruitlogix.ui.components.AppIcon
 import com.rebootech.fruitlogix.ui.components.LimeProgressBar
-import com.rebootech.fruitlogix.ui.theme.FruitLogixExtraTypography
 import com.rebootech.fruitlogix.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.ui.theme.RobotoFontFamily
 import com.rebootech.fruitlogix.ui.theme.Spacing
 
 @Composable
@@ -176,63 +178,47 @@ private fun FleetUnitCard(
                 Text(
                     text = unit.routeDescription,
                     style = FruitLogixTheme.typography.bodySmall,
-                    color = FruitLogixTheme.colors.textMuted
+                    color = FruitLogixTheme.colors.textMuted,
+                    maxLines = 1
                 )
             }
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
             // 3 Telemetry Columns: REEFER TEMP, HUMIDITY, DEST ETA / DELAY DELTA
+            // Metric values are Poppins 20sp with units at 14sp; captions are overline 11sp.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text(
-                        text = stringResource(R.string.fleet_label_reefer_temp),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = unit.reeferTemp,
-                        style = FruitLogixExtraTypography.kpiNumber,
-                        color = FruitLogixTheme.colors.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                // Reefer Temp (e.g. "3.4°C" -> "3.4" + "°C")
+                val (tempVal, tempUnit) = parseValAndUnit(unit.reeferTemp)
+                FleetMetricCell(
+                    caption = stringResource(R.string.fleet_label_reefer_temp),
+                    value = tempVal,
+                    unit = tempUnit,
+                    valueColor = FruitLogixTheme.colors.primary
+                )
 
-                Column {
-                    Text(
-                        text = stringResource(R.string.fleet_label_humidity),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = unit.humidity,
-                        style = FruitLogixExtraTypography.kpiNumber,
-                        color = FruitLogixTheme.colors.textOnDark,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                // Humidity (e.g. "88% RH" -> "88" + "% RH")
+                val (humVal, humUnit) = parseValAndUnit(unit.humidity)
+                FleetMetricCell(
+                    caption = stringResource(R.string.fleet_label_humidity),
+                    value = humVal,
+                    unit = humUnit,
+                    valueColor = FruitLogixTheme.colors.textOnDark
+                )
 
-                Column {
-                    val labelRes = if (unit.isDelay) R.string.fleet_label_delay_delta else R.string.fleet_label_dest_eta
-                    val valColor = if (unit.isDelay) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.textOnDark
-                    Text(
-                        text = stringResource(labelRes),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = unit.destEtaOrDelay,
-                        style = FruitLogixExtraTypography.kpiNumber,
-                        color = valColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                // ETA or Delay Delta (e.g. "+45m" -> "+45" + "m", or "14:15")
+                val labelRes = if (unit.isDelay) R.string.fleet_label_delay_delta else R.string.fleet_label_dest_eta
+                val valColor = if (unit.isDelay) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.textOnDark
+                val (etaVal, etaUnit) = parseValAndUnit(unit.destEtaOrDelay)
+                FleetMetricCell(
+                    caption = stringResource(labelRes),
+                    value = etaVal,
+                    unit = etaUnit,
+                    valueColor = valColor
+                )
             }
 
             Spacer(modifier = Modifier.height(Spacing.xs))
@@ -259,5 +245,60 @@ private fun FleetUnitCard(
 
             LimeProgressBar(progress = unit.progressPercent)
         }
+    }
+}
+
+@Composable
+private fun FleetMetricCell(
+    caption: String,
+    value: String,
+    unit: String?,
+    valueColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = caption,
+            style = FruitLogixTheme.typography.labelSmall,
+            color = FruitLogixTheme.colors.textMuted,
+            fontSize = 11.sp,
+            maxLines = 1,
+            softWrap = false
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = value,
+                fontFamily = PoppinsFontFamily,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = valueColor,
+                maxLines = 1,
+                softWrap = false
+            )
+            if (!unit.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.width(2.dp))
+                Text(
+                    text = unit,
+                    fontFamily = RobotoFontFamily,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = valueColor,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(bottom = 1.dp)
+                )
+            }
+        }
+    }
+}
+
+private fun parseValAndUnit(fullText: String): Pair<String, String?> {
+    // Splits "3.4°C" -> ("3.4", "°C"), "88% RH" -> ("88", "% RH"), "+45m" -> ("+45", "m"), "14:15" -> ("14:15", null)
+    val idx = fullText.indexOfFirst { it.isLetter() || it == '°' || it == '%' }
+    return if (idx > 0) {
+        Pair(fullText.substring(0, idx).trim(), fullText.substring(idx).trim())
+    } else {
+        Pair(fullText, null)
     }
 }

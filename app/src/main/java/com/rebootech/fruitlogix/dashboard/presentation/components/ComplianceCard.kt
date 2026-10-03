@@ -194,8 +194,7 @@ fun ComplianceCard(
                 Text(
                     text = stringResource(
                         R.string.compliance_risk_format,
-                        summary.predictiveRiskThermalCount,
-                        summary.predictiveRiskUnitId
+                        summary.predictiveRiskThermalCount
                     ),
                     style = FruitLogixTheme.typography.bodySmall,
                     color = FruitLogixTheme.colors.textOnDark,

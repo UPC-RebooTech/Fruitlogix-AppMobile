@@ -82,6 +82,6 @@
     <string name="compliance_line_breaches">VIOLACIONES DE TOLERANCIA</string>
     <string name="compliance_line_breaches_sub">0 Brechas Frías Hoy</string>
     <string name="compliance_risk_label">RIESGO PREDICTIVO</string>
-    <string name="compliance_risk_format">%1$d Alerta Térmica (%2$s)</string>
+    <string name="compliance_risk_format">%1$d Alerta Térmica</string>
 </resources>
 

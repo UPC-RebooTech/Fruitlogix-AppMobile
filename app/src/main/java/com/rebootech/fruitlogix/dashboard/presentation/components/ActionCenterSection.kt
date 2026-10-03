@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.dashboard.domain.ActionItem
@@ -143,13 +144,16 @@ private fun ActionItemCard(
 
                 Spacer(modifier = Modifier.width(Spacing.xs))
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = stringResource(id = item.titleRes),
                             style = FruitLogixTheme.typography.bodyLarge,
                             color = FruitLogixTheme.colors.textOnLight,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
                         if (item.hasRedDot) {
                             Spacer(modifier = Modifier.width(6.dp))
@@ -165,41 +169,54 @@ private fun ActionItemCard(
                     Text(
                         text = stringResource(id = item.subtitleRes),
                         style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f)
+                        color = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = stringResource(id = item.captionRes),
                         style = FruitLogixTheme.typography.labelSmall,
                         color = FruitLogixTheme.colors.textMuted,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
             Spacer(modifier = Modifier.width(Spacing.xs))
 
-            // Button (Lime or Dark)
-            if (item.style == ActionItemStyle.LIME_BUTTON) {
-                PrimaryButton(
-                    text = stringResource(id = item.buttonTextRes),
-                    onClick = onActionClick
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .clip(FruitLogixTheme.shapes.Pill)
-                        .background(FruitLogixTheme.colors.surfaceDark)
-                        .clickable(onClick = onActionClick)
-                        .padding(horizontal = Spacing.sm, vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
+            // Action button stays on right with fixed width
+            Box(
+                modifier = Modifier.width(120.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                if (item.style == ActionItemStyle.LIME_BUTTON) {
+                    PrimaryButton(
                         text = stringResource(id = item.buttonTextRes),
-                        style = FruitLogixTheme.typography.bodyMedium,
-                        color = FruitLogixTheme.colors.textOnDark,
-                        fontWeight = FontWeight.Bold
+                        onClick = onActionClick,
+                        modifier = Modifier.fillMaxWidth()
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(FruitLogixTheme.shapes.Pill)
+                            .background(FruitLogixTheme.colors.surfaceDark)
+                            .clickable(onClick = onActionClick)
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(id = item.buttonTextRes),
+                            style = FruitLogixTheme.typography.bodyMedium,
+                            color = FruitLogixTheme.colors.textOnDark,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
