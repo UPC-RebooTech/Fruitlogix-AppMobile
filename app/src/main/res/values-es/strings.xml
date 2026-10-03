@@ -52,21 +52,21 @@
     <!-- Action Center -->
     <string name="action_center_title">Centro de Acción</string>
     <string name="action_center_clear_all">Borrar todo</string>
-    <string name="action_cfdi_seal_title">Falta sello CFDI 4.0</string>
-    <string name="action_cfdi_seal_sub">Orden #ORD-1048 • Finca Santa Cruz</string>
+    <string name="action_cfdi_seal_title">Guía de remisión SUNAT pendiente</string>
+    <string name="action_cfdi_seal_sub">Orden #ORD-1048 • Finca Los Andes</string>
     <string name="action_cfdi_seal_caption">REQUISITO ADUANERO DE EXPORTACIÓN</string>
-    <string name="action_cfdi_seal_btn">Aprobar sello</string>
+    <string name="action_cfdi_seal_btn">Aprobar guía</string>
     <string name="action_precooling_title">Ingreso precooling Puerta 3</string>
     <string name="action_precooling_sub">320 cajas Limón Persa en espera</string>
     <string name="action_precooling_caption">RECEPCIÓN ANDÉN FRÍO</string>
     <string name="action_precooling_btn">Verificar ingreso</string>
 
-    <!-- Live Fleet -->
+    <!-- Live Fleet (Home screen) -->
     <string name="fleet_title">Flota en Vivo</string>
     <string name="fleet_in_transit_count">(%1$d en tránsito)</string>
     <string name="fleet_map_view">Ver mapa ></string>
     <string name="fleet_status_on_time">A tiempo</string>
-    <string name="fleet_status_delay">Retraso aduana</string>
+    <string name="fleet_status_delay">Retraso balanza</string>
     <string name="fleet_label_reefer_temp">TEMP REEFER</string>
     <string name="fleet_label_humidity">HUMEDAD</string>
     <string name="fleet_label_dest_eta">ETA DESTINO</string>
@@ -83,5 +83,69 @@
     <string name="compliance_line_breaches_sub">0 Brechas Frías Hoy</string>
     <string name="compliance_risk_label">RIESGO PREDICTIVO</string>
     <string name="compliance_risk_format">%1$d Alerta Térmica</string>
-</resources>
 
+    <!-- Fleet Control Center screen -->
+    <string name="fleet_screen_title">Centro de Control de Flota</string>
+    <string name="fleet_screen_subtitle">Tracking de despachos, cadena de frío y sensores</string>
+    <string name="fleet_limits_btn">Límites</string>
+
+    <!-- KPI chips -->
+    <string name="fleet_kpi_on_route">En ruta %1$d</string>
+    <string name="fleet_kpi_alerts">Alertas %1$d</string>
+
+    <!-- Radar card -->
+    <string name="fleet_radar_live">RADAR EN VIVO</string>
+    <string name="fleet_radar_gps_active">GPS Activo • 0.8s</string>
+
+    <!-- Segmented tabs -->
+    <string name="fleet_tab_dispatches">Despachos Activos %1$d</string>
+    <string name="fleet_tab_alerts">Alertas</string>
+    <string name="fleet_tab_sensors">Sensores</string>
+
+    <!-- Dispatch card -->
+    <string name="fleet_dispatch_unit">Unidad %1$s</string>
+    <string name="fleet_label_dock_eta">ETA ANDÉN</string>
+    <string name="fleet_transit_progress">Progreso Tránsito • %1$d%%</string>
+    <string name="fleet_view_dispatch_detail">Ver Detalle de Despacho ›</string>
+    <string name="fleet_immediate_reefer_diagnostic">Diagnóstico inmediato reefer →</string>
+
+    <!-- Dispatch status badges -->
+    <string name="dispatch_status_on_time">A TIEMPO</string>
+    <string name="dispatch_status_temp_alert">ALERTA TEMP</string>
+    <string name="dispatch_status_weigh_delay">RETRASO BALANZA</string>
+
+    <!-- Footer -->
+    <string name="fleet_footer_gateways">3 Gateways BLE Activos • SatCom v4.2</string>
+    <string name="fleet_footer_updated">Actualizado hace 10s</string>
+
+    <!-- Sensors screen -->
+    <string name="sensor_status_online">%1$d EN LÍNEA</string>
+    <string name="sensor_status_low_batt">%1$d BATERÍA BAJA</string>
+    <string name="sensor_status_offline">%1$d DESCONECTADO</string>
+
+    <string name="sensor_filter_all">Todos</string>
+    <string name="sensor_filter_on_route">En ruta</string>
+    <string name="sensor_filter_warehouse">En almacén</string>
+    <string name="sensor_filter_offline">Desconectados</string>
+
+    <string name="sensor_order_id">Orden #%1$s</string>
+    <string name="sensor_battery_label">%1$d%% BATT</string>
+
+    <string name="sensor_status_label_online">EN LÍNEA</string>
+    <string name="sensor_status_label_low_batt">BATERÍA BAJA</string>
+    <string name="sensor_status_label_offline">DESCONECTADO</string>
+    <string name="sensor_status_label_standby">ESPERA</string>
+
+    <string name="sensor_type_temperature">Temp Central &amp; Humedad (Sonda BLE)</string>
+    <string name="sensor_type_humidity">Sensor O₂ Atmosférico &amp; Etileno</string>
+    <string name="sensor_type_gps">Beacon GPS &amp; Sello Puerta</string>
+
+    <string name="sensor_btn_troubleshoot">Solucionar problema</string>
+    <string name="sensor_btn_link_order">Vincular a orden</string>
+
+    <string name="sensor_sheet_status">Estado</string>
+    <string name="sensor_sheet_truck">Camión vinculado</string>
+    <string name="sensor_sheet_order">Orden vinculada</string>
+    <string name="sensor_sheet_last_signal">Última señal</string>
+    <string name="sensor_sheet_battery">Batería</string>
+</resources>
