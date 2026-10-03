@@ -3,6 +3,7 @@
     <string name="nav_home">Home</string>
     <string name="nav_orders">Orders</string>
     <string name="nav_fleet">Fleet</string>
+    <string name="nav_invoices">Invoices</string>
     <string name="nav_producers">Producers</string>
     <string name="nav_more">More</string>
 
@@ -17,18 +18,20 @@
     <!-- Priority Actions -->
     <string name="priority_actions_label">PRIORITY ACTIONS</string>
     <string name="priority_ready_count">%1$d Ready</string>
-    <string name="action_assign_producer">Assign Producer</string>
-    <string name="action_link_new_lots">Link new lots</string>
-    <string name="action_dispatch_fleet">Dispatch Fleet</string>
-    <string name="action_reefers_ready">%1$d reefers ready</string>
-    <string name="action_alerts">Alerts</string>
-    <string name="action_anomalies">%1$d anomalies</string>
+    <string name="action_scan_lot">Scan lot</string>
+    <string name="action_dispatch_fleet">Dispatch fleet</string>
+    <string name="action_sensors">Sensors</string>
 
-    <!-- Critical Alert -->
-    <string name="alert_critical_thermal">CRITICAL THERMAL DEVIATION</string>
+    <!-- Predictive Alert -->
+    <string name="alert_predictive_label">PREDICTIVE ALERT</string>
+    <string name="alert_predictive_unit_line">Unit %1$s • %2$s</string>
+    <string name="alert_predictive_headline">Will exceed %1$s in %2$d min</string>
+    <string name="alert_predictive_subline">Rising %1$s/min • Now %2$s</string>
+    <string name="alert_predictive_ceiling">Critical ceiling %1$s</string>
     <string name="alert_immediate_action">IMMEDIATE ACTION</string>
-    <string name="alert_unit_label">Unit %1$s</string>
-    <string name="alert_review_reefer">REVIEW REEFER</string>
+    <string name="alert_review_reefer">Review reefer →</string>
+    <string name="alert_nominal_title">All cold chains nominal</string>
+    <string name="alert_breached_label">THRESHOLD BREACHED</string>
 
     <!-- KPI -->
     <string name="kpi_active_orders">Active Orders</string>

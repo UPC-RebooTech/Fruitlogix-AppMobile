@@ -27,7 +27,7 @@ class HomeViewModel : ViewModel() {
                 greeting = data.greeting,
                 priorityActions = data.priorityActions,
                 priorityReadyCount = data.priorityActions.size,
-                criticalAlert = data.criticalAlert,
+                predictiveAlert = data.predictiveAlert,
                 kpis = data.kpis
             )
         }

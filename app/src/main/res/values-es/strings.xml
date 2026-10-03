@@ -3,6 +3,7 @@
     <string name="nav_home">Inicio</string>
     <string name="nav_orders">Pedidos</string>
     <string name="nav_fleet">Flota</string>
+    <string name="nav_invoices">Facturas</string>
     <string name="nav_producers">Productores</string>
     <string name="nav_more">Más</string>
 
@@ -17,18 +18,20 @@
     <!-- Priority Actions -->
     <string name="priority_actions_label">ACCIONES PRIORITARIAS</string>
     <string name="priority_ready_count">%1$d Listas</string>
-    <string name="action_assign_producer">Asignar Productor</string>
-    <string name="action_link_new_lots">Vincular nuevos lotes</string>
-    <string name="action_dispatch_fleet">Despachar Flota</string>
-    <string name="action_reefers_ready">%1$d reefers listos</string>
-    <string name="action_alerts">Alertas</string>
-    <string name="action_anomalies">%1$d anomalías</string>
+    <string name="action_scan_lot">Escanear lote</string>
+    <string name="action_dispatch_fleet">Despachar flota</string>
+    <string name="action_sensors">Sensores</string>
 
-    <!-- Critical Alert -->
-    <string name="alert_critical_thermal">DESVIACIÓN TÉRMICA CRÍTICA</string>
+    <!-- Predictive Alert -->
+    <string name="alert_predictive_label">ALERTA PREDICTIVA</string>
+    <string name="alert_predictive_unit_line">Unidad %1$s • %2$s</string>
+    <string name="alert_predictive_headline">Excederá %1$s en %2$d min</string>
+    <string name="alert_predictive_subline">Sube %1$s/min • Ahora %2$s</string>
+    <string name="alert_predictive_ceiling">Límite crítico %1$s</string>
     <string name="alert_immediate_action">ACCIÓN INMEDIATA</string>
-    <string name="alert_unit_label">Unidad %1$s</string>
-    <string name="alert_review_reefer">REVISAR REEFER</string>
+    <string name="alert_review_reefer">Revisar reefer →</string>
+    <string name="alert_nominal_title">Todas las cadenas de frío nominales</string>
+    <string name="alert_breached_label">LÍMITE EXCEDIDO</string>
 
     <!-- KPI -->
     <string name="kpi_active_orders">Órdenes Activas</string>

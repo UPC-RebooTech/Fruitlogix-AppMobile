@@ -36,7 +36,7 @@ import com.rebootech.fruitlogix.ui.theme.PoppinsFontFamily
 /**
  * FruitLogix Bottom Navigation Bar.
  * Background: Appbar dark color (#2D3F33).
- * 5 tabs: Home, Orders, Fleet, Producers, More.
+ * 5 tabs: Home, Orders, Fleet, Invoices, More.
  * Active tab shows a lime pill highlight behind icon (on-primary icon, white label).
  * Inactive tab uses textMuted icon & label.
  */

@@ -1,6 +1,7 @@
 package com.rebootech.fruitlogix.dashboard.domain
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 
 /**
  * Domain models for the Home dashboard screen.
@@ -14,27 +15,15 @@ data class GreetingInfo(
 )
 
 data class PriorityAction(
-    val title: String,
-    val subtitle: String,
+    @StringRes val titleRes: Int,
     @DrawableRes val iconRes: Int,
     val style: PriorityActionStyle
 )
 
 enum class PriorityActionStyle {
     DARK,
-    LIME,
-    DANGER
+    LIME
 }
-
-data class CriticalAlert(
-    val title: String,
-    val badgeText: String,
-    val unitLabel: String,
-    val temperatureValue: String,
-    val routeDescription: String,
-    val locationLine: String,
-    val actionButtonText: String
-)
 
 data class KpiData(
     val caption: String,
@@ -66,6 +55,6 @@ data class SegmentedBarSegment(
 data class DashboardData(
     val greeting: GreetingInfo,
     val priorityActions: List<PriorityAction>,
-    val criticalAlert: CriticalAlert?,
+    val predictiveAlert: PredictiveAlert?,
     val kpis: List<KpiData>
 )

@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.dashboard.presentation
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,20 +29,31 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.dashboard.domain.CriticalAlert
+import com.rebootech.fruitlogix.dashboard.data.FakeDashboardRepository
 import com.rebootech.fruitlogix.dashboard.domain.GreetingInfo
 import com.rebootech.fruitlogix.dashboard.domain.KpiBadgeType
 import com.rebootech.fruitlogix.dashboard.domain.KpiData
+import com.rebootech.fruitlogix.dashboard.domain.PredictiveAlert
+import com.rebootech.fruitlogix.dashboard.domain.PredictiveAlertStatus
 import com.rebootech.fruitlogix.dashboard.domain.PriorityAction
 import com.rebootech.fruitlogix.dashboard.domain.PriorityActionStyle
 import com.rebootech.fruitlogix.dashboard.domain.SegmentedBarSegment
+import com.rebootech.fruitlogix.dashboard.domain.TemperatureReading
 import com.rebootech.fruitlogix.ui.components.AppIcon
 import com.rebootech.fruitlogix.ui.components.AppLanguage
 import com.rebootech.fruitlogix.ui.components.FruitLogixTopBar
@@ -97,7 +110,7 @@ private fun HomeScreenContent(
             }
         }
 
-        // 3. Priority Actions
+        // 3. Priority Actions (Compact Row of 3 Pill Chips)
         item {
             PriorityActionsSection(
                 actions = state.priorityActions,
@@ -105,10 +118,10 @@ private fun HomeScreenContent(
             )
         }
 
-        // 4. Critical Alert
+        // 4. Predictive Alert Card
         item {
-            state.criticalAlert?.let { alert ->
-                CriticalAlertCard(alert = alert)
+            state.predictiveAlert?.let { alert ->
+                PredictiveAlertCard(alert = alert)
             }
         }
 
@@ -192,7 +205,7 @@ private fun GreetingSection(greeting: GreetingInfo) {
 }
 
 // =============================================================================
-// Section 3: Priority Actions
+// Section 3: Priority Actions (Compact 3-Pill Chip Row)
 // =============================================================================
 @Composable
 private fun PriorityActionsSection(
@@ -228,94 +241,106 @@ private fun PriorityActionsSection(
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
-        // Horizontal scroll of action cards
+        // Compact horizontal row of 3 pill chips (min height 48dp)
         LazyRow(
             contentPadding = PaddingValues(horizontal = Spacing.sm),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(actions) { action ->
-                PriorityActionCard(action = action)
+                PriorityActionChip(action = action)
             }
         }
     }
 }
 
 @Composable
-private fun PriorityActionCard(action: PriorityAction) {
-    val (bgColor, contentColor, iconBgColor) = when (action.style) {
-        PriorityActionStyle.DARK -> Triple(
-            FruitLogixTheme.colors.surfaceDark,
-            FruitLogixTheme.colors.textOnDark,
-            FruitLogixTheme.colors.appbar
+private fun PriorityActionChip(action: PriorityAction) {
+    val isLime = action.style == PriorityActionStyle.LIME
+    val bgColor = if (isLime) FruitLogixTheme.colors.primary else FruitLogixTheme.colors.surfaceDark
+    val contentColor = if (isLime) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnDark
+
+    Row(
+        modifier = Modifier
+            .defaultMinSize(minHeight = 48.dp)
+            .clip(FruitLogixTheme.shapes.Pill)
+            .background(bgColor)
+            .padding(horizontal = Spacing.sm, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        AppIcon(
+            id = action.iconRes,
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(20.dp)
         )
-        PriorityActionStyle.LIME -> Triple(
-            FruitLogixTheme.colors.primary,
-            FruitLogixTheme.colors.onPrimary,
-            FruitLogixTheme.colors.onPrimary.copy(alpha = 0.15f)
-        )
-        PriorityActionStyle.DANGER -> Triple(
-            FruitLogixTheme.colors.danger,
-            FruitLogixTheme.colors.textOnDark,
-            FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.25f)
+        Spacer(modifier = Modifier.width(Spacing.xs))
+        Text(
+            text = stringResource(id = action.titleRes),
+            style = FruitLogixTheme.typography.bodyMedium,
+            color = contentColor,
+            fontWeight = FontWeight.SemiBold
         )
     }
+}
 
+// =============================================================================
+// Section 4: Predictive Alert Card
+// =============================================================================
+@Composable
+private fun PredictiveAlertCard(alert: PredictiveAlert) {
+    when (alert.status) {
+        PredictiveAlertStatus.NOMINAL -> NominalAlertCard()
+        PredictiveAlertStatus.BREACHED -> BreachedAlertCard(alert = alert)
+        PredictiveAlertStatus.PREDICTIVE -> PredictiveAlertContentCard(alert = alert)
+    }
+}
+
+@Composable
+private fun NominalAlertCard() {
     Card(
         modifier = Modifier
-            .width(150.dp)
-            .height(150.dp),
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
         shape = FruitLogixTheme.shapes.Card,
         colors = CardDefaults.cardColors(
-            containerColor = bgColor,
-            contentColor = contentColor
+            containerColor = FruitLogixTheme.colors.surfaceDark,
+            contentColor = FruitLogixTheme.colors.textOnDark
         )
     ) {
-        Column(
+        Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(Spacing.sm),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon container
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(iconBgColor),
+                    .background(FruitLogixTheme.colors.success.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 AppIcon(
-                    id = action.iconRes,
+                    id = R.drawable.ic_verified,
                     contentDescription = null,
-                    tint = contentColor,
+                    tint = FruitLogixTheme.colors.success,
                     modifier = Modifier.size(22.dp)
                 )
             }
-
-            Column {
-                Text(
-                    text = action.title,
-                    style = FruitLogixTheme.typography.titleMedium,
-                    color = contentColor,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = action.subtitle,
-                    style = FruitLogixTheme.typography.bodySmall,
-                    color = contentColor.copy(alpha = 0.7f)
-                )
-            }
+            Spacer(modifier = Modifier.width(Spacing.xs))
+            Text(
+                text = stringResource(R.string.alert_nominal_title),
+                style = FruitLogixTheme.typography.titleMedium,
+                color = FruitLogixTheme.colors.success,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
-// =============================================================================
-// Section 4: Critical Alert Card
-// =============================================================================
 @Composable
-private fun CriticalAlertCard(alert: CriticalAlert) {
+private fun BreachedAlertCard(alert: PredictiveAlert) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -327,111 +352,270 @@ private fun CriticalAlertCard(alert: CriticalAlert) {
         )
     ) {
         Column(modifier = Modifier.padding(Spacing.sm)) {
-            // Top: Title + badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.25f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AppIcon(
-                            id = R.drawable.ic_thermostat,
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.textOnDark,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(Spacing.xs))
-                    Text(
-                        text = alert.title,
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textOnDark,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                StatusBadge(
-                    text = alert.badgeText,
-                    type = StatusBadgeType.DANGER
+            // Overline title
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AppIcon(
+                    id = R.drawable.ic_warning,
+                    contentDescription = null,
+                    tint = FruitLogixTheme.colors.dangerStrong,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(Spacing.xs))
+                Text(
+                    text = stringResource(R.string.alert_breached_label),
+                    style = FruitLogixTheme.typography.labelSmall,
+                    color = FruitLogixTheme.colors.dangerStrong,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
+            // Unit line + current temp
+            Text(
+                text = stringResource(R.string.alert_predictive_unit_line, alert.unitId, alert.cargoDescription),
+                style = FruitLogixTheme.typography.bodySmall,
+                color = FruitLogixTheme.colors.textOnDark.copy(alpha = 0.8f)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "${alert.currentCelsius}°C",
+                style = FruitLogixExtraTypography.kpiNumber,
+                color = FruitLogixTheme.colors.dangerStrong,
+                fontWeight = FontWeight.Bold
+            )
+
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Unit label + temperature
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                horizontalArrangement = Arrangement.End
             ) {
-                Text(
-                    text = alert.unitLabel,
-                    style = FruitLogixTheme.typography.titleMedium,
-                    color = FruitLogixTheme.colors.textOnDark,
-                    fontWeight = FontWeight.Bold
+                PrimaryButton(
+                    text = stringResource(R.string.alert_review_reefer),
+                    onClick = {}
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.sm, vertical = Spacing.sm),
+        shape = FruitLogixTheme.shapes.Card,
+        colors = CardDefaults.cardColors(
+            containerColor = FruitLogixTheme.colors.surfaceDark,
+            contentColor = FruitLogixTheme.colors.textOnDark
+        )
+    ) {
+        Column(modifier = Modifier.padding(Spacing.sm)) {
+            // Overline: PREDICTIVE ALERT (amber) + warning icon
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AppIcon(
+                    id = R.drawable.ic_warning,
+                    contentDescription = null,
+                    tint = FruitLogixTheme.colors.warning,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(Spacing.xs))
                 Text(
-                    text = alert.temperatureValue,
-                    style = FruitLogixExtraTypography.kpiNumber,
-                    color = FruitLogixTheme.colors.dangerStrong,
+                    text = stringResource(R.string.alert_predictive_label),
+                    style = FruitLogixTheme.typography.labelSmall,
+                    color = FruitLogixTheme.colors.warning,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Route description
+            // Unit line
             Text(
-                text = alert.routeDescription,
+                text = stringResource(R.string.alert_predictive_unit_line, alert.unitId, alert.cargoDescription),
+                style = FruitLogixTheme.typography.bodySmall,
+                color = FruitLogixTheme.colors.textMuted
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.xs))
+
+            // Big Poppins headline: "Will exceed 4.0°C in 12 min"
+            Text(
+                text = stringResource(
+                    R.string.alert_predictive_headline,
+                    "${alert.thresholdCelsius}°C",
+                    alert.minutesToBreach
+                ),
+                style = FruitLogixTheme.typography.titleLarge,
+                color = FruitLogixTheme.colors.warning,
+                fontFamily = PoppinsFontFamily,
+                fontWeight = FontWeight.Bold
+            )
+
+            // Sub-line: "Rising 0.4°C/min • Now 3.2°C"
+            val rateText = if (alert.ratePerMinute < 0.1) "0.4°C" else String.format("%.1f°C", alert.ratePerMinute)
+            Text(
+                text = stringResource(
+                    R.string.alert_predictive_subline,
+                    rateText,
+                    "${alert.currentCelsius}°C"
+                ),
                 style = FruitLogixTheme.typography.bodySmall,
                 color = FruitLogixTheme.colors.textOnDark.copy(alpha = 0.8f)
             )
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Bottom row: location + action button
+            // Canvas Sparkline
+            val ceilingLabel = stringResource(R.string.alert_predictive_ceiling, "${alert.thresholdCelsius}°C")
+            SparklineCanvas(
+                readings = alert.readings,
+                currentCelsius = alert.currentCelsius,
+                thresholdCelsius = alert.thresholdCelsius,
+                minutesToBreach = alert.minutesToBreach,
+                ceilingLabel = ceilingLabel,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+            )
+
+            Spacer(modifier = Modifier.height(Spacing.sm))
+
+            // Bottom row: IMMEDIATE ACTION badge + Review reefer lime button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AppIcon(
-                        id = R.drawable.ic_navigation,
-                        contentDescription = null,
-                        tint = FruitLogixTheme.colors.textOnDark,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = alert.locationLine,
-                        style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textOnDark.copy(alpha = 0.8f)
-                    )
-                }
+                StatusBadge(
+                    text = stringResource(R.string.alert_immediate_action),
+                    type = StatusBadgeType.WARNING
+                )
                 PrimaryButton(
-                    text = alert.actionButtonText,
-                    onClick = {},
-                    trailingIcon = {
-                        AppIcon(
-                            id = R.drawable.ic_arrow_forward,
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.onPrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                    text = stringResource(R.string.alert_review_reefer),
+                    onClick = {}
                 )
             }
         }
+    }
+}
+
+// =============================================================================
+// Sparkline drawn with Compose Canvas (No third-party libraries)
+// =============================================================================
+@Composable
+private fun SparklineCanvas(
+    readings: List<TemperatureReading>,
+    currentCelsius: Double,
+    thresholdCelsius: Double,
+    minutesToBreach: Int,
+    ceilingLabel: String,
+    modifier: Modifier = Modifier
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val lineColor = FruitLogixTheme.colors.primary
+    val thresholdColor = FruitLogixTheme.colors.warning
+    val labelStyle = FruitLogixTheme.typography.labelSmall.copy(color = FruitLogixTheme.colors.textMuted)
+
+    Canvas(modifier = modifier) {
+        if (readings.isEmpty()) return@Canvas
+
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+
+        val historyMinMinutesAgo = readings.maxOfOrNull { it.minutesAgo } ?: 18
+        val totalMinutes = (historyMinMinutesAgo + minutesToBreach).toDouble()
+        if (totalMinutes <= 0.0) return@Canvas
+
+        val minTemp = (readings.minOfOrNull { it.celsius } ?: currentCelsius) - 0.4
+        val maxTemp = thresholdCelsius + 0.4
+        val tempRange = maxTemp - minTemp
+        if (tempRange <= 0.0) return@Canvas
+
+        fun getX(minutesAgo: Double): Float {
+            val progress = (historyMinMinutesAgo - minutesAgo) / totalMinutes
+            return (progress * canvasWidth).toFloat()
+        }
+
+        fun getY(temp: Double): Float {
+            val progress = (temp - minTemp) / tempRange
+            return (canvasHeight - (progress * canvasHeight)).toFloat()
+        }
+
+        // 1. Dashed threshold ceiling line
+        val thresholdY = getY(thresholdCelsius)
+        val dashEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)
+
+        drawLine(
+            color = thresholdColor,
+            start = Offset(0f, thresholdY),
+            end = Offset(canvasWidth, thresholdY),
+            strokeWidth = 2f,
+            pathEffect = dashEffect
+        )
+
+        // Draw ceiling text label
+        val textLayout = textMeasurer.measure(
+            text = ceilingLabel,
+            style = labelStyle
+        )
+        drawText(
+            textLayoutResult = textLayout,
+            topLeft = Offset(8f, (thresholdY - textLayout.size.height - 4f).coerceAtLeast(0f))
+        )
+
+        // Sort readings from past to present
+        val sortedReadings = readings.sortedByDescending { it.minutesAgo }
+
+        // 2. Solid lime line for history
+        val historyPath = Path().apply {
+            sortedReadings.forEachIndexed { index, reading ->
+                val px = getX(reading.minutesAgo.toDouble())
+                val py = getY(reading.celsius)
+                if (index == 0) {
+                    moveTo(px, py)
+                } else {
+                    lineTo(px, py)
+                }
+            }
+        }
+
+        drawPath(
+            path = historyPath,
+            color = lineColor,
+            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+
+        // 3. Dashed line for projection
+        val currentX = getX(0.0)
+        val currentY = getY(currentCelsius)
+        val breachX = getX(-minutesToBreach.toDouble())
+        val breachY = getY(thresholdCelsius)
+
+        drawLine(
+            color = lineColor,
+            start = Offset(currentX, currentY),
+            end = Offset(breachX, breachY),
+            strokeWidth = 3.dp.toPx(),
+            pathEffect = dashEffect,
+            cap = StrokeCap.Round
+        )
+
+        // 4. Dot marking current reading
+        drawCircle(
+            color = lineColor,
+            radius = 5.dp.toPx(),
+            center = Offset(currentX, currentY)
+        )
+        drawCircle(
+            color = Color.Black,
+            radius = 2.dp.toPx(),
+            center = Offset(currentX, currentY)
+        )
     }
 }
 
@@ -458,7 +642,6 @@ private fun KpiGrid(kpis: List<KpiData>) {
                         KpiTile(kpi = kpi)
                     }
                 }
-                // Fill with empty space if odd count
                 if (rowKpis.size == 1) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -613,47 +796,64 @@ private fun SegmentedBar(segments: List<SegmentedBarSegment>) {
 }
 
 // =============================================================================
-// Preview
+// Previews for all 3 States
 // =============================================================================
-@Preview(showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
+@Preview(name = "HomeScreen - Predictive State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
 @Composable
-private fun HomeScreenPreview() {
+private fun HomeScreenPreview_Predictive() {
+    val repo = FakeDashboardRepository()
+    val data = repo.getDashboardData()
     val previewState = HomeUiState(
         isLoading = false,
-        greeting = GreetingInfo(
-            dateLine = "Thursday, Oct 1, 2026",
-            shiftLabel = "Active Morning Shift",
-            userName = "Carlos",
-            hubDescription = "Fruit Distribution Tactical Hub • Pacific Sector"
-        ),
-        priorityActions = listOf(
-            PriorityAction("Assign Producer", "Link new lots", R.drawable.ic_assign_producer, PriorityActionStyle.DARK),
-            PriorityAction("Dispatch Fleet", "3 reefers ready", R.drawable.ic_dispatch_truck, PriorityActionStyle.LIME),
-            PriorityAction("Alerts", "2 anomalies", R.drawable.ic_alert_diamond, PriorityActionStyle.DANGER)
-        ),
+        greeting = data.greeting,
+        priorityActions = data.priorityActions,
         priorityReadyCount = 3,
-        criticalAlert = CriticalAlert(
-            title = "CRITICAL THERMAL DEVIATION",
-            badgeText = "IMMEDIATE ACTION",
-            unitLabel = "Unit FL-408",
-            temperatureValue = "6.8°C",
-            routeDescription = "Michoacán Hass • Max limit: 4.0°C (+2.8°C rising)",
-            locationLine = "KM 184 • Toluca Expy",
-            actionButtonText = "REVIEW REEFER"
-        ),
-        kpis = listOf(
-            KpiData("Active Orders", R.drawable.ic_orders, "48", "+12.5% vs yesterday", true, 0.72f),
-            KpiData("Daily Deliveries", R.drawable.ic_verified, "32", footerLine1 = "Avg ETA: 42 min", footerBadgeText = "On time", footerBadgeType = KpiBadgeType.SUCCESS),
-            KpiData("Fruit Quality", R.drawable.ic_shield_check, "98.4%", footerLine1 = "Last 200 lots", footerLine2 = "Grade A Certified"),
-            KpiData(
-                "IoT Alerts", R.drawable.ic_sensor_waves, "03",
-                footerLine1 = "2 Critical • 1 Warning",
-                segmentedBarSegments = listOf(
-                    SegmentedBarSegment(2f, KpiBadgeType.DANGER),
-                    SegmentedBarSegment(1f, KpiBadgeType.WARNING)
-                )
-            )
+        predictiveAlert = data.predictiveAlert,
+        kpis = data.kpis
+    )
+
+    FruitLogixTheme {
+        HomeScreenContent(
+            state = previewState,
+            onLanguageSelected = {}
         )
+    }
+}
+
+@Preview(name = "HomeScreen - Nominal State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
+@Composable
+private fun HomeScreenPreview_Nominal() {
+    val repo = FakeDashboardRepository()
+    val data = repo.getDashboardData()
+    val previewState = HomeUiState(
+        isLoading = false,
+        greeting = data.greeting,
+        priorityActions = data.priorityActions,
+        priorityReadyCount = 3,
+        predictiveAlert = repo.getNominalAlertData(),
+        kpis = data.kpis
+    )
+
+    FruitLogixTheme {
+        HomeScreenContent(
+            state = previewState,
+            onLanguageSelected = {}
+        )
+    }
+}
+
+@Preview(name = "HomeScreen - Breached State", showBackground = true, backgroundColor = 0xFFE8F3E3, widthDp = 390, heightDp = 844)
+@Composable
+private fun HomeScreenPreview_Breached() {
+    val repo = FakeDashboardRepository()
+    val data = repo.getDashboardData()
+    val previewState = HomeUiState(
+        isLoading = false,
+        greeting = data.greeting,
+        priorityActions = data.priorityActions,
+        priorityReadyCount = 3,
+        predictiveAlert = repo.getBreachedAlertData(),
+        kpis = data.kpis
     )
 
     FruitLogixTheme {
