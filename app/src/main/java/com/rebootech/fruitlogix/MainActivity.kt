@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme {
+            FruitLogixTheme {
                 val navController = rememberNavController()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),

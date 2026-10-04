@@ -1,4 +1,4 @@
-package com.rebootech.fruitlogix.profilesManagement.presentation
+package com.rebootech.fruitlogix.fleetManagement.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,13 +10,13 @@ import androidx.compose.ui.res.stringResource
 import com.rebootech.fruitlogix.R
 
 @Composable
-fun ProducersScreen(
+fun FleetResourcesScreen(
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = stringResource(id = R.string.screen_producers_title))
+        Text(text = stringResource(id = R.string.screen_fleet_resources_title))
     }
 }

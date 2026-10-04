@@ -10,13 +10,13 @@ import androidx.compose.ui.res.stringResource
 import com.rebootech.fruitlogix.R
 
 @Composable
-fun ProducersScreen(
+fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = stringResource(id = R.string.screen_producers_title))
+        Text(text = stringResource(id = R.string.screen_profile_title))
     }
 }

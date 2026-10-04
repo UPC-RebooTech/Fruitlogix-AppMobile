@@ -5,11 +5,14 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.rebootech.fruitlogix.paymentManagement.presentation.InvoicesScreen
 import com.rebootech.fruitlogix.app.dashboard.presentation.HomeScreen
+import com.rebootech.fruitlogix.fleetManagement.fleetManagementGraph
+import com.rebootech.fruitlogix.infrastructureIot.infrastructureIotGraph
 import com.rebootech.fruitlogix.logisticsMonitoring.presentation.FleetScreen
 import com.rebootech.fruitlogix.orderManagement.presentation.OrdersScreen
-import com.rebootech.fruitlogix.profilesManagement.presentation.MoreScreen
+import com.rebootech.fruitlogix.paymentManagement.presentation.InvoicesScreen
+import com.rebootech.fruitlogix.profilesManagement.profilesManagementGraph
+import com.rebootech.fruitlogix.qualityControl.qualityControlGraph
 
 @Composable
 fun AppNavHost(
@@ -34,8 +37,11 @@ fun AppNavHost(
         composable(Route.Invoices.route) {
             InvoicesScreen()
         }
-        composable(Route.More.route) {
-            MoreScreen()
-        }
+
+        // Bounded context nav graphs
+        infrastructureIotGraph(navController)
+        qualityControlGraph(navController)
+        profilesManagementGraph(navController)
+        fleetManagementGraph(navController)
     }
 }

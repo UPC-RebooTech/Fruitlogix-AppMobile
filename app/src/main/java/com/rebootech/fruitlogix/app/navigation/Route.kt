@@ -14,13 +14,16 @@ sealed class Route(
     object Fleet : Route("fleet", R.string.nav_fleet, R.drawable.ic_fleet)
     object Invoices : Route("invoices", R.string.nav_invoices, R.drawable.ic_invoices)
     object More : Route("more", R.string.nav_more, R.drawable.ic_more)
+    object Producers : Route("producers", R.string.nav_producers, R.drawable.ic_producers)
 }
 
-val bottomNavRoutes = listOf(
+val primaryNavRoutes = listOf(
     Route.Home,
     Route.Orders,
     Route.Fleet,
-    Route.Invoices,
-    Route.More
+    Route.Invoices
 )
+
+val bottomNavRoutes = primaryNavRoutes
+
 

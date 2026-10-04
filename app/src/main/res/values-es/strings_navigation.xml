@@ -1,0 +1,8 @@
+<resources>
+    <!-- More Menu Item Labels (ES) -->
+    <string name="menu_label_sensors">Sensores</string>
+    <string name="menu_label_quality">Calidad</string>
+    <string name="menu_label_producers">Productores</string>
+    <string name="menu_label_drivers">Conductores</string>
+    <string name="menu_label_profile">Perfil</string>
+</resources>
