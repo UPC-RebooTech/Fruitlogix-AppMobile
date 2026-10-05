@@ -280,5 +280,30 @@
 
     <string name="orders_scan_reception">Escanear recepción de lote</string>
 
+    <!-- Billing -->
+    <string name="billing_title">Facturas y facturación</string>
+    <string name="billing_subtitle">Gestiona las cuentas por cobrar y por pagar desde tu celular.</string>
+
+    <string name="billing_receivables">Cuentas por cobrar</string>
+    <string name="billing_payables">Cuentas por pagar</string>
+    <string name="billing_outstanding">Pendiente</string>
+
+    <string name="billing_filters">Filtrar facturación</string>
+    <string name="billing_filter_date">Fecha</string>
+    <string name="billing_filter_date_example">Ej. 24 Oct</string>
+    <string name="billing_filter_status">Estado</string>
+    <string name="billing_clear_filters">Limpiar filtros</string>
+
+    <string name="billing_status_all">Todos</string>
+    <string name="billing_status_pending">Pendiente</string>
+    <string name="billing_status_paid">Pagado</string>
+    <string name="billing_status_overdue">Vencido</string>
+
+    <string name="billing_empty_title">Sin registros de facturación</string>
+    <string name="billing_empty_message">Aún no existen facturas registradas.</string>
+
+    <string name="billing_no_results_title">No se encontraron resultados</string>
+    <string name="billing_no_results_message">Ninguna factura coincide con los filtros aplicados.</string>
+
 
 </resources>

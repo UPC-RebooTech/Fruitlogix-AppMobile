@@ -293,4 +293,29 @@
 
     <string name="orders_scan_reception">Scan lot reception</string>
 
+    <!-- Billing -->
+    <string name="billing_title">Invoices &amp; Billing</string>
+    <string name="billing_subtitle">Manage receivables and payables from your mobile device.</string>
+
+    <string name="billing_receivables">Receivables</string>
+    <string name="billing_payables">Payables</string>
+    <string name="billing_outstanding">Outstanding</string>
+
+    <string name="billing_filters">Filter billing</string>
+    <string name="billing_filter_date">Date</string>
+    <string name="billing_filter_date_example">E.g. 24 Oct</string>
+    <string name="billing_filter_status">Status</string>
+    <string name="billing_clear_filters">Clear filters</string>
+
+    <string name="billing_status_all">All</string>
+    <string name="billing_status_pending">Pending</string>
+    <string name="billing_status_paid">Paid</string>
+    <string name="billing_status_overdue">Overdue</string>
+
+    <string name="billing_empty_title">No billing records</string>
+    <string name="billing_empty_message">There are no invoices registered yet.</string>
+
+    <string name="billing_no_results_title">No results found</string>
+    <string name="billing_no_results_message">No invoices match the applied filters.</string>
+
 </resources>

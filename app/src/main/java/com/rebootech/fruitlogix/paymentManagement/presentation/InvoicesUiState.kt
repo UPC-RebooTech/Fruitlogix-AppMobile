@@ -6,7 +6,10 @@ import com.rebootech.fruitlogix.paymentManagement.domain.model.InvoiceType
 
 data class InvoicesUiState(
     val isLoading: Boolean = true,
-    val invoices: List<Invoice> = emptyList()
+    val allInvoices: List<Invoice> = emptyList(),
+    val invoices: List<Invoice> = emptyList(),
+    val dateFilter: String = "",
+    val statusFilter: InvoiceStatus? = null
 ) {
 
     val receivables: List<Invoice>
@@ -21,22 +24,19 @@ data class InvoicesUiState(
 
     val outstandingReceivables: Double
         get() = receivables
-            .filter {
-                it.status != InvoiceStatus.PAID
-            }
-            .sumOf {
-                it.amount
-            }
+            .filter { it.status != InvoiceStatus.PAID }
+            .sumOf { it.amount }
 
     val outstandingPayables: Double
         get() = payables
-            .filter {
-                it.status != InvoiceStatus.PAID
-            }
-            .sumOf {
-                it.amount
-            }
+            .filter { it.status != InvoiceStatus.PAID }
+            .sumOf { it.amount }
 
     val isEmpty: Boolean
-        get() = !isLoading && invoices.isEmpty()
+        get() = !isLoading && allInvoices.isEmpty()
+
+    val hasNoResults: Boolean
+        get() = !isLoading &&
+                allInvoices.isNotEmpty() &&
+                invoices.isEmpty()
 }
