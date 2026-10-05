@@ -4,6 +4,7 @@ object OrderManagementRoutes {
     const val CreateOrder = "order_management_create"
     const val EditOrder = "order_management_edit/{orderId}"
     const val OrderHistory = "order_management_history"
+    const val ScanReception = "order_management_scan_reception"
 
     fun editOrder(orderId: String): String {
         return "order_management_edit/$orderId"
