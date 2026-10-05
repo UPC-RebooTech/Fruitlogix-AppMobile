@@ -200,4 +200,15 @@
     <string name="create_order_success_message">Order %1$s was registered successfully.</string>
     <string name="create_order_success_button">Back to orders</string>
 
+    <!-- Edit Order -->
+    <string name="order_edit">Edit order</string>
+    <string name="edit_order_back">← Back to orders</string>
+    <string name="edit_order_title">Edit order</string>
+    <string name="edit_order_subtitle">Order %1$s</string>
+    <string name="edit_order_blocked">This order can no longer be edited because it is not pending.</string>
+    <string name="edit_order_save">Save changes</string>
+    <string name="edit_order_success_title">Order updated</string>
+    <string name="edit_order_success_message">The order was updated successfully.</string>
+    <string name="edit_order_success_button">Back to orders</string>
+
 </resources>

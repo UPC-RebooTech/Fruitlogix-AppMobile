@@ -10,9 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class EditOrderViewModel(
-    savedStateHandle: SavedStateHandle,
-    private val repository: OrderRepository = FakeOrderRepository()
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val repository: OrderRepository =
+        FakeOrderRepository()
 
     private val orderId: String =
         savedStateHandle["orderId"] ?: ""

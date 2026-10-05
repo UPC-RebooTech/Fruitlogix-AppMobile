@@ -187,4 +187,15 @@
     <string name="create_order_success_message">El pedido %1$s fue registrado correctamente.</string>
     <string name="create_order_success_button">Volver a pedidos</string>
 
+    <!-- Edit Order -->
+    <string name="order_edit">Editar pedido</string>
+    <string name="edit_order_back">← Volver a pedidos</string>
+    <string name="edit_order_title">Editar pedido</string>
+    <string name="edit_order_subtitle">Pedido %1$s</string>
+    <string name="edit_order_blocked">Este pedido ya no puede editarse porque no se encuentra pendiente.</string>
+    <string name="edit_order_save">Guardar cambios</string>
+    <string name="edit_order_success_title">Pedido actualizado</string>
+    <string name="edit_order_success_message">El pedido fue actualizado correctamente.</string>
+    <string name="edit_order_success_button">Volver a pedidos</string>
+
 </resources>
