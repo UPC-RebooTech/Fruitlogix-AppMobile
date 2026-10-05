@@ -43,6 +43,7 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun OrdersScreen(
@@ -51,6 +52,10 @@ fun OrdersScreen(
     onNewOrderClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadOrders()
+    }
 
     OrdersScreenContent(
         state = state,
