@@ -20,7 +20,7 @@ class OrdersViewModel(
         loadOrders()
     }
 
-    private fun loadOrders() {
+    fun loadOrders() {
         val orders = repository.getOrders()
 
         _uiState.value = OrdersUiState(

@@ -8,12 +8,11 @@ import com.rebootech.fruitlogix.orderManagement.domain.repository.OrderRepositor
 
 class FakeOrderRepository : OrderRepository {
 
-    private var nextOrderNumber = 1043
+    companion object {
 
-    private val registeredOrders = mutableListOf<RegisteredOrder>()
+        private var nextOrderNumber = 1043
 
-    override fun getOrders(): List<OrderSummary> {
-        return listOf(
+        private val orders = mutableListOf(
             OrderSummary(
                 id = "FX-1042",
                 clientName = "Supermercados Lima Norte",
@@ -39,6 +38,21 @@ class FakeOrderRepository : OrderRepository {
                 status = OrderStatus.PENDING
             )
         )
+
+        private val registeredOrders =
+            mutableListOf<RegisteredOrder>()
+    }
+
+    override fun getOrders(): List<OrderSummary> {
+        return orders.toList()
+    }
+
+    override fun getOrderById(
+        orderId: String
+    ): OrderSummary? {
+        return orders.firstOrNull {
+            it.id == orderId
+        }
     }
 
     override fun createOrder(
@@ -52,5 +66,37 @@ class FakeOrderRepository : OrderRepository {
         registeredOrders.add(registeredOrder)
 
         return registeredOrder
+    }
+
+    override fun updateOrder(
+        orderId: String,
+        productName: String,
+        quantity: Double,
+        requiredDate: String
+    ): Boolean {
+        val index = orders.indexOfFirst {
+            it.id == orderId
+        }
+
+        if (index == -1) {
+            return false
+        }
+
+        val currentOrder = orders[index]
+
+        if (currentOrder.status != OrderStatus.PENDING) {
+            return false
+        }
+
+        val palletsLabel =
+            currentOrder.quantityLabel.substringBefore("•").trim()
+
+        orders[index] = currentOrder.copy(
+            productName = productName,
+            quantityLabel = "$palletsLabel • $quantity t",
+            deliveryDateLabel = requiredDate
+        )
+
+        return true
     }
 }

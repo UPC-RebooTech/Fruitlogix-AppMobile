@@ -43,18 +43,26 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.TextButton
 
 @Composable
 fun OrdersScreen(
     modifier: Modifier = Modifier,
     viewModel: OrdersViewModel = viewModel(),
-    onNewOrderClick: () -> Unit = {}
+    onNewOrderClick: () -> Unit = {},
+    onEditOrderClick: (String) -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadOrders()
+    }
 
     OrdersScreenContent(
         state = state,
         onNewOrderClick = onNewOrderClick,
+        onEditOrderClick = onEditOrderClick,
         modifier = modifier
     )
 }
@@ -63,6 +71,7 @@ fun OrdersScreen(
 private fun OrdersScreenContent(
     state: OrdersUiState,
     onNewOrderClick: () -> Unit = {},
+    onEditOrderClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedLanguage by remember {
@@ -122,7 +131,12 @@ private fun OrdersScreenContent(
                     items = state.orders,
                     key = { order -> order.id }
                 ) { order ->
-                    OrderCard(order = order)
+                    OrderCard(
+                        order = order,
+                        onEditClick = {
+                            onEditOrderClick(order.id)
+                        }
+                    )
                 }
             }
         }
@@ -173,7 +187,8 @@ private fun OrdersHeader(
 
 @Composable
 private fun OrderCard(
-    order: OrderSummary
+    order: OrderSummary,
+    onEditClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -275,6 +290,20 @@ private fun OrderCard(
                     fontWeight = FontWeight.Medium
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextButton(
+                onClick = onEditClick,
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Text(
+                    text = stringResource(R.string.order_edit),
+                    color = FruitLogixTheme.colors.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
         }
     }
 }

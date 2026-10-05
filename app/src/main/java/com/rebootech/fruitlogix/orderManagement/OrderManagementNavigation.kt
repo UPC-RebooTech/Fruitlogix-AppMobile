@@ -4,6 +4,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.rebootech.fruitlogix.orderManagement.presentation.CreateOrderScreen
+import com.rebootech.fruitlogix.orderManagement.presentation.EditOrderScreen
 
 fun NavGraphBuilder.orderManagementGraph(
     navController: NavHostController
@@ -18,4 +19,16 @@ fun NavGraphBuilder.orderManagementGraph(
             }
         )
     }
+
+    composable(OrderManagementRoutes.EditOrder) {
+        EditOrderScreen(
+            onBackClick = {
+                navController.popBackStack()
+            },
+            onOrderUpdated = {
+                navController.popBackStack()
+            }
+        )
+    }
+
 }
