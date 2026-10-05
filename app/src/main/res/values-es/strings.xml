@@ -162,4 +162,29 @@
     <string name="orders_empty_title">No hay pedidos pendientes</string>
     <string name="orders_empty_message">No se encontraron pedidos pendientes asignados al distribuidor.</string>
 
+    <string name="orders_new_order">Nuevo pedido</string>
+
+    <!-- Create Order -->
+    <string name="create_order_back">← Volver a pedidos</string>
+    <string name="create_order_title">Registrar nuevo pedido</string>
+    <string name="create_order_subtitle">Ingresa los datos requeridos para crear el pedido.</string>
+
+    <string name="create_order_product">Variedad de fruta</string>
+    <string name="create_order_product_example">Ej. Palta Hass</string>
+    <string name="create_order_product_error">Selecciona o ingresa una variedad de fruta.</string>
+
+    <string name="create_order_quantity">Cantidad</string>
+    <string name="create_order_quantity_example">Ej. 12.5</string>
+    <string name="create_order_quantity_error">Ingresa una cantidad mayor que cero.</string>
+
+    <string name="create_order_date">Fecha requerida</string>
+    <string name="create_order_date_example">dd/mm/aaaa</string>
+    <string name="create_order_date_error">Ingresa la fecha requerida.</string>
+
+    <string name="create_order_submit">Registrar pedido</string>
+
+    <string name="create_order_success_title">Pedido registrado</string>
+    <string name="create_order_success_message">El pedido %1$s fue registrado correctamente.</string>
+    <string name="create_order_success_button">Volver a pedidos</string>
+
 </resources>

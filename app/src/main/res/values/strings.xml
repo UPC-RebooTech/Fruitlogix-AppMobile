@@ -175,4 +175,29 @@
     <string name="orders_empty_title">No pending orders</string>
     <string name="orders_empty_message">There are no pending orders assigned to the distributor.</string>
 
+    <string name="orders_new_order">New order</string>
+
+    <!-- Create Order -->
+    <string name="create_order_back">← Back to orders</string>
+    <string name="create_order_title">Register new order</string>
+    <string name="create_order_subtitle">Enter the required information to create the order.</string>
+
+    <string name="create_order_product">Fruit variety</string>
+    <string name="create_order_product_example">E.g. Hass avocado</string>
+    <string name="create_order_product_error">Select or enter a fruit variety.</string>
+
+    <string name="create_order_quantity">Quantity</string>
+    <string name="create_order_quantity_example">E.g. 12.5</string>
+    <string name="create_order_quantity_error">Enter a quantity greater than zero.</string>
+
+    <string name="create_order_date">Required date</string>
+    <string name="create_order_date_example">dd/mm/yyyy</string>
+    <string name="create_order_date_error">Enter the required date.</string>
+
+    <string name="create_order_submit">Register order</string>
+
+    <string name="create_order_success_title">Order registered</string>
+    <string name="create_order_success_message">Order %1$s was registered successfully.</string>
+    <string name="create_order_success_button">Back to orders</string>
+
 </resources>

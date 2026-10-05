@@ -1,10 +1,16 @@
 package com.rebootech.fruitlogix.orderManagement.data
 
+import com.rebootech.fruitlogix.orderManagement.domain.model.OrderRegistration
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderSummary
+import com.rebootech.fruitlogix.orderManagement.domain.model.RegisteredOrder
 import com.rebootech.fruitlogix.orderManagement.domain.repository.OrderRepository
 
 class FakeOrderRepository : OrderRepository {
+
+    private var nextOrderNumber = 1043
+
+    private val registeredOrders = mutableListOf<RegisteredOrder>()
 
     override fun getOrders(): List<OrderSummary> {
         return listOf(
@@ -33,5 +39,18 @@ class FakeOrderRepository : OrderRepository {
                 status = OrderStatus.PENDING
             )
         )
+    }
+
+    override fun createOrder(
+        order: OrderRegistration
+    ): RegisteredOrder {
+        val registeredOrder = RegisteredOrder(
+            id = "FX-${nextOrderNumber++}",
+            registration = order
+        )
+
+        registeredOrders.add(registeredOrder)
+
+        return registeredOrder
     }
 }
