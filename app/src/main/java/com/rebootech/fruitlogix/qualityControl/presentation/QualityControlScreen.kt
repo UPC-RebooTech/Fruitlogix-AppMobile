@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Paleta de colores de FruitLogix
 private val BackgroundDark = Color(0xFF141A14)
 private val CardBackground = Color(0xFF1E261D)
 private val CardBorder = Color(0xFF2E382C)
@@ -26,6 +28,7 @@ private val TextMuted = Color(0xFF9EABA0)
 private val ErrorRed = Color(0xFFE57373)
 private val SuccessGreen = Color(0xFF81C784)
 
+// Modelo para Reportes de Calidad de Lote (US10 + US53)
 data class QualityReport(
     val id: String,
     val lotCode: String,
@@ -34,7 +37,8 @@ data class QualityReport(
     val temp: String,
     val humidity: String,
     var status: QualityStatus = QualityStatus.PENDING,
-    var rejectionReason: String = ""
+    var rejectionReason: String = "",
+    val isPendingSync: Boolean = false
 )
 
 enum class QualityStatus { PENDING, APPROVED, REJECTED }
@@ -43,10 +47,12 @@ enum class QualityStatus { PENDING, APPROVED, REJECTED }
 fun QualityControlScreen(
     modifier: Modifier = Modifier
 ) {
+    var selectedTab by remember { mutableIntStateOf(0) } // 0: Lotes, 1: Inspección Campo
     var showRejectDialog by remember { mutableStateOf(false) }
     var selectedReportForRejection by remember { mutableStateOf<QualityReport?>(null) }
     var rejectionInputText by remember { mutableStateOf("") }
 
+    // Lista interactiva de reportes de lotes
     val reportsList = remember {
         mutableStateListOf(
             QualityReport("1", "LOT-2026-089", "Palta Hass Exportación", "Agropecuaria El Valle", "6 °C", "85%"),
@@ -73,32 +79,81 @@ fun QualityControlScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Validación de lotes recibidos (US10)",
+                text = "Inspección de lotes y validación de calidad",
                 color = TextMuted,
                 fontSize = 12.sp
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
+            // Selector de Pestañas sin advertencias (TabRow dentro de Surface)
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = CardBackground,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                items(reportsList) { report ->
-                    QualityReportCard(
-                        report = report,
-                        onApprove = {
-                            report.status = QualityStatus.APPROVED
-                        },
-                        onReject = {
-                            selectedReportForRejection = report
-                            showRejectDialog = true
-                        }
+                SecondaryTabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = CardBackground,
+                    contentColor = AccentLime
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = { selectedTab = 0 },
+                        text = { Text("Validar Lotes", fontWeight = FontWeight.Bold) }
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = { selectedTab = 1 },
+                        text = { Text("Formulario Campo", fontWeight = FontWeight.Bold) }
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (selectedTab == 0) {
+                // US10: Lista de validación de lotes
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(reportsList) { report ->
+                        QualityReportCard(
+                            report = report,
+                            onApprove = {
+                                report.status = QualityStatus.APPROVED
+                            },
+                            onReject = {
+                                selectedReportForRejection = report
+                                showRejectDialog = true
+                            }
+                        )
+                    }
+                }
+            } else {
+                // US53: Formulario de inspección de campo offline
+                FieldInspectionForm(
+                    onSaveInspection = { newLot, product, temp, hum ->
+                        reportsList.add(
+                            0,
+                            QualityReport(
+                                id = (reportsList.size + 1).toString(),
+                                lotCode = newLot,
+                                productName = product,
+                                producerName = "Inspección Campo (Offline)",
+                                temp = "$temp °C",
+                                humidity = "$hum%",
+                                isPendingSync = true
+                            )
+                        )
+                        selectedTab = 0
+                    }
+                )
+            }
         }
 
+        // Diálogo para Requerir Motivo Obligatorio de Rechazo (US10)
         if (showRejectDialog && selectedReportForRejection != null) {
             AlertDialog(
                 onDismissRequest = { showRejectDialog = false },
@@ -156,6 +211,7 @@ fun QualityControlScreen(
     }
 }
 
+// Tarjeta para Validar Lote (US10 + US53)
 @Composable
 private fun QualityReportCard(
     report: QualityReport,
@@ -175,9 +231,21 @@ private fun QualityReportCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(report.lotCode, color = AccentLime, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(report.lotCode, color = AccentLime, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                if (report.isPendingSync) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFF332B14))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text("Pendiente de sincronización", color = Color(0xFFFFC107), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
 
-            // Badge Estado
             val (badgeBg, badgeText, statusLabel) = when (report.status) {
                 QualityStatus.PENDING -> Triple(Color(0xFF332B14), Color(0xFFFFC107), "Pendiente")
                 QualityStatus.APPROVED -> Triple(Color(0xFF1B331E), SuccessGreen, "Aprobado")
@@ -195,7 +263,7 @@ private fun QualityReportCard(
 
         Spacer(modifier = Modifier.height(6.dp))
         Text(report.productName, color = TextWhite, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        Text("Productor: ${report.producerName}", color = TextMuted, fontSize = 12.sp)
+        Text("Origen: ${report.producerName}", color = TextMuted, fontSize = 12.sp)
 
         Spacer(modifier = Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -217,7 +285,7 @@ private fun QualityReportCard(
                 OutlinedButton(
                     onClick = onReject,
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed),
-                    border = BorderStroke(1.dp, ErrorRed), // Solución al error de sintaxis
+                    border = BorderStroke(1.dp, ErrorRed),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp)
                 ) {
@@ -232,6 +300,128 @@ private fun QualityReportCard(
                     Text("Aprobar", fontWeight = FontWeight.Bold)
                 }
             }
+        }
+    }
+}
+
+// Formulario de inspección de campo offline (US53)
+@Composable
+private fun FieldInspectionForm(
+    onSaveInspection: (lot: String, product: String, temp: String, hum: String) -> Unit
+) {
+    var lotInput by remember { mutableStateOf("") }
+    var productInput by remember { mutableStateOf("") }
+    var tempInput by remember { mutableStateOf("") }
+    var humInput by remember { mutableStateOf("") }
+
+    var tempError by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(CardBackground)
+            .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Inspección en Campo", color = TextWhite, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(Color(0xFF1B331E))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text("Modo Offline", color = SuccessGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        OutlinedTextField(
+            value = lotInput,
+            onValueChange = { lotInput = it },
+            label = { Text("Código de Lote *", color = TextMuted) },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
+                focusedBorderColor = AccentLime, unfocusedBorderColor = CardBorder,
+                focusedContainerColor = BackgroundDark, unfocusedContainerColor = BackgroundDark
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = productInput,
+            onValueChange = { productInput = it },
+            label = { Text("Producto (ej. Palta Hass)", color = TextMuted) },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
+                focusedBorderColor = AccentLime, unfocusedBorderColor = CardBorder,
+                focusedContainerColor = BackgroundDark, unfocusedContainerColor = BackgroundDark
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Validación de rango de temperatura (US53 - Escenario 2)
+        OutlinedTextField(
+            value = tempInput,
+            onValueChange = {
+                tempInput = it
+                val tempVal = it.toDoubleOrNull()
+                tempError = tempVal != null && (tempVal < 0 || tempVal > 40)
+            },
+            label = { Text("Temperatura (°C)", color = TextMuted) },
+            isError = tempError,
+            supportingText = {
+                if (tempError) {
+                    Text("Valor fuera de rango permitido (0°C a 40°C)", color = ErrorRed)
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
+                focusedBorderColor = if (tempError) ErrorRed else AccentLime,
+                unfocusedBorderColor = if (tempError) ErrorRed else CardBorder,
+                focusedContainerColor = BackgroundDark, unfocusedContainerColor = BackgroundDark
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = humInput,
+            onValueChange = { humInput = it },
+            label = { Text("Humedad (%)", color = TextMuted) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = TextWhite, unfocusedTextColor = TextWhite,
+                focusedBorderColor = AccentLime, unfocusedBorderColor = CardBorder,
+                focusedContainerColor = BackgroundDark, unfocusedContainerColor = BackgroundDark
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Button(
+            onClick = {
+                if (lotInput.isNotBlank() && !tempError) {
+                    onSaveInspection(
+                        lotInput,
+                        productInput.ifBlank { "Producto General" },
+                        tempInput.ifBlank { "5" },
+                        humInput.ifBlank { "80" }
+                    )
+                }
+            },
+            enabled = !tempError && lotInput.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(containerColor = AccentLime, contentColor = BackgroundDark),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Guardar", fontWeight = FontWeight.Bold)
         }
     }
 }
