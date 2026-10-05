@@ -217,5 +217,18 @@
 
     <string name="delete_order_ok">Aceptar</string>
 
+    <!-- Order History -->
+    <string name="orders_history">Ver historial de pedidos</string>
+    <string name="order_history_back">← Volver a pedidos</string>
+    <string name="order_history_title">Historial de pedidos</string>
+    <string name="order_history_subtitle">Consulta los pedidos finalizados anteriormente.</string>
+
+    <string name="order_history_delivered">Entregado</string>
+    <string name="order_history_cancelled">Cancelado</string>
+    <string name="order_history_date">Finalizado: %1$s</string>
+
+    <string name="order_history_empty_title">Sin historial de pedidos</string>
+    <string name="order_history_empty_message">Aún no hay pedidos finalizados en el historial.</string>
+
 
 </resources>

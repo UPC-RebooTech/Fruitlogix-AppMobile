@@ -39,6 +39,11 @@ fun AppNavHost(
                     navController.navigate(
                         OrderManagementRoutes.editOrder(orderId)
                     )
+                },
+                onHistoryClick = {
+                    navController.navigate(
+                        OrderManagementRoutes.OrderHistory
+                    )
                 }
             )
         }
