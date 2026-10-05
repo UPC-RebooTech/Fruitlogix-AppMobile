@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.logisticsMonitoring.domain.repository
 
+import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchDetail
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchSummary
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.FleetAlert
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.Sensor
@@ -24,4 +25,7 @@ interface FleetRepository {
 
     /** Returns the count of active alerts. */
     fun getAlertCount(): Int = getFleetAlerts().size
-}
+
+    /** Returns full dispatch detail for a specific unit ID. */
+    fun getDispatchDetail(unitId: String): DispatchDetail?
+}

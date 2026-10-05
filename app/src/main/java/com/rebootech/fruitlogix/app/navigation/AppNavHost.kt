@@ -16,6 +16,9 @@ import com.rebootech.fruitlogix.qualityControl.qualityControlGraph
 import com.rebootech.fruitlogix.orderManagement.OrderManagementRoutes
 import com.rebootech.fruitlogix.orderManagement.orderManagementGraph
 
+import com.rebootech.fruitlogix.logisticsMonitoring.LogisticsMonitoringRoutes
+import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringGraph
+
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -48,7 +51,11 @@ fun AppNavHost(
             )
         }
         composable(Route.Fleet.route) {
-            FleetScreen()
+            FleetScreen(
+                onDispatchClick = { unitId ->
+                    navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
+                }
+            )
         }
         composable(Route.Invoices.route) {
             InvoicesScreen()
@@ -60,5 +67,6 @@ fun AppNavHost(
         profilesManagementGraph(navController)
         fleetManagementGraph(navController)
         orderManagementGraph(navController)
+        logisticsMonitoringGraph(navController)
     }
 }
