@@ -8,7 +8,18 @@ interface OrderRepository {
 
     fun getOrders(): List<OrderSummary>
 
+    fun getOrderById(
+        orderId: String
+    ): OrderSummary?
+
     fun createOrder(
         order: OrderRegistration
     ): RegisteredOrder
+
+    fun updateOrder(
+        orderId: String,
+        productName: String,
+        quantity: Double,
+        requiredDate: String
+    ): Boolean
 }

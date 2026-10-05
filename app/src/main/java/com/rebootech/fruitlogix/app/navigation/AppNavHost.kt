@@ -34,6 +34,11 @@ fun AppNavHost(
             OrdersScreen(
                 onNewOrderClick = {
                     navController.navigate(OrderManagementRoutes.CreateOrder)
+                },
+                onEditOrderClick = { orderId ->
+                    navController.navigate(
+                        OrderManagementRoutes.editOrder(orderId)
+                    )
                 }
             )
         }
