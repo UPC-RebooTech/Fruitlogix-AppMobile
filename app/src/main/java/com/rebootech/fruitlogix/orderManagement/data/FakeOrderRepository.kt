@@ -52,18 +52,21 @@ class FakeOrderRepository : OrderRepository {
             OrderHistoryItem(
                 id = "FX-1035",
                 clientName = "Supermercados Lima Centro",
+                producerName = "Finca Los Andes",
                 completedDateLabel = "21 Oct, 16:20",
                 status = OrderHistoryStatus.DELIVERED
             ),
             OrderHistoryItem(
                 id = "FX-1032",
                 clientName = "Distribuidora Pacífico",
+                producerName = "Agro Valle Verde",
                 completedDateLabel = "18 Oct, 10:45",
                 status = OrderHistoryStatus.DELIVERED
             ),
             OrderHistoryItem(
                 id = "FX-1028",
                 clientName = "Mercados del Sur",
+                producerName = "Campos del Norte",
                 completedDateLabel = "14 Oct, 09:10",
                 status = OrderHistoryStatus.CANCELLED
             )

@@ -230,5 +230,25 @@
     <string name="order_history_empty_title">Sin historial de pedidos</string>
     <string name="order_history_empty_message">Aún no hay pedidos finalizados en el historial.</string>
 
+    <!-- Order History Filters -->
+    <string name="order_history_filters_title">Filtrar historial</string>
+    <string name="order_history_search">Buscar pedidos</string>
+    <string name="order_history_search_example">ID del pedido o cliente</string>
+
+    <string name="order_history_filter_date">Fecha</string>
+    <string name="order_history_filter_date_example">Ej. 21 Oct</string>
+
+    <string name="order_history_filter_producer">Productor</string>
+    <string name="order_history_filter_producer_example">Ej. Finca Los Andes</string>
+
+    <string name="order_history_filter_status">Estado</string>
+    <string name="order_history_filter_all">Todos</string>
+    <string name="order_history_clear_filters">Limpiar filtros</string>
+
+    <string name="order_history_producer">Productor: %1$s</string>
+
+    <string name="order_history_no_results_title">No se encontraron resultados</string>
+    <string name="order_history_no_results_message">Ningún pedido coincide con los filtros aplicados.</string>
+
 
 </resources>
