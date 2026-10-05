@@ -305,5 +305,7 @@
     <string name="billing_no_results_title">No se encontraron resultados</string>
     <string name="billing_no_results_message">Ninguna factura coincide con los filtros aplicados.</string>
 
+    <string name="billing_export_report">Exportar reporte</string>
+
 
 </resources>

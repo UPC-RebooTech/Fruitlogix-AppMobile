@@ -41,6 +41,10 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
+import com.rebootech.fruitlogix.paymentManagement.data.report.FinancialReportExporter
+import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+
 
 @Composable
 fun InvoicesScreen(
@@ -48,6 +52,8 @@ fun InvoicesScreen(
     viewModel: InvoicesViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    val context = LocalContext.current
 
     var selectedLanguage by remember {
         mutableStateOf(AppLanguage.ES)
@@ -126,6 +132,25 @@ fun InvoicesScreen(
                     onStatusChange = viewModel::onStatusFilterChange,
                     onClear = viewModel::clearFilters
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                PrimaryButton(
+                    text = stringResource(
+                        R.string.billing_export_report
+                    ),
+                    onClick = {
+                        FinancialReportExporter.exportAndShare(
+                            context = context,
+                            invoices = state.invoices,
+                            dateFilter = state.dateFilter,
+                            statusFilter = state.statusFilter
+                        )
+                    },
+                    enabled = state.invoices.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
             }
         }
 

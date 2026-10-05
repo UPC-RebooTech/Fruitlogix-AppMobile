@@ -318,4 +318,6 @@
     <string name="billing_no_results_title">No results found</string>
     <string name="billing_no_results_message">No invoices match the applied filters.</string>
 
+    <string name="billing_export_report">Export report</string>
+
 </resources>
