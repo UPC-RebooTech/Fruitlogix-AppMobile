@@ -10,4 +10,18 @@
     <string name="logistics_status_on_time">A TIEMPO</string>
     <string name="logistics_status_temp_alert">ALERTA TEMP</string>
     <string name="logistics_status_weigh_delay">RETRASO BALANZA</string>
+    <string name="logistics_detail_title">Detalle de Despacho</string>
+    <string name="logistics_driver_title">CONDUCTOR ASIGNADO</string>
+    <string name="logistics_contact_driver">Llamar Conductor</string>
+    <string name="logistics_alert_driver">Alertar Conductor</string>
+    <string name="logistics_reroute">Re-enrutar</string>
+    <string name="logistics_telemetry_title">TELEMETRÍA Y AMBIENTE EN VIVO</string>
+    <string name="logistics_speed">VELOCIDAD</string>
+    <string name="logistics_ambient_temp">AMBIENTE</string>
+    <string name="logistics_battery">BATERÍA / SEÑAL</string>
+    <string name="logistics_chart_title">TELEMETRÍA TÉRMICA REEFER</string>
+    <string name="logistics_milestones_title">PROGRESO DE RUTA Y HITOS</string>
+    <string name="logistics_current_location">POSICIÓN ACTUAL</string>
+    <string name="logistics_sensor_title">SENSOR IOT CONECTADO</string>
+    <string name="logistics_active_dispatches_count">Despachos Activos (%1$d)</string>
 </resources>

@@ -82,7 +82,7 @@ class FakeDashboardRepository {
                 routeDescription = "KM 184 \u2022 Panamericana Norte",
                 statusTextRes = R.string.fleet_status_on_time,
                 statusType = FleetStatusType.ON_TIME,
-                reeferTemp = "4.3\u00b0C",
+                reeferTemp = "3.2\u00b0C",
                 humidity = "84% RH",
                 destEtaOrDelay = "14:50 PET",
                 isDelay = false,

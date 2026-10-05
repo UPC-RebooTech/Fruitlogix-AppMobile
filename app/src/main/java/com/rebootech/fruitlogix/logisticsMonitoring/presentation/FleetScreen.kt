@@ -72,6 +72,7 @@ import com.rebootech.fruitlogix.shared.ui.theme.Spacing
 @Composable
 fun FleetScreen(
     modifier: Modifier = Modifier,
+    onDispatchClick: (String) -> Unit = {},
     viewModel: FleetViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -82,7 +83,7 @@ fun FleetScreen(
         onSensorFilterSelected = viewModel::onSensorFilterSelected,
         onSensorClick = viewModel::onSensorClick,
         onDismissSensorSheet = viewModel::onDismissSensorSheet,
-        onDispatchClick = { /* TODO: navigate to Dispatch Detail screen */ },
+        onDispatchClick = onDispatchClick,
         onLimitsClick = { /* TODO: navigate to Thresholds screen */ },
         modifier = modifier
     )
