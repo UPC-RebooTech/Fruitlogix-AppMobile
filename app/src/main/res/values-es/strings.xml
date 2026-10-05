@@ -198,4 +198,24 @@
     <string name="edit_order_success_message">El pedido fue actualizado correctamente.</string>
     <string name="edit_order_success_button">Volver a pedidos</string>
 
+    <!-- Delete Order -->
+    <string name="order_delete">Eliminar pedido</string>
+
+    <string name="delete_order_confirm_title">Eliminar pedido</string>
+    <string name="delete_order_confirm_message">¿Estás seguro de que deseas eliminar el pedido %1$s?</string>
+    <string name="delete_order_confirm">Eliminar</string>
+    <string name="delete_order_cancel">Cancelar</string>
+
+    <string name="delete_order_success_title">Pedido eliminado</string>
+    <string name="delete_order_success_message">Pedido eliminado correctamente.</string>
+
+    <string name="delete_order_expired_title">Eliminación no disponible</string>
+    <string name="delete_order_expired_message">El plazo de cancelación de 24 horas ha expirado. Este pedido no puede eliminarse.</string>
+
+    <string name="delete_order_error_title">Pedido no encontrado</string>
+    <string name="delete_order_error_message">No se pudo encontrar el pedido seleccionado.</string>
+
+    <string name="delete_order_ok">Aceptar</string>
+
+
 </resources>
