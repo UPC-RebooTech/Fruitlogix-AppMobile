@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
 
-// Colores basados en el Design System de FruitLogix
 private val BackgroundDark = Color(0xFF141A14)
 private val CardBackground = Color(0xFF1E261D)
 private val CardBorder = Color(0xFF2E382C)
@@ -32,7 +31,6 @@ private val TextMuted = Color(0xFF9EABA0)
 fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
-    // Estados simulados para la US23 (Visualizar) y US22 (Gestionar/Editar)
     var isEditing by remember { mutableStateOf(false) }
 
     var fullName by remember { mutableStateOf("Carlos Mendoza") }
@@ -53,7 +51,6 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Header: Avatar e Información Principal
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,7 +100,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Sección de Detalle de Contacto
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,7 +119,6 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (isEditing) {
-                    // MODO EDICIÓN (US22)
                     ProfileTextField(label = "Nombre Completo", value = fullName, onValueChange = { fullName = it })
                     Spacer(modifier = Modifier.height(12.dp))
                     ProfileTextField(label = "Correo Electrónico", value = email, onValueChange = { email = it })
@@ -132,7 +127,6 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     ProfileTextField(label = "RUC Empresa / Operación", value = ruc, onValueChange = { ruc = it })
                 } else {
-                    // MODO VISUALIZACIÓN (US23)
                     ProfileInfoRow(label = "Nombre", value = fullName)
                     ProfileInfoRow(label = "Correo", value = email)
                     ProfileInfoRow(label = "Teléfono", value = phone)
@@ -142,7 +136,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de Acción (Alternar Editar / Guardar)
             Button(
                 onClick = { isEditing = !isEditing },
                 modifier = Modifier
