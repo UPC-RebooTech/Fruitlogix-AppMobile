@@ -148,4 +148,18 @@
     <string name="sensor_sheet_order">Orden vinculada</string>
     <string name="sensor_sheet_last_signal">Última señal</string>
     <string name="sensor_sheet_battery">Batería</string>
+
+    <!-- Order Management -->
+    <string name="orders_title">Gestión de pedidos</string>
+    <string name="orders_subtitle">Pedidos activos para distribución</string>
+    <string name="orders_active_count">%1$d pedidos activos</string>
+    <string name="order_delivery_date">Entrega: %1$s</string>
+
+    <string name="order_status_pending">Pendiente</string>
+    <string name="order_status_in_preparation">En preparación</string>
+    <string name="order_status_on_route">En ruta</string>
+
+    <string name="orders_empty_title">No hay pedidos pendientes</string>
+    <string name="orders_empty_message">No se encontraron pedidos pendientes asignados al distribuidor.</string>
+
 </resources>

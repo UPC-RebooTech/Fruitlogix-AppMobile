@@ -161,4 +161,18 @@
     <string name="sensor_sheet_order">Linked order</string>
     <string name="sensor_sheet_last_signal">Last signal</string>
     <string name="sensor_sheet_battery">Battery</string>
+
+    <!-- Order Management -->
+    <string name="orders_title">Order Management</string>
+    <string name="orders_subtitle">Active orders for distribution</string>
+    <string name="orders_active_count">%1$d active orders</string>
+    <string name="order_delivery_date">Delivery: %1$s</string>
+
+    <string name="order_status_pending">Pending</string>
+    <string name="order_status_in_preparation">In preparation</string>
+    <string name="order_status_on_route">On route</string>
+
+    <string name="orders_empty_title">No pending orders</string>
+    <string name="orders_empty_message">There are no pending orders assigned to the distributor.</string>
+
 </resources>
