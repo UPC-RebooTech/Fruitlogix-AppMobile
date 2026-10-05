@@ -243,4 +243,24 @@
     <string name="order_history_empty_title">No order history</string>
     <string name="order_history_empty_message">There are no completed orders in the history yet.</string>
 
+    <!-- Order History Filters -->
+    <string name="order_history_filters_title">Filter history</string>
+    <string name="order_history_search">Search orders</string>
+    <string name="order_history_search_example">Order ID or client</string>
+
+    <string name="order_history_filter_date">Date</string>
+    <string name="order_history_filter_date_example">E.g. 21 Oct</string>
+
+    <string name="order_history_filter_producer">Producer</string>
+    <string name="order_history_filter_producer_example">E.g. Finca Los Andes</string>
+
+    <string name="order_history_filter_status">Status</string>
+    <string name="order_history_filter_all">All</string>
+    <string name="order_history_clear_filters">Clear filters</string>
+
+    <string name="order_history_producer">Producer: %1$s</string>
+
+    <string name="order_history_no_results_title">No results found</string>
+    <string name="order_history_no_results_message">No orders match the applied filters.</string>
+
 </resources>
