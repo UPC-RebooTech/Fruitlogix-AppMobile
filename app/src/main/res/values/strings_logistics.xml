@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="logistics_dispatch_unit">Unit %1$s</string>
+    <string name="logistics_label_reefer_temp">REEFER TEMP</string>
+    <string name="logistics_label_humidity">HUMIDITY</string>
+    <string name="logistics_label_dock_eta">DOCK ETA</string>
+    <string name="logistics_transit_progress">Transit Progress • %1$d%%</string>
+    <string name="logistics_view_dispatch_detail">View Dispatch Detail ›</string>
+    <string name="logistics_immediate_reefer_diagnostic">Immediate reefer diagnostic →</string>
+    <string name="logistics_status_on_time">ON TIME</string>
+    <string name="logistics_status_temp_alert">TEMP ALERT</string>
+    <string name="logistics_status_weigh_delay">WEIGH STATION DELAY</string>
+    <string name="logistics_detail_title">Dispatch Detail</string>
+    <string name="logistics_driver_title">ASSIGNED DRIVER</string>
+    <string name="logistics_contact_driver">Call Driver</string>
+    <string name="logistics_alert_driver">Alert Driver</string>
+    <string name="logistics_reroute">Re-route</string>
+    <string name="logistics_telemetry_title">LIVE TELEMETRY &amp; AMBIENT</string>
+    <string name="logistics_speed">SPEED</string>
+    <string name="logistics_ambient_temp">AMBIENT</string>
+    <string name="logistics_battery">BATTERY / SIGNAL</string>
+    <string name="logistics_chart_title">REEFER THERMAL TELEMETRY</string>
+    <string name="logistics_milestones_title">ROUTE PROGRESS &amp; MILESTONES</string>
+    <string name="logistics_current_location">CURRENT POSITION</string>
+    <string name="logistics_sensor_title">CONNECTED IOT SENSOR</string>
+    <string name="logistics_active_dispatches_count">Active Dispatches (%1$d)</string>
+</resources>

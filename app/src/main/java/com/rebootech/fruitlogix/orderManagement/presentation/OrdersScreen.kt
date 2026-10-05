@@ -47,13 +47,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
 import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 
 @Composable
 fun OrdersScreen(
     modifier: Modifier = Modifier,
     viewModel: OrdersViewModel = viewModel(),
     onNewOrderClick: () -> Unit = {},
-    onEditOrderClick: (String) -> Unit = {}
+    onEditOrderClick: (String) -> Unit = {},
+    onHistoryClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -66,7 +68,8 @@ fun OrdersScreen(
         onNewOrderClick = onNewOrderClick,
         onEditOrderClick = onEditOrderClick,
         onDeleteOrderClick = viewModel::requestDelete,
-        modifier = modifier
+        modifier = modifier,
+        onHistoryClick = onHistoryClick,
     )
 
     state.deleteCandidate?.let { order ->
@@ -113,6 +116,7 @@ private fun OrdersScreenContent(
     onNewOrderClick: () -> Unit = {},
     onEditOrderClick: (String) -> Unit = {},
     onDeleteOrderClick: (String) -> Unit = {},
+    onHistoryClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedLanguage by remember {
@@ -151,6 +155,19 @@ private fun OrdersScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = FruitLogixTheme.spacing.sm)
+            )
+        }
+
+        item {
+            SecondaryButton(
+                text = stringResource(R.string.orders_history),
+                onClick = onHistoryClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = FruitLogixTheme.spacing.sm,
+                        vertical = 8.dp
+                    )
             )
         }
 

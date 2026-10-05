@@ -230,4 +230,17 @@
 
     <string name="delete_order_ok">OK</string>
 
+    <!-- Order History -->
+    <string name="orders_history">View order history</string>
+    <string name="order_history_back">← Back to orders</string>
+    <string name="order_history_title">Order history</string>
+    <string name="order_history_subtitle">Review previously completed orders.</string>
+
+    <string name="order_history_delivered">Delivered</string>
+    <string name="order_history_cancelled">Cancelled</string>
+    <string name="order_history_date">Completed: %1$s</string>
+
+    <string name="order_history_empty_title">No order history</string>
+    <string name="order_history_empty_message">There are no completed orders in the history yet.</string>
+
 </resources>
