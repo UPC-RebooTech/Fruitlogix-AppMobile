@@ -6,6 +6,8 @@ import com.rebootech.fruitlogix.orderManagement.domain.model.OrderSummary
 import com.rebootech.fruitlogix.orderManagement.domain.model.RegisteredOrder
 import com.rebootech.fruitlogix.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
+import com.rebootech.fruitlogix.orderManagement.domain.model.OrderHistoryItem
+import com.rebootech.fruitlogix.orderManagement.domain.model.OrderHistoryStatus
 
 class FakeOrderRepository : OrderRepository {
 
@@ -45,6 +47,28 @@ class FakeOrderRepository : OrderRepository {
 
         private val registeredOrders =
             mutableListOf<RegisteredOrder>()
+
+        private val orderHistory = listOf(
+            OrderHistoryItem(
+                id = "FX-1035",
+                clientName = "Supermercados Lima Centro",
+                completedDateLabel = "21 Oct, 16:20",
+                status = OrderHistoryStatus.DELIVERED
+            ),
+            OrderHistoryItem(
+                id = "FX-1032",
+                clientName = "Distribuidora Pacífico",
+                completedDateLabel = "18 Oct, 10:45",
+                status = OrderHistoryStatus.DELIVERED
+            ),
+            OrderHistoryItem(
+                id = "FX-1028",
+                clientName = "Mercados del Sur",
+                completedDateLabel = "14 Oct, 09:10",
+                status = OrderHistoryStatus.CANCELLED
+            )
+        )
+
     }
 
     override fun getOrders(): List<OrderSummary> {
@@ -124,6 +148,10 @@ class FakeOrderRepository : OrderRepository {
         orders.removeAt(index)
 
         return DeleteOrderResult.SUCCESS
+    }
+
+    override fun getOrderHistory(): List<OrderHistoryItem> {
+        return orderHistory
     }
 
 }
