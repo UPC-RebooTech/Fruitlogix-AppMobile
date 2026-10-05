@@ -5,6 +5,7 @@ import com.rebootech.fruitlogix.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderSummary
 import com.rebootech.fruitlogix.orderManagement.domain.model.RegisteredOrder
 import com.rebootech.fruitlogix.orderManagement.domain.repository.OrderRepository
+import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
 
 class FakeOrderRepository : OrderRepository {
 
@@ -19,7 +20,8 @@ class FakeOrderRepository : OrderRepository {
                 productName = "Palta Hass",
                 quantityLabel = "18 pallets • 12.0 t",
                 deliveryDateLabel = "Hoy, 14:30",
-                status = OrderStatus.ON_ROUTE
+                status = OrderStatus.ON_ROUTE,
+                createdHoursAgo = 40
             ),
             OrderSummary(
                 id = "FX-1040",
@@ -27,7 +29,8 @@ class FakeOrderRepository : OrderRepository {
                 productName = "Fresa",
                 quantityLabel = "14 pallets • 11.2 t",
                 deliveryDateLabel = "Mañana, 08:00",
-                status = OrderStatus.IN_PREPARATION
+                status = OrderStatus.IN_PREPARATION,
+                createdHoursAgo = 30
             ),
             OrderSummary(
                 id = "FX-1039",
@@ -35,7 +38,8 @@ class FakeOrderRepository : OrderRepository {
                 productName = "Mango Kent",
                 quantityLabel = "20 pallets • 15.0 t",
                 deliveryDateLabel = "26 Oct, 11:15",
-                status = OrderStatus.PENDING
+                status = OrderStatus.PENDING,
+                createdHoursAgo = 8
             )
         )
 
@@ -99,4 +103,27 @@ class FakeOrderRepository : OrderRepository {
 
         return true
     }
+
+    override fun deleteOrder(
+        orderId: String
+    ): DeleteOrderResult {
+        val index = orders.indexOfFirst {
+            it.id == orderId
+        }
+
+        if (index == -1) {
+            return DeleteOrderResult.NOT_FOUND
+        }
+
+        val order = orders[index]
+
+        if (order.createdHoursAgo > 24) {
+            return DeleteOrderResult.WINDOW_EXPIRED
+        }
+
+        orders.removeAt(index)
+
+        return DeleteOrderResult.SUCCESS
+    }
+
 }
