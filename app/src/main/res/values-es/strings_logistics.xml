@@ -24,4 +24,27 @@
     <string name="logistics_current_location">POSICIÓN ACTUAL</string>
     <string name="logistics_sensor_title">SENSOR IOT CONECTADO</string>
     <string name="logistics_active_dispatches_count">Despachos Activos (%1$d)</string>
+
+    <!-- Arrivals Screen -->
+    <string name="arrivals_title">Llegadas Entrantes</string>
+    <string name="arrivals_subtitle">Seguimiento geofence y cola de andén en vivo</string>
+    <string name="arrivals_filter_all">Todos</string>
+    <string name="arrivals_filter_approaching">Aproximándose</string>
+    <string name="arrivals_filter_at_gate">En Acceso</string>
+    <string name="arrivals_label_reefer">REEFER</string>
+    <string name="arrivals_label_humidity">HUMEDAD</string>
+    <string name="arrivals_label_eta">ETA</string>
+    <string name="arrivals_label_distance">DISTANCIA</string>
+    <string name="arrivals_label_dock">ANDÉN</string>
+    <string name="arrivals_label_driver">CONDUCTOR</string>
+    <string name="arrivals_simulate_geofence">Simular entrada a geofence</string>
+    <string name="arrivals_empty">Sin llegadas para el filtro seleccionado</string>
+
+    <!-- Geofence Alert Sheet -->
+    <string name="geofence_sheet_title">%1$s ingresó al geofence del almacén</string>
+    <string name="geofence_sheet_eta">ETA andén %1$d min</string>
+    <string name="geofence_sheet_btn_start">Iniciar recepción</string>
+    <string name="geofence_sheet_btn_dismiss">Descartar</string>
+    <string name="geofence_notif_channel_name">Alertas Geofence</string>
+    <string name="geofence_notif_channel_desc">Se activa cuando una unidad entra al geofence del almacén</string>
 </resources>

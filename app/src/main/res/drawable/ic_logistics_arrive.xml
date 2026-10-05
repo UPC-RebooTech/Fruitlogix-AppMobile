@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Inbound arrow / arrival icon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Warehouse outline -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M3,11L12,4L21,11V20H15V15H9V20H3V11Z"
+        android:strokeColor="@color/white"
+        android:strokeWidth="1.8" />
+    <!-- Inbound arrow pointing down-right into building -->
+    <path
+        android:pathData="M17,7L21,3M21,3H17M21,3V7"
+        android:strokeColor="@color/white"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

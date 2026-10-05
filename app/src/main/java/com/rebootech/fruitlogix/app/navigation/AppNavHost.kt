@@ -18,6 +18,7 @@ import com.rebootech.fruitlogix.orderManagement.orderManagementGraph
 
 import com.rebootech.fruitlogix.logisticsMonitoring.LogisticsMonitoringRoutes
 import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringGraph
+import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringArrivalsGraph
 
 @Composable
 fun AppNavHost(
@@ -59,6 +60,9 @@ fun AppNavHost(
             FleetScreen(
                 onDispatchClick = { unitId ->
                     navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
+                },
+                onArrivalsClick = {
+                    navController.navigate(LogisticsMonitoringRoutes.Arrivals)
                 }
             )
         }
@@ -73,5 +77,6 @@ fun AppNavHost(
         fleetManagementGraph(navController)
         orderManagementGraph(navController)
         logisticsMonitoringGraph(navController)
+        logisticsMonitoringArrivalsGraph(navController)
     }
 }

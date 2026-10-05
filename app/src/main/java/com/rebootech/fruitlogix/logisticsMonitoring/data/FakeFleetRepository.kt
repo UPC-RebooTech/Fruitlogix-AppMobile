@@ -1,5 +1,7 @@
 package com.rebootech.fruitlogix.logisticsMonitoring.data
 
+import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.Arrival
+import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.ArrivalStatus
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchDetail
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchStatus
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchSummary
@@ -443,4 +445,67 @@ class FakeFleetRepository : FleetRepository {
             }
         }
     }
+
+    override fun getArrivals(): List<Arrival> = listOf(
+        // FL-102 – AT GATE – Ica grapes – BQK-482 – Jorge Huamán
+        Arrival(
+            unitId = "FL-102",
+            licensePlate = "BQK-482",
+            driverName = "Jorge Huamán",
+            cargoDescription = "Ica grapes • 16 Pallets (Grade A)",
+            palletsCount = 16,
+            orderId = "FX-1040",
+            assignedDock = "Dock B",
+            reeferTemp = "3.4°C",
+            tempSafeRange = "Safe 2.0 - 4.0°C",
+            humidity = "88% RH",
+            distanceKm = 0.1f,
+            distanceLabel = "0.1 km • Inside Perimeter",
+            status = ArrivalStatus.AT_GATE,
+            etaMinutes = 0,
+            speedKmh = "0 km/h",
+            eSealStatus = "#PE-99410-X Intact",
+            notes = "Holding at Gate 2 Checkpoint."
+        ),
+        // FL-408 – APPROACHING – Hass avocado – AZT-901 – Mateo Silva
+        Arrival(
+            unitId = "FL-408",
+            licensePlate = "AZT-901",
+            driverName = "Mateo Silva",
+            cargoDescription = "Hass avocado • 18 Pallets",
+            palletsCount = 18,
+            orderId = "FX-1042",
+            assignedDock = "Dock A",
+            reeferTemp = "3.2°C",
+            tempSafeRange = "Safe 2.0 - 4.0°C",
+            humidity = "84% RH",
+            distanceKm = 1.8f,
+            distanceLabel = "1.8 km to warehouse",
+            status = ArrivalStatus.APPROACHING,
+            etaMinutes = 6,
+            speedKmh = "34 km/h",
+            eSealStatus = "#PE-88310-Y Intact",
+            notes = "Cruising 34 km/h on Carretera Central."
+        ),
+        // FL-219 – APPROACHING – Piura mango – CHD-330 – Luis Ramos
+        Arrival(
+            unitId = "FL-219",
+            licensePlate = "CHD-330",
+            driverName = "Luis Ramos",
+            cargoDescription = "Piura mango • 20 Pallets",
+            palletsCount = 20,
+            orderId = "FX-1039",
+            assignedDock = "Dock C",
+            reeferTemp = "2.1°C",
+            tempSafeRange = "Safe 2.0 - 4.0°C",
+            humidity = "91% RH",
+            distanceKm = 4.8f,
+            distanceLabel = "4.8 km to warehouse",
+            status = ArrivalStatus.APPROACHING,
+            etaMinutes = 14,
+            speedKmh = "68 km/h",
+            eSealStatus = "#PE-77210-Z Intact",
+            notes = "On transit Panamericana Norte."
+        )
+    ).sortedBy { it.distanceKm }
 }
