@@ -1,0 +1,190 @@
+<resources>
+    <string name="app_name">FruitLogix</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_orders">Pedidos</string>
+    <string name="nav_fleet">Flota</string>
+    <string name="nav_invoices">Facturas</string>
+    <string name="nav_producers">Productores</string>
+    <string name="nav_more">Más</string>
+
+    <!-- Top Bar -->
+    <string name="topbar_title">FruitLogix</string>
+    <string name="topbar_subtitle">COMANDO DISTRIBUIDOR</string>
+
+    <!-- Greeting -->
+    <string name="greeting_welcome">Bienvenido, %1$s</string>
+    <string name="greeting_active_shift">Turno Activo Matutino</string>
+
+    <!-- Priority Actions -->
+    <string name="priority_actions_label">ACCIONES PRIORITARIAS</string>
+    <string name="priority_ready_count">%1$d Listas</string>
+    <string name="action_scan_lot">Escanear lote</string>
+    <string name="action_dispatch_fleet">Despachar flota</string>
+    <string name="action_sensors">Sensores</string>
+
+    <!-- Predictive Alert -->
+    <string name="alert_predictive_label">ALERTA PREDICTIVA</string>
+    <string name="alert_predictive_unit_line">Unidad %1$s • %2$s</string>
+    <string name="alert_predictive_headline">Excederá %1$s en %2$d min</string>
+    <string name="alert_predictive_subline">Sube %1$s/min • Ahora %2$s</string>
+    <string name="alert_predictive_ceiling">Límite crítico %1$s</string>
+    <string name="alert_predictive_now_label">Ahora %1$s</string>
+    <string name="alert_predictive_plus_min">+%1$d min</string>
+    <string name="alert_predictive_minus_min">-%1$d min</string>
+    <string name="alert_predictive_now_caption">Ahora</string>
+    <string name="alert_immediate_action">ACCIÓN INMEDIATA</string>
+    <string name="alert_review_reefer">Revisar reefer →</string>
+    <string name="alert_nominal_title">Todas las cadenas de frío nominales</string>
+    <string name="alert_breached_label">LÍMITE EXCEDIDO</string>
+
+    <!-- KPI -->
+    <string name="kpi_active_orders">Órdenes Activas</string>
+    <string name="kpi_daily_deliveries">Entregas Día</string>
+    <string name="kpi_fruit_quality">Calidad Fruta</string>
+    <string name="kpi_iot_alerts">Alertas IoT</string>
+    <string name="kpi_vs_yesterday">+12.5% vs ayer</string>
+    <string name="kpi_avg_eta">ETA Prom: %1$s</string>
+    <string name="kpi_on_time">A Tiempo</string>
+    <string name="kpi_last_lots">Últimos %1$d lotes</string>
+    <string name="kpi_grade_a">Grado A Certificado</string>
+    <string name="kpi_critical_warning">%1$d Críticas • %2$d Aviso</string>
+
+    <!-- Action Center -->
+    <string name="action_center_title">Centro de Acción</string>
+    <string name="action_center_clear_all">Borrar todo</string>
+    <string name="action_cfdi_seal_title">Guía de remisión SUNAT pendiente</string>
+    <string name="action_cfdi_seal_sub">Orden #ORD-1048 • Finca Los Andes</string>
+    <string name="action_cfdi_seal_caption">REQUISITO ADUANERO DE EXPORTACIÓN</string>
+    <string name="action_cfdi_seal_btn">Aprobar guía</string>
+    <string name="action_precooling_title">Ingreso precooling Puerta 3</string>
+    <string name="action_precooling_sub">320 cajas Limón Persa en espera</string>
+    <string name="action_precooling_caption">RECEPCIÓN ANDÉN FRÍO</string>
+    <string name="action_precooling_btn">Verificar ingreso</string>
+
+    <!-- Live Fleet (Home screen) -->
+    <string name="fleet_title">Flota en Vivo</string>
+    <string name="fleet_in_transit_count">(%1$d en tránsito)</string>
+    <string name="fleet_map_view">Ver mapa ></string>
+    <string name="fleet_status_on_time">A tiempo</string>
+    <string name="fleet_status_delay">Retraso balanza</string>
+    <string name="fleet_label_reefer_temp">TEMP REEFER</string>
+    <string name="fleet_label_humidity">HUMEDAD</string>
+    <string name="fleet_label_dest_eta">ETA DESTINO</string>
+    <string name="fleet_label_delay_delta">RETRASO</string>
+    <string name="fleet_mileage_format">Kilometraje tránsito: %1$s</string>
+
+    <!-- Cold-Chain Compliance -->
+    <string name="compliance_title">Cumplimiento Cadena de Frío</string>
+    <string name="compliance_subtitle">Índice de adherencia 24h</string>
+    <string name="compliance_label_compliant">Cumplimiento</string>
+    <string name="compliance_line_integrity">INTEGRIDAD DE TRÁNSITO</string>
+    <string name="compliance_line_integrity_sub">94%% Trayectoria Nominal</string>
+    <string name="compliance_line_breaches">VIOLACIONES DE TOLERANCIA</string>
+    <string name="compliance_line_breaches_sub">0 Brechas Frías Hoy</string>
+    <string name="compliance_risk_label">RIESGO PREDICTIVO</string>
+    <string name="compliance_risk_format">%1$d Alerta Térmica</string>
+
+    <!-- Fleet Control Center screen -->
+    <string name="fleet_screen_title">Centro de Control de Flota</string>
+    <string name="fleet_screen_subtitle">Tracking de despachos, cadena de frío y sensores</string>
+    <string name="fleet_limits_btn">Límites</string>
+
+    <!-- KPI chips -->
+    <string name="fleet_kpi_on_route">En ruta %1$d</string>
+    <string name="fleet_kpi_alerts">Alertas %1$d</string>
+
+    <!-- Radar card -->
+    <string name="fleet_radar_live">RADAR EN VIVO</string>
+    <string name="fleet_radar_gps_active">GPS Activo • 0.8s</string>
+
+    <!-- Segmented tabs -->
+    <string name="fleet_tab_dispatches">Despachos Activos %1$d</string>
+    <string name="fleet_tab_alerts">Alertas</string>
+    <string name="fleet_tab_sensors">Sensores</string>
+
+    <!-- Dispatch card -->
+    <string name="fleet_dispatch_unit">Unidad %1$s</string>
+    <string name="fleet_label_dock_eta">ETA ANDÉN</string>
+    <string name="fleet_transit_progress">Progreso Tránsito • %1$d%%</string>
+    <string name="fleet_view_dispatch_detail">Ver Detalle de Despacho ›</string>
+    <string name="fleet_immediate_reefer_diagnostic">Diagnóstico inmediato reefer →</string>
+
+    <!-- Dispatch status badges -->
+    <string name="dispatch_status_on_time">A TIEMPO</string>
+    <string name="dispatch_status_temp_alert">ALERTA TEMP</string>
+    <string name="dispatch_status_weigh_delay">RETRASO BALANZA</string>
+
+    <!-- Footer -->
+    <string name="fleet_footer_gateways">3 Gateways BLE Activos • SatCom v4.2</string>
+    <string name="fleet_footer_updated">Actualizado hace 10s</string>
+
+    <!-- Sensors screen -->
+    <string name="sensor_status_online">%1$d EN LÍNEA</string>
+    <string name="sensor_status_low_batt">%1$d BATERÍA BAJA</string>
+    <string name="sensor_status_offline">%1$d DESCONECTADO</string>
+
+    <string name="sensor_filter_all">Todos</string>
+    <string name="sensor_filter_on_route">En ruta</string>
+    <string name="sensor_filter_warehouse">En almacén</string>
+    <string name="sensor_filter_offline">Desconectados</string>
+
+    <string name="sensor_order_id">Orden #%1$s</string>
+    <string name="sensor_battery_label">%1$d%% BATT</string>
+
+    <string name="sensor_status_label_online">EN LÍNEA</string>
+    <string name="sensor_status_label_low_batt">BATERÍA BAJA</string>
+    <string name="sensor_status_label_offline">DESCONECTADO</string>
+    <string name="sensor_status_label_standby">ESPERA</string>
+
+    <string name="sensor_type_temperature">Temp Central &amp; Humedad (Sonda BLE)</string>
+    <string name="sensor_type_humidity">Sensor O₂ Atmosférico &amp; Etileno</string>
+    <string name="sensor_type_gps">Beacon GPS &amp; Sello Puerta</string>
+
+    <string name="sensor_btn_troubleshoot">Solucionar problema</string>
+    <string name="sensor_btn_link_order">Vincular a orden</string>
+
+    <string name="sensor_sheet_status">Estado</string>
+    <string name="sensor_sheet_truck">Camión vinculado</string>
+    <string name="sensor_sheet_order">Orden vinculada</string>
+    <string name="sensor_sheet_last_signal">Última señal</string>
+    <string name="sensor_sheet_battery">Batería</string>
+
+    <!-- Order Management -->
+    <string name="orders_title">Gestión de pedidos</string>
+    <string name="orders_subtitle">Pedidos activos para distribución</string>
+    <string name="orders_active_count">%1$d pedidos activos</string>
+    <string name="order_delivery_date">Entrega: %1$s</string>
+
+    <string name="order_status_pending">Pendiente</string>
+    <string name="order_status_in_preparation">En preparación</string>
+    <string name="order_status_on_route">En ruta</string>
+
+    <string name="orders_empty_title">No hay pedidos pendientes</string>
+    <string name="orders_empty_message">No se encontraron pedidos pendientes asignados al distribuidor.</string>
+
+    <string name="orders_new_order">Nuevo pedido</string>
+
+    <!-- Create Order -->
+    <string name="create_order_back">← Volver a pedidos</string>
+    <string name="create_order_title">Registrar nuevo pedido</string>
+    <string name="create_order_subtitle">Ingresa los datos requeridos para crear el pedido.</string>
+
+    <string name="create_order_product">Variedad de fruta</string>
+    <string name="create_order_product_example">Ej. Palta Hass</string>
+    <string name="create_order_product_error">Selecciona o ingresa una variedad de fruta.</string>
+
+    <string name="create_order_quantity">Cantidad</string>
+    <string name="create_order_quantity_example">Ej. 12.5</string>
+    <string name="create_order_quantity_error">Ingresa una cantidad mayor que cero.</string>
+
+    <string name="create_order_date">Fecha requerida</string>
+    <string name="create_order_date_example">dd/mm/aaaa</string>
+    <string name="create_order_date_error">Ingresa la fecha requerida.</string>
+
+    <string name="create_order_submit">Registrar pedido</string>
+
+    <string name="create_order_success_title">Pedido registrado</string>
+    <string name="create_order_success_message">El pedido %1$s fue registrado correctamente.</string>
+    <string name="create_order_success_button">Volver a pedidos</string>
+
+</resources>
