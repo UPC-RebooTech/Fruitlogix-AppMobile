@@ -4,6 +4,7 @@ import com.rebootech.fruitlogix.orderManagement.domain.model.OrderRegistration
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderSummary
 import com.rebootech.fruitlogix.orderManagement.domain.model.RegisteredOrder
 import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
+import com.rebootech.fruitlogix.orderManagement.domain.model.OrderHistoryItem
 
 interface OrderRepository {
 
@@ -27,5 +28,7 @@ interface OrderRepository {
     fun deleteOrder(
         orderId: String
     ): DeleteOrderResult
+
+    fun getOrderHistory(): List<OrderHistoryItem>
 
 }
