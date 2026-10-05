@@ -2,7 +2,9 @@ package com.rebootech.fruitlogix.paymentManagement.domain.model
 
 data class Invoice(
     val id: String,
-    val producerName: String,
+    val counterpartyName: String,
     val amount: Double,
-    val status: String
+    val dateLabel: String,
+    val type: InvoiceType,
+    val status: InvoiceStatus
 )
