@@ -17,20 +17,24 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,9 +53,10 @@ import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.ArrivalStatus
 import com.rebootech.fruitlogix.logisticsMonitoring.presentation.components.ArrivalCard
 import com.rebootech.fruitlogix.logisticsMonitoring.presentation.components.GeofenceAlertSheet
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import kotlinx.coroutines.launch
 
-// Placeholder route owned by orderManagement bounded context
-// TODO: Replace with OrderManagementRoutes.ScanReception or orderManagement reception route when available
+// Placeholder route constant owned by orderManagement bounded context
+// TODO: Replace with OrderManagementRoutes.ScanReception when orderManagement exposes its reception route
 const val ORDER_RECEPTION_ROUTE = "orders/reception/{unitId}"
 fun orderReceptionRoute(unitId: String) = "orders/reception/$unitId"
 
@@ -61,7 +66,7 @@ fun orderReceptionRoute(unitId: String) = "orders/reception/$unitId"
 @Composable
 fun ArrivalsScreen(
     onBackClick: () -> Unit = {},
-    onNavigateToReception: (String) -> Unit = {},
+    onNavigateToReception: (String) -> Boolean = { false },
     viewModel: ArrivalsViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -71,9 +76,7 @@ fun ArrivalsScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onFilterSelected = viewModel::selectFilter,
-        onStartReceptionClick = { unitId ->
-            onNavigateToReception(orderReceptionRoute(unitId))
-        },
+        onNavigateToReception = onNavigateToReception,
         onViewRouteClick = { /* Placeholder view route action */ },
         onSimulateGeofenceClick = { viewModel.simulateGeofenceEntry("FL-102") },
         onDismissGeofenceSheet = viewModel::dismissGeofenceSheet,
@@ -90,15 +93,20 @@ fun ArrivalsScreenContent(
     uiState: ArrivalsUiState,
     onBackClick: () -> Unit,
     onFilterSelected: (ArrivalsFilter) -> Unit,
-    onStartReceptionClick: (String) -> Unit,
+    onNavigateToReception: (String) -> Boolean,
     onViewRouteClick: (String) -> Unit,
     onSimulateGeofenceClick: () -> Unit,
     onDismissGeofenceSheet: () -> Unit,
+    showDebugButton: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val paleMint = Color(0xFFE8F3E3)
     val textPrimary = Color(0xFF1B2E1E)
     val textMuted = Color(0xFF5A7060)
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val comingSoonMsg = stringResource(id = R.string.reception_coming_soon)
 
     Scaffold(
         topBar = {
@@ -126,6 +134,16 @@ fun ArrivalsScreenContent(
                 )
             )
         },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = Color(0xFF1F2D23),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
         containerColor = paleMint,
         modifier = modifier
     ) { paddingValues ->
@@ -139,40 +157,15 @@ fun ArrivalsScreenContent(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 1. Header Subtitle & Telemetry Chip
+                // 1. Subtitle header
                 item {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(id = R.string.arrivals_subtitle),
-                                    style = FruitLogixTheme.typography.bodyMedium.copy(
-                                        color = textMuted,
-                                        fontSize = 14.sp
-                                    )
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFD3E7CD))
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "● LIVE TELEMETRY",
-                                    style = FruitLogixTheme.typography.labelSmall.copy(
-                                        color = Color(0xFF2E5335),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 10.sp
-                                    )
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = stringResource(id = R.string.arrivals_subtitle),
+                        style = FruitLogixTheme.typography.bodyMedium.copy(
+                            color = textMuted,
+                            fontSize = 14.sp
+                        )
+                    )
                 }
 
                 // 2. Working Filter Chips: All, Approaching, At gate
@@ -180,7 +173,7 @@ fun ArrivalsScreenContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 2.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ArrivalsFilterChip(
@@ -206,38 +199,41 @@ fun ArrivalsScreenContent(
                     }
                 }
 
-                // 3. Debug button: "Simulate geofence entry"
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "SORTED BY DISTANCE (CLOSEST FIRST)",
-                            style = FruitLogixTheme.typography.labelSmall.copy(
-                                color = textMuted,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-
-                        Button(
-                            onClick = onSimulateGeofenceClick,
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF28382D),
-                                contentColor = Color(0xFFC2E85A)
-                            ),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                // 3. Debug "Simulate geofence entry" ghost button
+                if (showDebugButton) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "⚡ " + stringResource(id = R.string.arrivals_simulate_geofence),
+                                text = "SORTED BY DISTANCE (CLOSEST FIRST)",
                                 style = FruitLogixTheme.typography.labelSmall.copy(
+                                    color = textMuted,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
+
+                            OutlinedButton(
+                                onClick = onSimulateGeofenceClick,
+                                shape = RoundedCornerShape(8.dp),
+                                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Color.Transparent,
+                                    contentColor = textMuted
+                                ),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFB5CBB0)),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "⚡ " + stringResource(id = R.string.arrivals_simulate_geofence),
+                                    style = FruitLogixTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -289,14 +285,21 @@ fun ArrivalsScreenContent(
                     ) { arrival ->
                         ArrivalCard(
                             arrival = arrival,
-                            onStartReceptionClick = onStartReceptionClick,
+                            onStartReceptionClick = { unitId ->
+                                val success = onNavigateToReception(orderReceptionRoute(unitId))
+                                if (!success) {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar(comingSoonMsg)
+                                    }
+                                }
+                            },
                             onViewRouteClick = onViewRouteClick
                         )
                     }
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(80.dp))
+                    Spacer(modifier = Modifier.height(120.dp))
                 }
             }
 
@@ -307,7 +310,12 @@ fun ArrivalsScreenContent(
                     onDismiss = onDismissGeofenceSheet,
                     onStartReception = { unitId ->
                         onDismissGeofenceSheet()
-                        onStartReceptionClick(unitId)
+                        val success = onNavigateToReception(orderReceptionRoute(unitId))
+                        if (!success) {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(comingSoonMsg)
+                            }
+                        }
                     }
                 )
             }
@@ -383,7 +391,7 @@ private fun ArrivalsScreenPreview_List() {
             uiState = state,
             onBackClick = {},
             onFilterSelected = {},
-            onStartReceptionClick = {},
+            onNavigateToReception = { false },
             onViewRouteClick = {},
             onSimulateGeofenceClick = {},
             onDismissGeofenceSheet = {}
@@ -403,7 +411,7 @@ private fun ArrivalsScreenPreview_Empty() {
             uiState = state,
             onBackClick = {},
             onFilterSelected = {},
-            onStartReceptionClick = {},
+            onNavigateToReception = { false },
             onViewRouteClick = {},
             onSimulateGeofenceClick = {},
             onDismissGeofenceSheet = {}
@@ -411,24 +419,24 @@ private fun ArrivalsScreenPreview_Empty() {
     }
 }
 
-@Preview(name = "GeofenceAlertSheet - Preview", showBackground = true, backgroundColor = 0xFF1F2D23)
+@Preview(name = "GeofenceAlertSheet - Mockup Match Preview", showBackground = true, backgroundColor = 0xFF1F2D23)
 @Composable
 private fun GeofenceAlertSheetPreview() {
     val sampleArrival = Arrival(
         unitId = "FL-102",
         licensePlate = "BQK-482",
         driverName = "Jorge Huamán",
-        cargoDescription = "Ica grapes • 16 Pallets",
+        cargoDescription = "Ica grapes",
         palletsCount = 16,
         orderId = "FX-1040",
         assignedDock = "Dock B",
         reeferTemp = "3.4°C",
         humidity = "88% RH",
-        distanceKm = 0.1f,
-        distanceLabel = "0.1 km • Inside Perimeter",
-        status = ArrivalStatus.AT_GATE,
+        distanceKm = 1.8f,
+        distanceLabel = "1.8 km to warehouse",
+        status = ArrivalStatus.APPROACHING,
         etaMinutes = 6,
-        speedKmh = "34 km/h"
+        speedKmh = "18 km/h"
     )
 
     FruitLogixTheme {

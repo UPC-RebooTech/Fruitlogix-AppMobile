@@ -25,18 +25,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +56,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -61,13 +67,14 @@ import androidx.core.content.ContextCompat
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.Arrival
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 private const val GEOFENCE_CHANNEL_ID = "geofence"
 private const val GEOFENCE_NOTIF_ID = 4010
 
 /**
- * Modal Bottom Sheet triggered when a shipment enters the warehouse geofence.
- * Displays radar animation, ETA, climate, assigned dock, payload info, and EXACTLY two action buttons.
+ * Modal Bottom Sheet for Geofence Alerts.
+ * Pixel-perfect implementation following the mockup with 28dp top corners, ETA card, Canvas radar, compact tiles, payload summary, and EXACTLY two action buttons.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +100,7 @@ fun GeofenceAlertSheet(
         }
     }
 
-    // Fire notification when sheet appears
+    // Fire native local notification when sheet appears
     LaunchedEffect(arrival.unitId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val permissionCheck = ContextCompat.checkSelfPermission(
@@ -113,94 +120,64 @@ fun GeofenceAlertSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         containerColor = darkSurface,
         scrimColor = Color.Black.copy(alpha = 0.6f),
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .width(40.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFF3B4D40))
-            )
-        },
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0xFF3B4D40)) },
         modifier = modifier
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // 1. Header Trigger Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF334435))
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            // a. Overline "GEOFENCE ALERT" with small pulsing dot
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(limeColor)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "GEOFENCE TRIGGER • WAREHOUSE PERIMETER (RADIUS 2.5 KM)",
-                            style = FruitLogixTheme.typography.labelSmall.copy(
-                                color = limeColor,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                    Text(
-                        text = "LIVE GPS",
-                        style = FruitLogixTheme.typography.labelSmall.copy(
-                            color = textMuted,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(limeColor)
+                )
+                Text(
+                    text = stringResource(id = R.string.geofence_sheet_overline),
+                    style = FruitLogixTheme.typography.labelSmall.copy(
+                        color = limeColor,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp
                     )
-                }
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Subtitle & Main Title
-            Text(
-                text = "📍 OUTER PERIMETER BREACH DETECTED",
-                style = FruitLogixTheme.typography.labelSmall.copy(
-                    color = limeColor,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+            // b. Title "FL-102 entered the warehouse geofence" (Poppins 22sp, white, max 2 lines)
             Text(
                 text = stringResource(id = R.string.geofence_sheet_title, arrival.unitId),
                 style = FruitLogixTheme.typography.headlineSmall.copy(
+                    fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    fontSize = 20.sp
-                )
+                    fontSize = 22.sp,
+                    lineHeight = 28.sp
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-            // 2. ETA Card
+            // c. ETA Card: Timer icon in lime circle, ETA title & big value on left, distance & speed on right
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(innerCardBg)
                     .padding(14.dp)
             ) {
@@ -209,92 +186,119 @@ fun GeofenceAlertSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1.2f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Timer icon in lime circle
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF3B4D2C)),
+                                .background(limeColor),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_logistics_clock),
                                 contentDescription = null,
-                                tint = limeColor,
-                                modifier = Modifier.size(20.dp)
+                                tint = Color(0xFF1B2E1E),
+                                modifier = Modifier.size(22.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
                         Column {
                             Text(
-                                text = "DOCK APPROACH ETA",
+                                text = stringResource(id = R.string.geofence_sheet_eta_overline),
                                 style = FruitLogixTheme.typography.labelSmall.copy(
                                     color = textMuted,
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.8.sp
                                 )
                             )
+
+                            // Computed ETA string (never 0 min, show "< 1 MIN" if < 1)
+                            val computedEtaMin = arrival.etaMinutes ?: (if (arrival.distanceKm <= 0.2f) 1 else ((arrival.distanceKm / 18f) * 60).toInt())
+                            val etaText = if (computedEtaMin < 1 || arrival.distanceKm <= 0.1f) {
+                                stringResource(id = R.string.geofence_sheet_eta_less_than_min)
+                            } else {
+                                stringResource(id = R.string.geofence_sheet_eta_min, computedEtaMin)
+                            }
+
                             Text(
-                                text = stringResource(
-                                    id = R.string.geofence_sheet_eta,
-                                    arrival.etaMinutes ?: 6
-                                ),
-                                style = FruitLogixTheme.typography.titleMedium.copy(
-                                    color = limeColor,
+                                text = etaText,
+                                style = FruitLogixTheme.typography.headlineLarge.copy(
+                                    fontFamily = PoppinsFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp
+                                    color = limeColor,
+                                    fontSize = 28.sp,
+                                    lineHeight = 32.sp
                                 )
                             )
                         }
                     }
 
-                    Column(horizontalAlignment = Alignment.End) {
+                    // Right side position & speed info
+                    Column(
+                        modifier = Modifier.weight(0.9f),
+                        horizontalAlignment = Alignment.End
+                    ) {
                         Text(
-                            text = "${arrival.distanceKm} km to Gate 2",
+                            text = stringResource(
+                                id = R.string.geofence_sheet_distance_speed,
+                                arrival.distanceKm
+                            ),
                             style = FruitLogixTheme.typography.bodySmall.copy(
                                 color = Color.White,
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.End
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "CRUISING ${arrival.speedKmh.ifEmpty { "34 KM/H" }}",
+                            text = stringResource(
+                                id = R.string.geofence_sheet_cruising_speed,
+                                arrival.speedKmh.ifEmpty { "18 km/h" }.uppercase()
+                            ),
                             style = FruitLogixTheme.typography.labelSmall.copy(
                                 color = textMuted,
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.End
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 3. Radar Canvas Visualizer
+            // d. RADAR BAND: Full width ~160dp tall card drawn with Canvas
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(innerCardBg),
-                contentAlignment = Alignment.Center
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(innerCardBg)
             ) {
-                RadarCanvasVisualizer(unitId = arrival.unitId, assignedDock = arrival.assignedDock)
+                RadarBandCanvas(unitId = arrival.unitId, assignedDock = arrival.assignedDock)
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 4. Reefer Climate & Pre-assigned Dock Tiles
+            // e. Two Compact Tiles Side by Side: REEFER CLIMATE & ASSIGNED DOCK
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Reefer Climate Tile
+                // Tile 1: REEFER CLIMATE
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(16.dp))
                         .background(innerCardBg)
                         .padding(12.dp)
                 ) {
@@ -305,10 +309,10 @@ fun GeofenceAlertSheet(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "REEFER CLIMATE",
+                                text = stringResource(id = R.string.geofence_sheet_reefer_overline),
                                 style = FruitLogixTheme.typography.labelSmall.copy(
                                     color = textMuted,
-                                    fontSize = 9.sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -319,7 +323,7 @@ fun GeofenceAlertSheet(
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = "NOMINAL",
+                                    text = stringResource(id = R.string.geofence_sheet_nominal),
                                     style = FruitLogixTheme.typography.labelSmall.copy(
                                         color = limeColor,
                                         fontSize = 8.sp,
@@ -328,62 +332,90 @@ fun GeofenceAlertSheet(
                                 )
                             }
                         }
+
                         Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = "${arrival.reeferTemp} / RH ${arrival.humidity}",
                             style = FruitLogixTheme.typography.titleMedium.copy(
-                                color = Color.White,
+                                fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                                color = Color.White,
+                                fontSize = 20.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        LimeProgressBar(progressFraction = 0.85f, height = 4.dp)
                     }
                 }
 
-                // Pre-assigned Dock Tile
+                // Tile 2: ASSIGNED DOCK
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(16.dp))
                         .background(innerCardBg)
                         .padding(12.dp)
                 ) {
                     Column {
-                        Text(
-                            text = "PRE-ASSIGNED DOCK",
-                            style = FruitLogixTheme.typography.labelSmall.copy(
-                                color = textMuted,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.geofence_sheet_dock_overline),
+                                style = FruitLogixTheme.typography.labelSmall.copy(
+                                    color = textMuted,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
-                        )
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_logistics_truck),
+                                contentDescription = null,
+                                tint = limeColor,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
                             text = arrival.assignedDock,
                             style = FruitLogixTheme.typography.titleMedium.copy(
-                                color = Color.White,
+                                fontFamily = PoppinsFontFamily,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
+                                color = Color.White,
+                                fontSize = 20.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
                         Text(
-                            text = "Cold Chamber 02 • Pre-Cooled",
+                            text = stringResource(id = R.string.geofence_sheet_dock_caption),
                             style = FruitLogixTheme.typography.bodySmall.copy(
                                 color = textMuted,
                                 fontSize = 10.sp
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 5. Payload Spec Box
+            // f. Payload Card: Leaf icon, fruit, pallets at right, second row driver & plate chip
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(innerCardBg)
                     .padding(12.dp)
             ) {
@@ -393,59 +425,82 @@ fun GeofenceAlertSheet(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "PAYLOAD SPEC",
-                                style = FruitLogixTheme.typography.labelSmall.copy(
-                                    color = textMuted,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF334438)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_logistics_snowflake),
+                                    contentDescription = null,
+                                    tint = limeColor,
+                                    modifier = Modifier.size(16.dp)
                                 )
-                            )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = arrival.cargoDescription,
-                                style = FruitLogixTheme.typography.bodyMedium.copy(
-                                    color = Color.White,
+                                text = arrival.cargoDescription.split("•").firstOrNull()?.trim() ?: arrival.cargoDescription,
+                                style = FruitLogixTheme.typography.titleMedium.copy(
+                                    fontFamily = PoppinsFontFamily,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
+                                    color = Color.White,
+                                    fontSize = 16.sp
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "${arrival.palletsCount} PALLETS",
-                                style = FruitLogixTheme.typography.labelSmall.copy(
-                                    color = limeColor,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp
-                                )
+                        Text(
+                            text = "${arrival.palletsCount} PALLETS",
+                            style = FruitLogixTheme.typography.labelSmall.copy(
+                                color = limeColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
                             )
-                        }
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "👤 ${arrival.driverName}",
-                            style = FruitLogixTheme.typography.bodySmall.copy(
-                                color = textMuted,
-                                fontSize = 11.sp
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_shield_check),
+                                contentDescription = null,
+                                tint = textMuted,
+                                modifier = Modifier.size(14.dp)
                             )
-                        )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = arrival.driverName,
+                                style = FruitLogixTheme.typography.bodySmall.copy(
+                                    color = textMuted,
+                                    fontSize = 12.sp
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(Color(0xFF334438))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "PLATE ${arrival.licensePlate}",
+                                text = arrival.licensePlate,
                                 style = FruitLogixTheme.typography.labelSmall.copy(
                                     color = Color.White,
                                     fontSize = 10.sp,
@@ -457,81 +512,73 @@ fun GeofenceAlertSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // 6. EXACTLY TWO BUTTONS: Lime Filled "Start reception" and Outlined "Dismiss"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            // g. Buttons: Lime pill "Start reception →" (56dp) & Ghost pill "Dismiss" below it
+            Button(
+                onClick = {
+                    onDismiss()
+                    onStartReception(arrival.unitId)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(28.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = limeColor,
+                    contentColor = Color(0xFF1B2E1E)
+                )
             ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color.White
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B4D40))
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.geofence_sheet_btn_dismiss),
-                        style = FruitLogixTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
-                        )
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_logistics_arrive),
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(id = R.string.geofence_sheet_btn_start_arrow),
+                    style = FruitLogixTheme.typography.labelLarge.copy(
+                        fontFamily = PoppinsFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
                     )
-                }
-
-                Button(
-                    onClick = {
-                        onDismiss()
-                        onStartReception(arrival.unitId)
-                    },
-                    modifier = Modifier
-                        .weight(1.5f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = limeColor,
-                        contentColor = Color(0xFF1B2E1E)
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_logistics_arrive),
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(id = R.string.geofence_sheet_btn_start),
-                        style = FruitLogixTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    )
-                }
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = innerCardBg,
+                    contentColor = textMuted
+                )
+            ) {
+                Text(
+                    text = stringResource(id = R.string.geofence_sheet_btn_dismiss),
+                    style = FruitLogixTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                )
+            }
         }
     }
 }
 
 /**
- * Radar Canvas visualizer rendering concentric dashed rings, center warehouse dot, radar line, and truck dot.
+ * Radar Band Canvas component (~160dp tall full width card visualizer).
  */
 @Composable
-private fun RadarCanvasVisualizer(
+private fun RadarBandCanvas(
     unitId: String,
     assignedDock: String
 ) {
     val limeColor = Color(0xFFC2E85A)
-    val textMuted = Color(0xFFA0B2A6)
 
-    val infiniteTransition = rememberInfiniteTransition(label = "RadarSweep")
+    val infiniteTransition = rememberInfiniteTransition(label = "RadarBandSweep")
     val sweepAngle by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
@@ -542,13 +589,13 @@ private fun RadarCanvasVisualizer(
         label = "angle"
     )
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Canvas(modifier = Modifier.fillMaxWidth().height(140.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().height(160.dp)) {
+        Canvas(modifier = Modifier.fillMaxWidth().height(160.dp)) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val maxRadius = size.height * 0.42f
             val dashEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
 
-            // Outer ring
+            // Outer ring (dashed perimeter)
             drawCircle(
                 color = Color(0xFF3B4D40),
                 radius = maxRadius,
@@ -571,13 +618,13 @@ private fun RadarCanvasVisualizer(
                 center = center
             )
 
-            // Truck position on radar (45 deg angle on outer ring)
-            val truckAngleRad = Math.toRadians(210.0 + (sweepAngle * 0.05))
+            // Truck position approaching from lower left
+            val truckAngleRad = Math.toRadians(215.0 + (sweepAngle * 0.04))
             val truckX = center.x + (maxRadius * 0.7f * kotlin.math.cos(truckAngleRad)).toFloat()
             val truckY = center.y + (maxRadius * 0.7f * kotlin.math.sin(truckAngleRad)).toFloat()
             val truckPos = Offset(truckX, truckY)
 
-            // Radar line from truck to warehouse
+            // Radar line
             drawLine(
                 color = limeColor,
                 start = truckPos,
@@ -585,9 +632,9 @@ private fun RadarCanvasVisualizer(
                 strokeWidth = 2f
             )
 
-            // Truck dot glow & dot
+            // Truck dot glow & center dot
             drawCircle(
-                color = limeColor.copy(alpha = 0.3f),
+                color = limeColor.copy(alpha = 0.35f),
                 radius = 12f,
                 center = truckPos
             )
@@ -598,41 +645,60 @@ private fun RadarCanvasVisualizer(
             )
         }
 
-        // Overlay text badges
+        // Top Right Pill inside card: "Dock B assigned"
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(6.dp))
+                .padding(10.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFF334438))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .padding(horizontal = 10.dp, vertical = 5.dp)
         ) {
-            Text(
-                text = "🏷️ $assignedDock ASSIGNED",
-                style = FruitLogixTheme.typography.labelSmall.copy(
-                    color = Color.White,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_logistics_truck),
+                    contentDescription = null,
+                    tint = limeColor,
+                    modifier = Modifier.size(12.dp)
                 )
-            )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(id = R.string.geofence_sheet_pill_dock),
+                    style = FruitLogixTheme.typography.labelSmall.copy(
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
         }
 
+        // Bottom Left Pill inside card: "FL-102 crossing perimeter"
         Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(6.dp))
+                .padding(10.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .background(Color(0xFF334438))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .padding(horizontal = 10.dp, vertical = 5.dp)
         ) {
-            Text(
-                text = "🚛 $unitId (CROSSING SECTOR B)",
-                style = FruitLogixTheme.typography.labelSmall.copy(
-                    color = limeColor,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_logistics_truck),
+                    contentDescription = null,
+                    tint = limeColor,
+                    modifier = Modifier.size(12.dp)
                 )
-            )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(id = R.string.geofence_sheet_pill_crossing, unitId),
+                    style = FruitLogixTheme.typography.labelSmall.copy(
+                        color = limeColor,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
         }
     }
 }
@@ -655,7 +721,6 @@ private fun sendGeofenceNotification(context: Context, arrival: Arrival) {
         notificationManager.createNotificationChannel(channel)
     }
 
-    // Launch intent back to app
     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
         flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
     } ?: Intent()

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.logisticsMonitoring.data.FakeFleetRepository
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.Arrival
+import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.ArrivalStatus
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.repository.FleetRepository
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.service.DetectGeofenceEntryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,19 +46,39 @@ class ArrivalsViewModel(
     }
 
     fun simulateGeofenceEntry(targetUnitId: String = "FL-102") {
-        val targetArrival = _uiState.value.arrivals.find { it.unitId == targetUnitId }
+        val baseArrival = _uiState.value.arrivals.find { it.unitId == targetUnitId }
             ?: _uiState.value.arrivals.firstOrNull()
 
-        if (targetArrival != null) {
-            // Evaluate domain event
-            detectGeofenceEntryUseCase.evaluateAndPublishEvent(targetArrival)
+        // Simulation specific values: FL-102 at 1.8 km from gate, speed 18 km/h, computed ETA = 6 min
+        val simulatedArrival = (baseArrival ?: Arrival(
+            unitId = "FL-102",
+            licensePlate = "BQK-482",
+            driverName = "Jorge Huamán",
+            cargoDescription = "Ica grapes",
+            palletsCount = 16,
+            orderId = "FX-1040",
+            assignedDock = "Dock B",
+            reeferTemp = "3.4°C",
+            humidity = "88% RH",
+            distanceKm = 1.8f,
+            distanceLabel = "1.8 km to warehouse",
+            status = ArrivalStatus.APPROACHING,
+            etaMinutes = 6,
+            speedKmh = "18 km/h"
+        )).copy(
+            distanceKm = 1.8f,
+            speedKmh = "18 km/h",
+            etaMinutes = 6,
+            status = ArrivalStatus.APPROACHING
+        )
 
-            _uiState.update {
-                it.copy(
-                    showGeofenceSheet = true,
-                    simulatedAlertArrival = targetArrival
-                )
-            }
+        detectGeofenceEntryUseCase.evaluateAndPublishEvent(simulatedArrival)
+
+        _uiState.update {
+            it.copy(
+                showGeofenceSheet = true,
+                simulatedAlertArrival = simulatedArrival
+            )
         }
     }
 

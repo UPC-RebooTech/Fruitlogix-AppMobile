@@ -47,4 +47,18 @@
     <string name="geofence_sheet_btn_dismiss">Dismiss</string>
     <string name="geofence_notif_channel_name">Geofence Alerts</string>
     <string name="geofence_notif_channel_desc">Fires when a fleet unit enters the warehouse geofence</string>
+    <string name="geofence_sheet_overline">GEOFENCE ALERT</string>
+    <string name="geofence_sheet_eta_overline">DOCK APPROACH ETA</string>
+    <string name="geofence_sheet_eta_less_than_min">&lt; 1 MIN</string>
+    <string name="geofence_sheet_eta_min">%1$d MIN</string>
+    <string name="geofence_sheet_distance_speed">%1$.1f km to Gate 2</string>
+    <string name="geofence_sheet_cruising_speed">CRUISING %1$s</string>
+    <string name="geofence_sheet_reefer_overline">REEFER CLIMATE</string>
+    <string name="geofence_sheet_dock_overline">ASSIGNED DOCK</string>
+    <string name="geofence_sheet_dock_caption">Cold Chamber 02 • Pre-Cooled</string>
+    <string name="geofence_sheet_btn_start_arrow">Start reception →</string>
+    <string name="reception_coming_soon">Reception flow coming soon</string>
+    <string name="geofence_sheet_nominal">NOMINAL</string>
+    <string name="geofence_sheet_pill_dock">Dock B assigned</string>
+    <string name="geofence_sheet_pill_crossing">%1$s crossing perimeter</string>
 </resources>

@@ -59,7 +59,17 @@ fun NavGraphBuilder.logisticsMonitoringArrivalsGraph(navController: NavHostContr
         ArrivalsScreen(
             onBackClick = { navController.popBackStack() },
             onNavigateToReception = { route ->
-                navController.navigate(route)
+                try {
+                    val hasNode = runCatching { navController.graph.findNode(route) != null }.getOrDefault(false)
+                    if (hasNode) {
+                        navController.navigate(route)
+                        true
+                    } else {
+                        false
+                    }
+                } catch (e: Exception) {
+                    false
+                }
             }
         )
     }
