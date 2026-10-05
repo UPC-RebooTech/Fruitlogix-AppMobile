@@ -263,4 +263,34 @@
     <string name="order_history_no_results_title">No results found</string>
     <string name="order_history_no_results_message">No orders match the applied filters.</string>
 
+    <!-- Scan Reception -->
+    <string name="scan_reception_back">← Back to orders</string>
+    <string name="scan_reception_title">Scan reception</string>
+    <string name="scan_reception_subtitle">Scan the lot QR or barcode to validate the reception.</string>
+
+    <string name="scan_reception_camera_hint">Align the lot code inside the frame.</string>
+
+    <string name="scan_reception_demo_valid">Test recognized code</string>
+    <string name="scan_reception_demo_invalid">Test damaged code</string>
+
+    <string name="scan_reception_permission_title">Camera access required</string>
+    <string name="scan_reception_permission_message">FruitLogix needs camera access to scan lot codes.</string>
+    <string name="scan_reception_permission_button">Allow camera</string>
+
+    <string name="scan_reception_match_title">Match confirmed</string>
+    <string name="scan_reception_order">Order: %1$s</string>
+    <string name="scan_reception_product">Product: %1$s</string>
+    <string name="scan_reception_quantity">Quantity: %1$s</string>
+    <string name="scan_reception_scan_again">Scan another lot</string>
+
+    <string name="scan_reception_error_title">Code not recognized</string>
+    <string name="scan_reception_error_message">The code could not be read or does not match a registered order.</string>
+
+    <string name="scan_reception_manual_option">Enter code manually</string>
+    <string name="scan_reception_manual_title">Manual code entry</string>
+    <string name="scan_reception_manual_label">Lot code</string>
+    <string name="scan_reception_validate">Validate code</string>
+
+    <string name="orders_scan_reception">Scan lot reception</string>
+
 </resources>

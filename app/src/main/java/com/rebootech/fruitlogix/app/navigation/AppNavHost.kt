@@ -47,6 +47,11 @@ fun AppNavHost(
                     navController.navigate(
                         OrderManagementRoutes.OrderHistory
                     )
+                },
+                onScanReceptionClick = {
+                    navController.navigate(
+                        OrderManagementRoutes.ScanReception
+                    )
                 }
             )
         }
