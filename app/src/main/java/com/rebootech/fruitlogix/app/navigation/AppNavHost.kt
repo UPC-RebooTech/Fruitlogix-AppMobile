@@ -13,6 +13,8 @@ import com.rebootech.fruitlogix.orderManagement.presentation.OrdersScreen
 import com.rebootech.fruitlogix.paymentManagement.presentation.InvoicesScreen
 import com.rebootech.fruitlogix.profilesManagement.profilesManagementGraph
 import com.rebootech.fruitlogix.qualityControl.qualityControlGraph
+import com.rebootech.fruitlogix.orderManagement.OrderManagementRoutes
+import com.rebootech.fruitlogix.orderManagement.orderManagementGraph
 
 @Composable
 fun AppNavHost(
@@ -29,7 +31,11 @@ fun AppNavHost(
             HomeScreen()
         }
         composable(Route.Orders.route) {
-            OrdersScreen()
+            OrdersScreen(
+                onNewOrderClick = {
+                    navController.navigate(OrderManagementRoutes.CreateOrder)
+                }
+            )
         }
         composable(Route.Fleet.route) {
             FleetScreen()
@@ -43,5 +49,6 @@ fun AppNavHost(
         qualityControlGraph(navController)
         profilesManagementGraph(navController)
         fleetManagementGraph(navController)
+        orderManagementGraph(navController)
     }
 }

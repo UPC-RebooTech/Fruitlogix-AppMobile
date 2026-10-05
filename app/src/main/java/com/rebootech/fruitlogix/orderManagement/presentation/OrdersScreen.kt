@@ -42,16 +42,19 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 
 @Composable
 fun OrdersScreen(
     modifier: Modifier = Modifier,
-    viewModel: OrdersViewModel = viewModel()
+    viewModel: OrdersViewModel = viewModel(),
+    onNewOrderClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
     OrdersScreenContent(
         state = state,
+        onNewOrderClick = onNewOrderClick,
         modifier = modifier
     )
 }
@@ -59,6 +62,7 @@ fun OrdersScreen(
 @Composable
 private fun OrdersScreenContent(
     state: OrdersUiState,
+    onNewOrderClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedLanguage by remember {
@@ -87,6 +91,16 @@ private fun OrdersScreenContent(
         item {
             OrdersHeader(
                 orderCount = state.orders.size
+            )
+        }
+
+        item {
+            PrimaryButton(
+                text = stringResource(R.string.orders_new_order),
+                onClick = onNewOrderClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = FruitLogixTheme.spacing.sm)
             )
         }
 
