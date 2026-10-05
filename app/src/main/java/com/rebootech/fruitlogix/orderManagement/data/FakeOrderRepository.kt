@@ -8,6 +8,8 @@ import com.rebootech.fruitlogix.orderManagement.domain.repository.OrderRepositor
 import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderHistoryItem
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderHistoryStatus
+import com.rebootech.fruitlogix.orderManagement.domain.model.LotScanResult
+import com.rebootech.fruitlogix.orderManagement.domain.model.LotScanStatus
 
 class FakeOrderRepository : OrderRepository {
 
@@ -155,6 +157,70 @@ class FakeOrderRepository : OrderRepository {
 
     override fun getOrderHistory(): List<OrderHistoryItem> {
         return orderHistory
+    }
+
+    override fun validateLotCode(
+        code: String
+    ): LotScanResult {
+        return when (code.trim().uppercase()) {
+
+            "LOT-FX-1040-FRESA" -> {
+                val order = orders.firstOrNull {
+                    it.id == "FX-1040"
+                }
+
+                if (
+                    order != null &&
+                    order.productName.equals("Fresa", ignoreCase = true) &&
+                    order.quantityLabel == "14 pallets • 11.2 t"
+                ) {
+                    LotScanResult(
+                        scannedCode = code,
+                        status = LotScanStatus.MATCHED,
+                        orderId = order.id,
+                        productName = order.productName,
+                        quantityLabel = order.quantityLabel
+                    )
+                } else {
+                    LotScanResult(
+                        scannedCode = code,
+                        status = LotScanStatus.NOT_RECOGNIZED
+                    )
+                }
+            }
+
+            "LOT-FX-1039-MANGO" -> {
+                val order = orders.firstOrNull {
+                    it.id == "FX-1039"
+                }
+
+                if (
+                    order != null &&
+                    order.productName.equals("Mango Kent", ignoreCase = true) &&
+                    order.quantityLabel == "20 pallets • 15.0 t"
+                ) {
+                    LotScanResult(
+                        scannedCode = code,
+                        status = LotScanStatus.MATCHED,
+                        orderId = order.id,
+                        productName = order.productName,
+                        quantityLabel = order.quantityLabel
+                    )
+                } else {
+                    LotScanResult(
+                        scannedCode = code,
+                        status = LotScanStatus.NOT_RECOGNIZED
+                    )
+                }
+            }
+
+            else -> {
+                LotScanResult(
+                    scannedCode = code,
+                    status = LotScanStatus.NOT_RECOGNIZED
+                )
+            }
+        }
     }
 
 }

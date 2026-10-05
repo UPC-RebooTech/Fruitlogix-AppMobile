@@ -55,7 +55,8 @@ fun OrdersScreen(
     viewModel: OrdersViewModel = viewModel(),
     onNewOrderClick: () -> Unit = {},
     onEditOrderClick: (String) -> Unit = {},
-    onHistoryClick: () -> Unit = {}
+    onHistoryClick: () -> Unit = {},
+    onScanReceptionClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -70,6 +71,7 @@ fun OrdersScreen(
         onDeleteOrderClick = viewModel::requestDelete,
         modifier = modifier,
         onHistoryClick = onHistoryClick,
+        onScanReceptionClick = onScanReceptionClick,
     )
 
     state.deleteCandidate?.let { order ->
@@ -117,6 +119,7 @@ private fun OrdersScreenContent(
     onEditOrderClick: (String) -> Unit = {},
     onDeleteOrderClick: (String) -> Unit = {},
     onHistoryClick: () -> Unit = {},
+    onScanReceptionClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedLanguage by remember {
@@ -162,6 +165,19 @@ private fun OrdersScreenContent(
             SecondaryButton(
                 text = stringResource(R.string.orders_history),
                 onClick = onHistoryClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = FruitLogixTheme.spacing.sm,
+                        vertical = 8.dp
+                    )
+            )
+        }
+
+        item {
+            SecondaryButton(
+                text = stringResource(R.string.orders_scan_reception),
+                onClick = onScanReceptionClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
