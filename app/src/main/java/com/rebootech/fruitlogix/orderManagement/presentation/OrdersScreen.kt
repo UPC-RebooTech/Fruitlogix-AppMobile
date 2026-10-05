@@ -45,6 +45,8 @@ import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
+import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
 
 @Composable
 fun OrdersScreen(
@@ -63,8 +65,46 @@ fun OrdersScreen(
         state = state,
         onNewOrderClick = onNewOrderClick,
         onEditOrderClick = onEditOrderClick,
+        onDeleteOrderClick = viewModel::requestDelete,
         modifier = modifier
     )
+
+    state.deleteCandidate?.let { order ->
+        DeleteOrderConfirmationDialog(
+            orderId = order.id,
+            onConfirm = viewModel::confirmDelete,
+            onDismiss = viewModel::dismissDelete
+        )
+    }
+
+    when (state.deleteResult) {
+        DeleteOrderResult.SUCCESS -> {
+            DeleteOrderResultDialog(
+                title = stringResource(R.string.delete_order_success_title),
+                message = stringResource(R.string.delete_order_success_message),
+                onDismiss = viewModel::clearDeleteResult
+            )
+        }
+
+        DeleteOrderResult.WINDOW_EXPIRED -> {
+            DeleteOrderResultDialog(
+                title = stringResource(R.string.delete_order_expired_title),
+                message = stringResource(R.string.delete_order_expired_message),
+                onDismiss = viewModel::clearDeleteResult
+            )
+        }
+
+        DeleteOrderResult.NOT_FOUND -> {
+            DeleteOrderResultDialog(
+                title = stringResource(R.string.delete_order_error_title),
+                message = stringResource(R.string.delete_order_error_message),
+                onDismiss = viewModel::clearDeleteResult
+            )
+        }
+
+        null -> Unit
+    }
+
 }
 
 @Composable
@@ -72,6 +112,7 @@ private fun OrdersScreenContent(
     state: OrdersUiState,
     onNewOrderClick: () -> Unit = {},
     onEditOrderClick: (String) -> Unit = {},
+    onDeleteOrderClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedLanguage by remember {
@@ -135,6 +176,9 @@ private fun OrdersScreenContent(
                         order = order,
                         onEditClick = {
                             onEditOrderClick(order.id)
+                        },
+                        onDeleteClick = {
+                            onDeleteOrderClick(order.id)
                         }
                     )
                 }
@@ -188,7 +232,8 @@ private fun OrdersHeader(
 @Composable
 private fun OrderCard(
     order: OrderSummary,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -293,15 +338,31 @@ private fun OrderCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            TextButton(
-                onClick = onEditClick,
-                modifier = Modifier.align(Alignment.End)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.order_edit),
-                    color = FruitLogixTheme.colors.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
+                TextButton(
+                    onClick = onEditClick
+                ) {
+                    Text(
+                        text = stringResource(R.string.order_edit),
+                        color = FruitLogixTheme.colors.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                TextButton(
+                    onClick = onDeleteClick
+                ) {
+                    Text(
+                        text = stringResource(R.string.order_delete),
+                        color = FruitLogixTheme.colors.dangerStrong,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
         }
@@ -398,6 +459,87 @@ private fun EmptyOrdersState() {
         }
     }
 }
+
+@Composable
+private fun DeleteOrderConfirmationDialog(
+    orderId: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = FruitLogixTheme.shapes.Card,
+        containerColor = FruitLogixTheme.colors.surfaceDark,
+        titleContentColor = FruitLogixTheme.colors.textOnDark,
+        textContentColor = FruitLogixTheme.colors.textMuted,
+        title = {
+            Text(
+                text = stringResource(R.string.delete_order_confirm_title),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(
+                    R.string.delete_order_confirm_message,
+                    orderId
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm
+            ) {
+                Text(
+                    text = stringResource(R.string.delete_order_confirm),
+                    color = FruitLogixTheme.colors.dangerStrong,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = stringResource(R.string.delete_order_cancel),
+                    color = FruitLogixTheme.colors.primary
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun DeleteOrderResultDialog(
+    title: String,
+    message: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = FruitLogixTheme.shapes.Card,
+        containerColor = FruitLogixTheme.colors.surfaceDark,
+        titleContentColor = FruitLogixTheme.colors.textOnDark,
+        textContentColor = FruitLogixTheme.colors.textMuted,
+        title = {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Text(text = message)
+        },
+        confirmButton = {
+            PrimaryButton(
+                text = stringResource(R.string.delete_order_ok),
+                onClick = onDismiss
+            )
+        }
+    )
+}
+
 
 @Preview(showBackground = true)
 @Composable

@@ -211,4 +211,23 @@
     <string name="edit_order_success_message">The order was updated successfully.</string>
     <string name="edit_order_success_button">Back to orders</string>
 
+    <!-- Delete Order -->
+    <string name="order_delete">Delete order</string>
+
+    <string name="delete_order_confirm_title">Delete order</string>
+    <string name="delete_order_confirm_message">Are you sure you want to delete order %1$s?</string>
+    <string name="delete_order_confirm">Delete</string>
+    <string name="delete_order_cancel">Cancel</string>
+
+    <string name="delete_order_success_title">Order deleted</string>
+    <string name="delete_order_success_message">Order deleted successfully.</string>
+
+    <string name="delete_order_expired_title">Deletion unavailable</string>
+    <string name="delete_order_expired_message">The 24-hour cancellation period has expired. This order cannot be deleted.</string>
+
+    <string name="delete_order_error_title">Order not found</string>
+    <string name="delete_order_error_message">The selected order could not be found.</string>
+
+    <string name="delete_order_ok">OK</string>
+
 </resources>

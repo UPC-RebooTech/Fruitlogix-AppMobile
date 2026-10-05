@@ -3,6 +3,7 @@ package com.rebootech.fruitlogix.orderManagement.domain.repository
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderRegistration
 import com.rebootech.fruitlogix.orderManagement.domain.model.OrderSummary
 import com.rebootech.fruitlogix.orderManagement.domain.model.RegisteredOrder
+import com.rebootech.fruitlogix.orderManagement.domain.model.DeleteOrderResult
 
 interface OrderRepository {
 
@@ -22,4 +23,9 @@ interface OrderRepository {
         quantity: Double,
         requiredDate: String
     ): Boolean
+
+    fun deleteOrder(
+        orderId: String
+    ): DeleteOrderResult
+
 }
