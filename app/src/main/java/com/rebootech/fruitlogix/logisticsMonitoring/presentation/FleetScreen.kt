@@ -73,6 +73,7 @@ import com.rebootech.fruitlogix.shared.ui.theme.Spacing
 fun FleetScreen(
     modifier: Modifier = Modifier,
     onDispatchClick: (String) -> Unit = {},
+    onArrivalsClick: () -> Unit = {},
     viewModel: FleetViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -84,6 +85,7 @@ fun FleetScreen(
         onSensorClick = viewModel::onSensorClick,
         onDismissSensorSheet = viewModel::onDismissSensorSheet,
         onDispatchClick = onDispatchClick,
+        onArrivalsClick = onArrivalsClick,
         onLimitsClick = { /* TODO: navigate to Thresholds screen */ },
         modifier = modifier
     )
@@ -102,6 +104,7 @@ private fun FleetScreenContent(
     onSensorClick: (Sensor) -> Unit,
     onDismissSensorSheet: () -> Unit,
     onDispatchClick: (String) -> Unit,
+    onArrivalsClick: () -> Unit = {},
     onLimitsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -119,7 +122,8 @@ private fun FleetScreenContent(
                 FleetScreenHeader(
                     onRouteCount = state.onRouteCount,
                     alertCount = state.alertCount,
-                    onLimitsClick = onLimitsClick
+                    onLimitsClick = onLimitsClick,
+                    onArrivalsClick = onArrivalsClick
                 )
             }
 
@@ -199,7 +203,8 @@ private fun FleetScreenContent(
 private fun FleetScreenHeader(
     onRouteCount: Int,
     alertCount: Int,
-    onLimitsClick: () -> Unit
+    onLimitsClick: () -> Unit,
+    onArrivalsClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -226,29 +231,60 @@ private fun FleetScreenHeader(
                     color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f)
                 )
             }
-            // Limits icon button
-            Box(
-                modifier = Modifier
-                    .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
-                    .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.surfaceDark)
-                    .clickable(onClick = onLimitsClick)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
+            // Arrivals + Limits icon buttons
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppIcon(
-                        id = R.drawable.ic_limits,
-                        contentDescription = stringResource(R.string.fleet_limits_btn),
-                        tint = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.fleet_limits_btn),
-                        style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.bodySmall,
-                        color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textOnDark,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                // Arrivals button
+                Box(
+                    modifier = Modifier
+                        .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
+                        .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.primary)
+                        .clickable(onClick = onArrivalsClick)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppIcon(
+                            id = R.drawable.ic_logistics_arrive,
+                            contentDescription = "Arrivals",
+                            tint = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.surfaceDark,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Arrivals",
+                            style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.bodySmall,
+                            color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.surfaceDark,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                // Limits button
+                Box(
+                    modifier = Modifier
+                        .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
+                        .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.surfaceDark)
+                        .clickable(onClick = onLimitsClick)
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppIcon(
+                            id = R.drawable.ic_limits,
+                            contentDescription = stringResource(R.string.fleet_limits_btn),
+                            tint = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.fleet_limits_btn),
+                            style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.bodySmall,
+                            color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textOnDark,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }
@@ -1242,6 +1278,7 @@ private fun FleetScreenPreview_Dispatches() {
             onSensorClick = {},
             onDismissSensorSheet = {},
             onDispatchClick = {},
+            onArrivalsClick = {},
             onLimitsClick = {}
         )
     }
@@ -1274,6 +1311,7 @@ private fun FleetScreenPreview_Sensors() {
             onSensorClick = {},
             onDismissSensorSheet = {},
             onDispatchClick = {},
+            onArrivalsClick = {},
             onLimitsClick = {}
         )
     }

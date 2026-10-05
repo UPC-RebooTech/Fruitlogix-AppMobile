@@ -24,4 +24,41 @@
     <string name="logistics_current_location">CURRENT POSITION</string>
     <string name="logistics_sensor_title">CONNECTED IOT SENSOR</string>
     <string name="logistics_active_dispatches_count">Active Dispatches (%1$d)</string>
+
+    <!-- Arrivals Screen -->
+    <string name="arrivals_title">Inbound Arrivals</string>
+    <string name="arrivals_subtitle">Live geofence tracking and dock queue</string>
+    <string name="arrivals_filter_all">All</string>
+    <string name="arrivals_filter_approaching">Approaching</string>
+    <string name="arrivals_filter_at_gate">At Gate</string>
+    <string name="arrivals_label_reefer">REEFER</string>
+    <string name="arrivals_label_humidity">HUMIDITY</string>
+    <string name="arrivals_label_eta">ETA</string>
+    <string name="arrivals_label_distance">DISTANCE</string>
+    <string name="arrivals_label_dock">DOCK</string>
+    <string name="arrivals_label_driver">DRIVER</string>
+    <string name="arrivals_simulate_geofence">Simulate geofence entry</string>
+    <string name="arrivals_empty">No arrivals matching the selected filter</string>
+
+    <!-- Geofence Alert Sheet -->
+    <string name="geofence_sheet_title">%1$s entered the warehouse geofence</string>
+    <string name="geofence_sheet_eta">Dock approach ETA %1$d min</string>
+    <string name="geofence_sheet_btn_start">Start reception</string>
+    <string name="geofence_sheet_btn_dismiss">Dismiss</string>
+    <string name="geofence_notif_channel_name">Geofence Alerts</string>
+    <string name="geofence_notif_channel_desc">Fires when a fleet unit enters the warehouse geofence</string>
+    <string name="geofence_sheet_overline">GEOFENCE ALERT</string>
+    <string name="geofence_sheet_eta_overline">DOCK APPROACH ETA</string>
+    <string name="geofence_sheet_eta_less_than_min">&lt; 1 MIN</string>
+    <string name="geofence_sheet_eta_min">%1$d MIN</string>
+    <string name="geofence_sheet_distance_speed">%1$.1f km to Gate 2</string>
+    <string name="geofence_sheet_cruising_speed">CRUISING %1$s</string>
+    <string name="geofence_sheet_reefer_overline">REEFER CLIMATE</string>
+    <string name="geofence_sheet_dock_overline">ASSIGNED DOCK</string>
+    <string name="geofence_sheet_dock_caption">Cold Chamber 02 • Pre-Cooled</string>
+    <string name="geofence_sheet_btn_start_arrow">Start reception →</string>
+    <string name="reception_coming_soon">Reception flow coming soon</string>
+    <string name="geofence_sheet_nominal">NOMINAL</string>
+    <string name="geofence_sheet_pill_dock">Dock B assigned</string>
+    <string name="geofence_sheet_pill_crossing">%1$s crossing perimeter</string>
 </resources>

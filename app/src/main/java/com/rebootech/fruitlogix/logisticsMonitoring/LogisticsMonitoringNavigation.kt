@@ -6,11 +6,13 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.rebootech.fruitlogix.infrastructureIot.InfrastructureIotRoutes
+import com.rebootech.fruitlogix.logisticsMonitoring.presentation.ArrivalsScreen
 import com.rebootech.fruitlogix.logisticsMonitoring.presentation.DispatchDetailScreen
 
 object LogisticsMonitoringRoutes {
     const val DispatchDetail = "dispatch/{id}"
     fun dispatchDetail(unitId: String) = "dispatch/$unitId"
+    const val Arrivals = "arrivals"
 }
 
 fun NavGraphBuilder.logisticsMonitoringGraph(navController: NavHostController) {
@@ -52,3 +54,23 @@ fun NavGraphBuilder.logisticsMonitoringGraph(navController: NavHostController) {
     }
 }
 
+fun NavGraphBuilder.logisticsMonitoringArrivalsGraph(navController: NavHostController) {
+    composable(route = LogisticsMonitoringRoutes.Arrivals) {
+        ArrivalsScreen(
+            onBackClick = { navController.popBackStack() },
+            onNavigateToReception = { route ->
+                try {
+                    val hasNode = runCatching { navController.graph.findNode(route) != null }.getOrDefault(false)
+                    if (hasNode) {
+                        navController.navigate(route)
+                        true
+                    } else {
+                        false
+                    }
+                } catch (e: Exception) {
+                    false
+                }
+            }
+        )
+    }
+}
