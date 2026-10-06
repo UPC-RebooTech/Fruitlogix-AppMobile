@@ -19,7 +19,7 @@ import com.rebootech.fruitlogix.orderManagement.orderManagementGraph
 import com.rebootech.fruitlogix.logisticsMonitoring.LogisticsMonitoringRoutes
 import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringGraph
 import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringArrivalsGraph
-
+import com.rebootech.fruitlogix.paymentManagement.paymentManagementGraph
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -78,5 +78,6 @@ fun AppNavHost(
         orderManagementGraph(navController)
         logisticsMonitoringGraph(navController)
         logisticsMonitoringArrivalsGraph(navController)
+        paymentManagementGraph(navController)
     }
 }
