@@ -1,3 +1,24 @@
 <resources>
-    <string name="screen_fleet_resources_title">Drivers</string>
+    <string name="screen_fleet_resources_title">Drivers &amp; Vehicles</string>
+    <string name="fleet_read_only_chip">READ-ONLY</string>
+    <string name="fleet_web_portal_note">Management is done on the web portal</string>
+    <string name="fleet_drivers_tab_drivers">Drivers (%1$d)</string>
+    <string name="fleet_drivers_tab_vehicles">Vehicles (%1$d)</string>
+    <string name="fleet_drivers_vehicles_placeholder">Vehicles coming next</string>
+    <string name="fleet_drivers_kpi_available">Available</string>
+    <string name="fleet_drivers_kpi_on_route">On route</string>
+    <string name="fleet_drivers_kpi_off_duty">Off duty</string>
+    <string name="fleet_drivers_filter_all">All</string>
+    <string name="fleet_drivers_filter_available">Available</string>
+    <string name="fleet_drivers_filter_on_route">On route</string>
+    <string name="fleet_drivers_filter_off_duty">Off duty</string>
+    <string name="fleet_drivers_status_available">AVAILABLE</string>
+    <string name="fleet_drivers_status_on_route">ON ROUTE</string>
+    <string name="fleet_drivers_status_off_duty">OFF DUTY</string>
+    <string name="fleet_drivers_status_expired">EXPIRED</string>
+    <string name="fleet_drivers_unassigned_ready">Unassigned • Ready for dispatch</string>
+    <string name="fleet_drivers_license_valid_until">License valid until %1$s</string>
+    <string name="fleet_drivers_license_expires_in_days">Expires in %1$d days</string>
+    <string name="fleet_drivers_cannot_be_assigned_expired">Cannot be assigned • License expired (%1$s)</string>
+    <string name="fleet_drivers_empty_drivers">No drivers registered</string>
 </resources>

@@ -12,22 +12,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.shared.ui.theme.*
 
-// Colores basados en el Design System de FruitLogix
-private val BackgroundDark = Color(0xFF141A14)
-private val CardBackground = Color(0xFF1E261D)
-private val CardBorder = Color(0xFF2E382C)
-private val AccentLime = Color(0xFFD2F852)
-private val TextWhite = Color(0xFFF5F5F5)
-private val TextMuted = Color(0xFF9EABA0)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier
@@ -45,7 +36,7 @@ fun ProfileScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(ColorBg) // Fondo blanco derivado de Color.kt
     ) {
         Column(
             modifier = Modifier
@@ -58,8 +49,8 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(CardBackground)
-                    .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
+                    .background(ColorSurfaceDark)
+                    .border(1.dp, ColorAppbar, RoundedCornerShape(20.dp))
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -67,13 +58,13 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
-                        .background(AccentLime),
+                        .background(ColorPrimary),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_person),
                         contentDescription = "Avatar",
-                        tint = BackgroundDark,
+                        tint = ColorOnPrimary,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -83,19 +74,19 @@ fun ProfileScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = fullName,
-                        color = TextWhite,
+                        color = ColorTextOnDark,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = roleTitle,
-                        color = AccentLime,
+                        color = ColorPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
                         text = companyHub,
-                        color = TextMuted,
+                        color = ColorTextMuted,
                         fontSize = 12.sp
                     )
                 }
@@ -108,13 +99,13 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(CardBackground)
-                    .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
+                    .background(ColorSurfaceDark)
+                    .border(1.dp, ColorAppbar, RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
                 Text(
                     text = "DATOS DE PERFIL Y CONTACTO",
-                    color = TextMuted,
+                    color = ColorTextMuted,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -149,8 +140,8 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AccentLime,
-                    contentColor = BackgroundDark
+                    containerColor = ColorPrimary,
+                    contentColor = ColorOnPrimary
                 ),
                 shape = RoundedCornerShape(16.dp)
             ) {
@@ -159,7 +150,7 @@ fun ProfileScreen(
                         id = if (isEditing) R.drawable.ic_save else R.drawable.ic_edit
                     ),
                     contentDescription = null,
-                    tint = BackgroundDark,
+                    tint = ColorOnPrimary,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -180,14 +171,13 @@ private fun ProfileInfoRow(label: String, value: String) {
             .fillMaxWidth()
             .padding(vertical = 6.dp)
     ) {
-        Text(text = label, color = TextMuted, fontSize = 11.sp)
-        Text(text = value, color = TextWhite, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        Text(text = label, color = ColorTextMuted, fontSize = 11.sp)
+        Text(text = value, color = ColorTextOnDark, fontSize = 15.sp, fontWeight = FontWeight.Medium)
         Spacer(modifier = Modifier.height(6.dp))
-        HorizontalDivider(color = CardBorder, thickness = 0.5.dp)
+        HorizontalDivider(color = ColorAppbar, thickness = 0.5.dp)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfileTextField(
     label: String,
@@ -197,15 +187,15 @@ private fun ProfileTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = TextMuted) },
+        label = { Text(label, color = ColorTextMuted) },
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = TextWhite,
-            unfocusedTextColor = TextWhite,
-            focusedBorderColor = AccentLime,
-            unfocusedBorderColor = CardBorder,
-            focusedContainerColor = BackgroundDark,
-            unfocusedContainerColor = BackgroundDark
+            focusedTextColor = ColorTextOnDark,
+            unfocusedTextColor = ColorTextOnDark,
+            focusedBorderColor = ColorPrimary,
+            unfocusedBorderColor = ColorAppbar,
+            focusedContainerColor = ColorAppbar,
+            unfocusedContainerColor = ColorAppbar
         ),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp)
