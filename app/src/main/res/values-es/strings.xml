@@ -306,6 +306,10 @@
     <string name="billing_no_results_message">Ninguna factura coincide con los filtros aplicados.</string>
 
     <string name="billing_export_report">Exportar reporte</string>
-
-
+    <string name="invoice_detail_back">Volver a facturas</string>
+    <string name="invoice_detail_title">Detalle de factura</string>
+    <string name="invoice_detail_subtitle">Información financiera de %1$s</string>
+    <string name="invoice_detail_not_found_title">Factura no disponible</string>
+    <string name="invoice_detail_not_found_message">No se pudo encontrar la factura %1$s. Es posible que ya no esté disponible.</string>
+    <string name="invoice_detail_back_to_invoices">Volver a facturas</string>
 </resources>
