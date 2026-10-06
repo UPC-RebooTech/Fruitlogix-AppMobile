@@ -28,6 +28,7 @@ import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 import java.util.Locale
+import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 
 @Composable
 fun InvoiceDetailScreen(
@@ -169,12 +170,60 @@ fun InvoiceDetailScreen(
             }
 
             state.isNotFound -> {
-                Text(
-                    text = stringResource(
-                        R.string.invoice_detail_not_found
-                    ),
-                    color = FruitLogixTheme.colors.textOnLight
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = FruitLogixTheme.shapes.Card,
+                    colors = CardDefaults.cardColors(
+                        containerColor =
+                            FruitLogixTheme.colors.surfaceDark
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment =
+                            Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.invoice_detail_not_found_title
+                            ),
+                            style =
+                                FruitLogixTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color =
+                                FruitLogixTheme.colors.textOnDark
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(12.dp)
+                        )
+
+                        Text(
+                            text = stringResource(
+                                R.string.invoice_detail_not_found_message,
+                                invoiceId
+                            ),
+                            style =
+                                FruitLogixTheme.typography.bodyMedium,
+                            color =
+                                FruitLogixTheme.colors.textMuted
+                        )
+
+                        Spacer(
+                            modifier = Modifier.height(20.dp)
+                        )
+
+                        PrimaryButton(
+                            text = stringResource(
+                                R.string.invoice_detail_back_to_invoices
+                            ),
+                            onClick = onBackClick,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
     }

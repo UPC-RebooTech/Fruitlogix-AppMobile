@@ -323,5 +323,8 @@
     <string name="invoice_detail_back">Back to invoices</string>
     <string name="invoice_detail_title">Invoice detail</string>
     <string name="invoice_detail_subtitle">Financial information for %1$s</string>
-    <string name="invoice_detail_not_found">Invoice not found.</string>
+    <string name="invoice_detail_not_found_title">Invoice unavailable</string>
+    <string name="invoice_detail_not_found_message">Invoice %1$s could not be found. It may no longer be available.</string>
+    <string name="invoice_detail_back_to_invoices">Back to invoices</string>
+
 </resources>
