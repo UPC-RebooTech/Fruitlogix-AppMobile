@@ -1,3 +1,24 @@
 <resources>
-    <string name="screen_fleet_resources_title">Conductores</string>
+    <string name="screen_fleet_resources_title">Conductores y Vehículos</string>
+    <string name="fleet_read_only_chip">SÓLO LECTURA</string>
+    <string name="fleet_web_portal_note">La gestión se realiza en el portal web</string>
+    <string name="fleet_drivers_tab_drivers">Conductores (%1$d)</string>
+    <string name="fleet_drivers_tab_vehicles">Vehículos (%1$d)</string>
+    <string name="fleet_drivers_vehicles_placeholder">Próximamente vehículos</string>
+    <string name="fleet_drivers_kpi_available">Disponible</string>
+    <string name="fleet_drivers_kpi_on_route">En ruta</string>
+    <string name="fleet_drivers_kpi_off_duty">Fuera de servicio</string>
+    <string name="fleet_drivers_filter_all">Todos</string>
+    <string name="fleet_drivers_filter_available">Disponible</string>
+    <string name="fleet_drivers_filter_on_route">En ruta</string>
+    <string name="fleet_drivers_filter_off_duty">Fuera de servicio</string>
+    <string name="fleet_drivers_status_available">DISPONIBLE</string>
+    <string name="fleet_drivers_status_on_route">EN RUTA</string>
+    <string name="fleet_drivers_status_off_duty">FUERA DE SERVICIO</string>
+    <string name="fleet_drivers_status_expired">VENCIDO</string>
+    <string name="fleet_drivers_unassigned_ready">Sin asignar • Listo para despacho</string>
+    <string name="fleet_drivers_license_valid_until">Licencia válida hasta %1$s</string>
+    <string name="fleet_drivers_license_expires_in_days">Vence en %1$d días</string>
+    <string name="fleet_drivers_cannot_be_assigned_expired">No se puede asignar • Licencia vencida (%1$s)</string>
+    <string name="fleet_drivers_empty_drivers">No hay conductores registrados</string>
 </resources>
