@@ -20,6 +20,7 @@ import com.rebootech.fruitlogix.logisticsMonitoring.LogisticsMonitoringRoutes
 import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringGraph
 import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringArrivalsGraph
 import com.rebootech.fruitlogix.paymentManagement.paymentManagementGraph
+import com.rebootech.fruitlogix.paymentManagement.PaymentManagementRoutes
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -67,7 +68,15 @@ fun AppNavHost(
             )
         }
         composable(Route.Invoices.route) {
-            InvoicesScreen()
+            InvoicesScreen(
+                onInvoiceClick = { invoiceId ->
+                    navController.navigate(
+                        PaymentManagementRoutes.invoiceDetail(
+                            invoiceId
+                        )
+                    )
+                }
+            )
         }
 
         // Bounded context nav graphs
