@@ -1,3 +1,11 @@
 <resources>
-    <string name="screen_iot_title">Sensores</string>
+    <string name="screen_iot_title">Sensores y Alertas IoT</string>
+    <string name="iot_devices_section">Dispositivos Activos</string>
+    <string name="iot_alerts_section">Alertas Telemáticas</string>
+    <string name="iot_no_alerts">Sin alertas de temperatura o humedad registradas.</string>
+    <string name="iot_temperature_unit">°C</string>
+    <string name="iot_humidity_unit">%</string>
+    <string name="iot_battery_level">Batería: %1$d%%</string>
+    <string name="iot_calibrate_action">Calibrar</string>
+    <string name="iot_device_calibrating">Calibrando…</string>
 </resources>
