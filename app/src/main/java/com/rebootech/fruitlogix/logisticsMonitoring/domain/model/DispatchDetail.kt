@@ -5,7 +5,8 @@ import com.rebootech.fruitlogix.shared.ui.components.TemperaturePoint
 enum class MilestoneStatus {
     COMPLETED,
     IN_TRANSIT,
-    PENDING
+    PENDING,
+    WARNING
 }
 
 data class RouteMilestone(
@@ -17,10 +18,26 @@ data class RouteMilestone(
     val detailNote: String? = null
 )
 
+data class DispatchTemperaturePoint(
+    val timeLabel: String,
+    val celsius: Float,
+    val isExcursion: Boolean = false,
+    val excursionDurationMinutes: Int? = null,
+    val excursionTooltip: String? = null,
+    val isProjected: Boolean = false
+)
+
+enum class ChartTimeFilter {
+    ONE_HOUR,
+    SIX_HOURS,
+    FULL_TRIP
+}
+
 data class DispatchDetail(
     val unitId: String,
     val licensePlate: String,
-    val truckModel: String,
+    val truckModel: String = "Reefer Express 400",
+    val orderId: String = "FX-1042",
     val cargoDescription: String,
     val originName: String,
     val destinationName: String,
@@ -29,6 +46,8 @@ data class DispatchDetail(
     val dockEta: String,
     val progressFraction: Float,
     val progressLabel: String,
+    val distanceProgress: String = "182 / 220 km",
+    val delayText: String? = null,
     val currentTemp: String,
     val tempTarget: String,
     val rateOfRise: String,
@@ -45,8 +64,10 @@ data class DispatchDetail(
     val driverName: String,
     val driverPhone: String,
     val driverLicense: String,
-    val temperaturePoints: List<TemperaturePoint>,
+    val temperaturePoints: List<TemperaturePoint> = emptyList(),
+    val detailedTemperaturePoints: List<DispatchTemperaturePoint> = emptyList(),
     val milestones: List<RouteMilestone>,
     val minTempThreshold: Float = 2.0f,
     val maxTempThreshold: Float = 4.0f
 )
+

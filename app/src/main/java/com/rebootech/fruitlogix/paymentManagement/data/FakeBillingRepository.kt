@@ -10,7 +10,11 @@ class FakeBillingRepository : BillingRepository {
     override fun getInvoices(): List<Invoice> {
         return invoices
     }
-
+    override fun getInvoiceById(invoiceId: String): Invoice? {
+        return invoices.find { invoice ->
+            invoice.id == invoiceId
+        }
+    }
     companion object {
 
         private val invoices = listOf(

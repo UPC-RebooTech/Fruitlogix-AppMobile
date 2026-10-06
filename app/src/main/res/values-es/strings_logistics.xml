@@ -24,4 +24,41 @@
     <string name="logistics_current_location">POSICIÓN ACTUAL</string>
     <string name="logistics_sensor_title">SENSOR IOT CONECTADO</string>
     <string name="logistics_active_dispatches_count">Despachos Activos (%1$d)</string>
+
+    <!-- Arrivals Screen -->
+    <string name="arrivals_title">Llegadas Entrantes</string>
+    <string name="arrivals_subtitle">Seguimiento geofence y cola de andén en vivo</string>
+    <string name="arrivals_filter_all">Todos</string>
+    <string name="arrivals_filter_approaching">Aproximándose</string>
+    <string name="arrivals_filter_at_gate">En Acceso</string>
+    <string name="arrivals_label_reefer">REEFER</string>
+    <string name="arrivals_label_humidity">HUMEDAD</string>
+    <string name="arrivals_label_eta">ETA</string>
+    <string name="arrivals_label_distance">DISTANCIA</string>
+    <string name="arrivals_label_dock">ANDÉN</string>
+    <string name="arrivals_label_driver">CONDUCTOR</string>
+    <string name="arrivals_simulate_geofence">Simular entrada a geofence</string>
+    <string name="arrivals_empty">Sin llegadas para el filtro seleccionado</string>
+
+    <!-- Geofence Alert Sheet -->
+    <string name="geofence_sheet_title">%1$s ingresó al geofence del almacén</string>
+    <string name="geofence_sheet_eta">ETA andén %1$d min</string>
+    <string name="geofence_sheet_btn_start">Iniciar recepción</string>
+    <string name="geofence_sheet_btn_dismiss">Descartar</string>
+    <string name="geofence_notif_channel_name">Alertas Geofence</string>
+    <string name="geofence_notif_channel_desc">Se activa cuando una unidad entra al geofence del almacén</string>
+    <string name="geofence_sheet_overline">ALERTA GEOFENCE</string>
+    <string name="geofence_sheet_eta_overline">ETA A ANDÉN</string>
+    <string name="geofence_sheet_eta_less_than_min">&lt; 1 MIN</string>
+    <string name="geofence_sheet_eta_min">%1$d MIN</string>
+    <string name="geofence_sheet_distance_speed">%1$.1f km a Garita 2</string>
+    <string name="geofence_sheet_cruising_speed">VELOCIDAD %1$s</string>
+    <string name="geofence_sheet_reefer_overline">CLIMA REEFER</string>
+    <string name="geofence_sheet_dock_overline">ANDÉN ASIGNADO</string>
+    <string name="geofence_sheet_dock_caption">Cámara Fría 02 • Pre-Enfriada</string>
+    <string name="geofence_sheet_btn_start_arrow">Iniciar recepción →</string>
+    <string name="reception_coming_soon">Flujo de recepción disponible próximamente</string>
+    <string name="geofence_sheet_nominal">NOMINAL</string>
+    <string name="geofence_sheet_pill_dock">Andén B asignado</string>
+    <string name="geofence_sheet_pill_crossing">%1$s cruzando perímetro</string>
 </resources>

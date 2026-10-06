@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.logisticsMonitoring.domain.repository
 
+import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.Arrival
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchDetail
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.DispatchSummary
 import com.rebootech.fruitlogix.logisticsMonitoring.domain.model.FleetAlert
@@ -19,6 +20,9 @@ interface FleetRepository {
 
     /** Returns all sensors tracked by the system. */
     fun getAllSensors(): List<Sensor>
+
+    /** Returns inbound arrivals tracked by geofence at Callao Cold Hub. */
+    fun getArrivals(): List<Arrival>
 
     /** Returns the count of dispatches currently on route. */
     fun getOnRouteCount(): Int = getActiveDispatches().size
