@@ -48,6 +48,7 @@ import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 
 @Composable
 fun InvoicesScreen(
+    onInvoiceClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: InvoicesViewModel = viewModel()
 ) {
@@ -204,7 +205,12 @@ fun InvoicesScreen(
                         items = state.receivables,
                         key = { it.id }
                     ) { invoice ->
-                        InvoiceCard(invoice)
+                        InvoiceCard(
+                            invoice = invoice,
+                            onClick = {
+                                onInvoiceClick(invoice.id)
+                            }
+                        )
                     }
                 }
 
@@ -221,7 +227,12 @@ fun InvoicesScreen(
                         items = state.payables,
                         key = { it.id }
                     ) { invoice ->
-                        InvoiceCard(invoice)
+                        InvoiceCard(
+                            invoice = invoice,
+                            onClick = {
+                                onInvoiceClick(invoice.id)
+                            }
+                        )
                     }
                 }
             }
@@ -433,9 +444,11 @@ private fun BillingSectionTitle(
 
 @Composable
 private fun InvoiceCard(
-    invoice: Invoice
+    invoice: Invoice,
+    onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(
