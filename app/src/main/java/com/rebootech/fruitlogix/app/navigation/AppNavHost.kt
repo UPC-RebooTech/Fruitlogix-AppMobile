@@ -5,22 +5,22 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.rebootech.fruitlogix.app.dashboard.presentation.HomeScreen
-import com.rebootech.fruitlogix.fleetManagement.fleetManagementGraph
-import com.rebootech.fruitlogix.infrastructureIot.infrastructureIotGraph
-import com.rebootech.fruitlogix.logisticsMonitoring.presentation.FleetScreen
-import com.rebootech.fruitlogix.orderManagement.presentation.OrdersScreen
-import com.rebootech.fruitlogix.paymentManagement.presentation.InvoicesScreen
-import com.rebootech.fruitlogix.profilesManagement.profilesManagementGraph
-import com.rebootech.fruitlogix.qualityControl.qualityControlGraph
-import com.rebootech.fruitlogix.orderManagement.OrderManagementRoutes
-import com.rebootech.fruitlogix.orderManagement.orderManagementGraph
+import com.rebootech.fruitlogix.distributor.dashboard.presentation.HomeScreen
+import com.rebootech.fruitlogix.distributor.fleetManagement.fleetManagementGraph
+import com.rebootech.fruitlogix.distributor.infrastructureIot.infrastructureIotGraph
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.FleetScreen
+import com.rebootech.fruitlogix.distributor.orderManagement.presentation.OrdersScreen
+import com.rebootech.fruitlogix.distributor.paymentManagement.presentation.InvoicesScreen
+import com.rebootech.fruitlogix.distributor.profilesManagement.profilesManagementGraph
+import com.rebootech.fruitlogix.distributor.qualityControl.qualityControlGraph
+import com.rebootech.fruitlogix.distributor.orderManagement.OrderManagementRoutes
+import com.rebootech.fruitlogix.distributor.orderManagement.orderManagementGraph
 
-import com.rebootech.fruitlogix.logisticsMonitoring.LogisticsMonitoringRoutes
-import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringGraph
-import com.rebootech.fruitlogix.logisticsMonitoring.logisticsMonitoringArrivalsGraph
-import com.rebootech.fruitlogix.paymentManagement.paymentManagementGraph
-import com.rebootech.fruitlogix.paymentManagement.PaymentManagementRoutes
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.LogisticsMonitoringRoutes
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringGraph
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringArrivalsGraph
+import com.rebootech.fruitlogix.distributor.paymentManagement.paymentManagementGraph
+import com.rebootech.fruitlogix.distributor.paymentManagement.PaymentManagementRoutes
 @Composable
 fun AppNavHost(
     navController: NavHostController,

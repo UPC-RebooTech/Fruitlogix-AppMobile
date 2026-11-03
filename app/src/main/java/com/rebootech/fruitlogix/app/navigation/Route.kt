@@ -4,10 +4,16 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.rebootech.fruitlogix.R
 
+data class BottomNavTab(
+    val route: String,
+    @param:StringRes val labelRes: Int,
+    @param:DrawableRes val iconRes: Int
+)
+
 sealed class Route(
     val route: String,
-    @StringRes val labelRes: Int,
-    @DrawableRes val iconRes: Int
+    @param:StringRes val labelRes: Int,
+    @param:DrawableRes val iconRes: Int
 ) {
     object Home : Route("home", R.string.nav_home, R.drawable.ic_home)
     object Orders : Route("orders", R.string.nav_orders, R.drawable.ic_orders)
@@ -17,6 +23,8 @@ sealed class Route(
     object Producers : Route("producers", R.string.nav_producers, R.drawable.ic_producers)
 }
 
+fun Route.toNavTab(): BottomNavTab = BottomNavTab(route, labelRes, iconRes)
+
 val primaryNavRoutes = listOf(
     Route.Home,
     Route.Orders,
@@ -25,5 +33,3 @@ val primaryNavRoutes = listOf(
 )
 
 val bottomNavRoutes = primaryNavRoutes
-
-
