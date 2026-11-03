@@ -1,4 +1,4 @@
-package com.rebootech.fruitlogix.shared.ui.theme
+﻿package com.rebootech.fruitlogix.shared.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
@@ -49,6 +49,12 @@ val ColorWarning = Color(0xFFF5B800)
 /** Informational notices */
 val ColorInfo = Color(0xFF4C8DFF)
 
+/** Light surface for cards and containers */
+val ColorSurfaceLight = Color(0xFFF2F8F0)
+
+/** Pure white for cards and highlighted backgrounds */
+val ColorWhite = Color(0xFFFFFFFF)
+
 // ==========================================
 // 2. Extended FruitLogix Color Scheme
 // ==========================================
@@ -67,7 +73,9 @@ data class FruitLogixColors(
     val dangerStrong: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorDangerStrong,
     val success: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorSuccess,
     val warning: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorWarning,
-    val info: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorInfo
+    val info: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorInfo,
+    val surfaceLight: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorSurfaceLight,
+    val white: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorWhite
 )
 
 val LocalFruitLogixColors = staticCompositionLocalOf { _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixColors() }

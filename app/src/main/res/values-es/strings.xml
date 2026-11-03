@@ -7,6 +7,16 @@
     <string name="nav_producers">Productores</string>
     <string name="nav_more">Más</string>
 
+    <!-- Producer Navigation -->
+    <string name="producer_nav_home">Inicio</string>
+    <string name="producer_nav_orders">Pedidos</string>
+    <string name="producer_nav_stock">Stock</string>
+    <string name="producer_nav_reports">Reportes</string>
+    <string name="producer_nav_harvests">Cosechas</string>
+    <string name="producer_nav_payouts">Liquidaciones</string>
+    <string name="producer_nav_messaging">Mensajes</string>
+    <string name="producer_nav_profile">Mi Fundo</string>
+
     <!-- Top Bar -->
     <string name="topbar_title">FruitLogix</string>
     <string name="topbar_subtitle">COMANDO DISTRIBUIDOR</string>
