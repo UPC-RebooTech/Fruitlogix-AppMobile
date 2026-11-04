@@ -1,4 +1,4 @@
-package com.rebootech.fruitlogix.producer.qualityInspection.presentation
+package com.rebootech.fruitlogix.producer.logisticsMonitoring.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -14,13 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
-import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
-import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
-fun ProducerQualityScreen(
+fun ProducerDeliveryScreen(
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -30,14 +28,14 @@ fun ProducerQualityScreen(
             .padding(FruitLogixTheme.spacing.sm)
     ) {
         Text(
-            text = "Reportes de Calidad",
+            text = "Entrega al Camión",
             fontFamily = PoppinsFontFamily,
             fontWeight = FontWeight.Bold,
             style = FruitLogixTheme.typography.displayLarge,
             color = FruitLogixTheme.colors.textOnLight
         )
         Text(
-            text = "CERTIFICACIONES, BRIX Y FITOSANIDAD",
+            text = "LOGÍSTICA DE DESPACHO Y SEGUIMIENTO",
             style = FruitLogixTheme.typography.labelSmall,
             color = FruitLogixTheme.colors.textMuted,
             fontWeight = FontWeight.Bold
@@ -46,22 +44,21 @@ fun ProducerQualityScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         FruitLogixCard(
-            variant = CardVariant.Dark,
+            variant = CardVariant.White,
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
-                StatusBadge(text = "Aprobado (Grade A)", type = StatusBadgeType.SUCCESS)
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Lote L-204 • Uva Red Globe",
+                    text = "Pantalla en construcción",
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleMedium,
-                    color = FruitLogixTheme.colors.textOnDark
+                    color = FruitLogixTheme.colors.textOnLight
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Brix: 17.8° • Firmeza: 98% • SENASA Certificado OK",
-                    style = FruitLogixTheme.typography.bodySmall,
+                    text = "Aquí irá el flujo de entrega y confirmación de despacho al camión distribuidor.",
+                    style = FruitLogixTheme.typography.bodyMedium,
                     color = FruitLogixTheme.colors.textMuted
                 )
             }

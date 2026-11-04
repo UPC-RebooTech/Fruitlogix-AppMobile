@@ -1,4 +1,4 @@
-package com.rebootech.fruitlogix.producer.notificationsProfile.presentation
+package com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -14,13 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
-import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
-fun ProducerProfileScreen(
-    onSwitchRole: () -> Unit,
+fun ProducerMessagingScreen(
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -30,14 +28,14 @@ fun ProducerProfileScreen(
             .padding(FruitLogixTheme.spacing.sm)
     ) {
         Text(
-            text = "Perfil del Fundo",
+            text = "Mensajería y Enlace",
             fontFamily = PoppinsFontFamily,
             fontWeight = FontWeight.Bold,
             style = FruitLogixTheme.typography.displayLarge,
             color = FruitLogixTheme.colors.textOnLight
         )
         Text(
-            text = "DATOS DE CONTACTO, RUC Y CERTIFICACIONES",
+            text = "COMUNICACIÓN DIRECTA CON DISTRIBUIDOR",
             style = FruitLogixTheme.typography.labelSmall,
             color = FruitLogixTheme.colors.textMuted,
             fontWeight = FontWeight.Bold
@@ -46,39 +44,25 @@ fun ProducerProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         FruitLogixCard(
-            variant = CardVariant.Dark,
+            variant = CardVariant.White,
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                    text = "Fundo Agrícola Los Laureles S.A.C.",
+                    text = "Mesa de Ayuda Logística",
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleMedium,
-                    color = FruitLogixTheme.colors.textOnDark
+                    color = FruitLogixTheme.colors.textOnLight
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "RUC: 20491823901 • Ica, Valle Hermoso",
-                    style = FruitLogixTheme.typography.bodySmall,
+                    text = "Distribuidor: 'Camión FL-102 llegará a su fundo a las 11:30 AM.'",
+                    style = FruitLogixTheme.typography.bodyMedium,
                     color = FruitLogixTheme.colors.textMuted
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Certificación GlobalGAP: Válida hasta Octubre 2027",
-                    style = FruitLogixTheme.typography.bodySmall,
-                    color = FruitLogixTheme.colors.primary
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        SecondaryButton(
-            text = "Cambiar de Rol (Cerrar Sesión de Productor)",
-            onClick = onSwitchRole,
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
 

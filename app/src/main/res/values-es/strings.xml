@@ -15,6 +15,7 @@
     <string name="producer_nav_harvests">Cosechas</string>
     <string name="producer_nav_payouts">Liquidaciones</string>
     <string name="producer_nav_messaging">Mensajes</string>
+    <string name="producer_nav_notifications">Notificaciones</string>
     <string name="producer_nav_profile">Mi Fundo</string>
 
     <!-- Top Bar -->

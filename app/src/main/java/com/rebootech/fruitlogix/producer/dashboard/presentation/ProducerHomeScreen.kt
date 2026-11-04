@@ -1,4 +1,4 @@
-package com.rebootech.fruitlogix.producer.home.presentation
+package com.rebootech.fruitlogix.producer.dashboard.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

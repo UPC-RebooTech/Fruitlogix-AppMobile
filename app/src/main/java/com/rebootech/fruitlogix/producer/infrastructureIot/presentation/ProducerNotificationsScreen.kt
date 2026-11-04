@@ -1,4 +1,4 @@
-package com.rebootech.fruitlogix.producer.messaging.presentation
+package com.rebootech.fruitlogix.producer.infrastructureIot.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,7 @@ import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
-fun ProducerMessagingScreen(
+fun ProducerNotificationsScreen(
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -28,14 +28,14 @@ fun ProducerMessagingScreen(
             .padding(FruitLogixTheme.spacing.sm)
     ) {
         Text(
-            text = "Mensajería y Enlace",
+            text = "Notificaciones IoT",
             fontFamily = PoppinsFontFamily,
             fontWeight = FontWeight.Bold,
             style = FruitLogixTheme.typography.displayLarge,
             color = FruitLogixTheme.colors.textOnLight
         )
         Text(
-            text = "COMUNICACIÓN DIRECTA CON DISTRIBUIDOR",
+            text = "ALERTAS DE SENSORES Y EVENTOS DE CAMPO",
             style = FruitLogixTheme.typography.labelSmall,
             color = FruitLogixTheme.colors.textMuted,
             fontWeight = FontWeight.Bold
@@ -49,7 +49,7 @@ fun ProducerMessagingScreen(
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                    text = "Mesa de Ayuda Logística",
+                    text = "Sensor Temperatura — Cámara #1",
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleMedium,
@@ -57,7 +57,7 @@ fun ProducerMessagingScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Distribuidor: 'Camión FL-102 llegará a su fundo a las 11:30 AM.'",
+                    text = "Alerta: temperatura subió a 6.1°C • hace 5 min",
                     style = FruitLogixTheme.typography.bodyMedium,
                     color = FruitLogixTheme.colors.textMuted
                 )

@@ -1,7 +1,6 @@
-package com.rebootech.fruitlogix.producer.orderFulfillment.presentation
+package com.rebootech.fruitlogix.producer.qualityControl.stock.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,13 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
-import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
-import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
-fun ProducerOrdersScreen(
+fun ProducerStockScreen(
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -31,14 +28,14 @@ fun ProducerOrdersScreen(
             .padding(FruitLogixTheme.spacing.sm)
     ) {
         Text(
-            text = "Pedidos Asignados",
+            text = "Stock en Fundo",
             fontFamily = PoppinsFontFamily,
             fontWeight = FontWeight.Bold,
             style = FruitLogixTheme.typography.displayLarge,
             color = FruitLogixTheme.colors.textOnLight
         )
         Text(
-            text = "CUMPLIMIENTO Y PREPARACIÓN DE LOTES",
+            text = "INVENTARIO DE CAMPO Y CÁMARAS LOCALES",
             style = FruitLogixTheme.typography.labelSmall,
             color = FruitLogixTheme.colors.textMuted,
             fontWeight = FontWeight.Bold
@@ -47,22 +44,21 @@ fun ProducerOrdersScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         FruitLogixCard(
-            variant = CardVariant.Dark,
+            variant = CardVariant.White,
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
-                StatusBadge(text = "En Preparación", type = StatusBadgeType.WARNING)
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Orden #PO-8821 • 14 Pallets",
+                    text = "Cámara Frigorífica #1 (Hass)",
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleMedium,
-                    color = FruitLogixTheme.colors.textOnDark
+                    color = FruitLogixTheme.colors.textOnLight
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Destino: Callao Cold Hub • Fecha límite: Mañana 10:00",
-                    style = FruitLogixTheme.typography.bodySmall,
+                    text = "18 Pallets almacenados a 4.2°C • 86% RH",
+                    style = FruitLogixTheme.typography.bodyMedium,
                     color = FruitLogixTheme.colors.textMuted
                 )
             }
