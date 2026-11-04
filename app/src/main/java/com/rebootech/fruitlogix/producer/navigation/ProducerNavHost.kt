@@ -5,14 +5,15 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.rebootech.fruitlogix.producer.harvests.presentation.ProducerHarvestsScreen
-import com.rebootech.fruitlogix.producer.home.presentation.ProducerHomeScreen
-import com.rebootech.fruitlogix.producer.messaging.presentation.ProducerMessagingScreen
-import com.rebootech.fruitlogix.producer.notificationsProfile.presentation.ProducerProfileScreen
-import com.rebootech.fruitlogix.producer.orderFulfillment.presentation.ProducerOrdersScreen
-import com.rebootech.fruitlogix.producer.payouts.presentation.ProducerPayoutsScreen
-import com.rebootech.fruitlogix.producer.qualityInspection.presentation.ProducerQualityScreen
-import com.rebootech.fruitlogix.producer.stockManagement.presentation.ProducerStockScreen
+import com.rebootech.fruitlogix.producer.dashboard.presentation.ProducerHomeScreen
+import com.rebootech.fruitlogix.producer.infrastructureIot.presentation.ProducerNotificationsScreen
+import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersScreen
+import com.rebootech.fruitlogix.producer.paymentManagement.presentation.ProducerPayoutsScreen
+import com.rebootech.fruitlogix.producer.profilesManagement.presentation.ProducerProfileScreen
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerHarvestsScreen
+import com.rebootech.fruitlogix.producer.qualityControl.presentation.ProducerQualityScreen
+import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 
 @Composable
 fun ProducerNavHost(
@@ -47,9 +48,11 @@ fun ProducerNavHost(
         composable(ProducerRoutes.Messaging) {
             ProducerMessagingScreen()
         }
+        composable(ProducerRoutes.Notifications) {
+            ProducerNotificationsScreen()
+        }
         composable(ProducerRoutes.Profile) {
             ProducerProfileScreen(onSwitchRole = onSwitchRole)
         }
     }
 }
-
