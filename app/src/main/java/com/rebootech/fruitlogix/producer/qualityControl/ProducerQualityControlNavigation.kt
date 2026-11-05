@@ -22,7 +22,7 @@ fun NavGraphBuilder.producerQualityControlGraph(
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
         ProducerPlaceholderScreen(
-            title = "Preparar Pedido $orderId",
+            title = "Preparar Pedido ",
             onBack = { navController.popBackStack() }
         )
     }
@@ -42,7 +42,31 @@ fun NavGraphBuilder.producerQualityControlGraph(
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
         ProducerPlaceholderScreen(
-            title = "Escanear Lote para $orderId",
+            title = "Escanear Lote para ",
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    // TODO(producer): Inspección de Calidad
+    composable(
+        route = ProducerQualityControlRoutes.Inspection,
+        arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+        ProducerPlaceholderScreen(
+            title = "Inspección de Calidad ",
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    // TODO(producer): Detalle de Reporte de Calidad
+    composable(
+        route = ProducerQualityControlRoutes.ReportDetail,
+        arguments = listOf(navArgument("reportId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val reportId = backStackEntry.arguments?.getString("reportId") ?: ""
+        ProducerPlaceholderScreen(
+            title = "Detalle de Reporte ",
             onBack = { navController.popBackStack() }
         )
     }
@@ -54,7 +78,7 @@ fun NavGraphBuilder.producerQualityControlGraph(
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
         ProducerPlaceholderScreen(
-            title = "Resultado de Calidad $orderId",
+            title = "Resultado de Calidad ",
             onBack = { navController.popBackStack() }
         )
     }
@@ -66,7 +90,7 @@ fun NavGraphBuilder.producerQualityControlGraph(
     ) { backStackEntry ->
         val productId = backStackEntry.arguments?.getString("productId") ?: ""
         ProducerPlaceholderScreen(
-            title = "Detalle de Stock: $productId",
+            title = "Detalle de Stock: ",
             onBack = { navController.popBackStack() }
         )
     }

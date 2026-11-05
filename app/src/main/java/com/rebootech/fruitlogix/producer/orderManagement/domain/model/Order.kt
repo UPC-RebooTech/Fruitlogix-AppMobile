@@ -27,10 +27,13 @@ data class Order(
     val dueDate: LocalDate,
     val status: OrderStatus,
     val qualityStatus: QualityStatus? = null,
+    val qualityRejectionReason: String? = null,
     val assignedTruck: AssignedTruck? = null,
     val respondBy: Instant? = null,
     val respondByHoursLeft: Int? = null,
     val rejectionReason: String? = null,
+    val dispatchedAtFormatted: String? = null,
+    val deliveredAtFormatted: String? = null,
     val syncState: SyncState = SyncState.SYNCED
 ) {
     val totalKg: Int get() = items.sumOf { it.kg }
@@ -40,4 +43,3 @@ data class Order(
         qualityStatus == QualityStatus.APPROVED &&
         assignedTruck != null
 }
-
