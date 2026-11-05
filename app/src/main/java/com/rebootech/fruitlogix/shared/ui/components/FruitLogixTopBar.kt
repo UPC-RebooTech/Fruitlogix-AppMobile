@@ -31,7 +31,7 @@ enum class AppLanguage {
 }
 
 /**
- * Top App Bar component for FruitLogix Distributor app.
+ * Top App Bar component for FruitLogix app.
  *
  * @param title Top bar title string
  * @param subtitle Top bar subtitle string
@@ -42,24 +42,30 @@ enum class AppLanguage {
  * @param modifier Modifier to apply
  * @param hasUnreadNotifications Show red dot on notification bell if true
  * @param userInitials Initials to display inside avatar circle
+ * @param showLanguageToggle Show language switch pill (defaults to true for distributor compatibility)
+ * @param unreadMessages Unread chat messages count for badge
+ * @param onMessagesClick Callback when user taps message/chat icon (if provided, message icon is displayed)
  */
 @Composable
 fun FruitLogixTopBar(
     title: String,
     subtitle: String,
-    selectedLanguage: com.rebootech.fruitlogix.shared.ui.components.AppLanguage,
-    onLanguageSelected: (com.rebootech.fruitlogix.shared.ui.components.AppLanguage) -> Unit,
+    selectedLanguage: AppLanguage,
+    onLanguageSelected: (AppLanguage) -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
     hasUnreadNotifications: Boolean = true,
-    userInitials: String = "FL"
+    userInitials: String = "FL",
+    showLanguageToggle: Boolean = true,
+    unreadMessages: Int = 0,
+    onMessagesClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.appbar)
-            .padding(horizontal = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.spacing.sm, vertical = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.spacing.xs),
+            .background(FruitLogixTheme.colors.appbar)
+            .padding(horizontal = FruitLogixTheme.spacing.sm, vertical = FruitLogixTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -71,44 +77,72 @@ fun FruitLogixTopBar(
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
-                    .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.primary),
+                    .clip(FruitLogixTheme.shapes.Pill)
+                    .background(FruitLogixTheme.colors.primary),
                 contentAlignment = Alignment.Center
             ) {
-                _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppIcon(
+                AppIcon(
                     id = R.drawable.ic_sensor_waves,
                     contentDescription = null,
-                    tint = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.onPrimary,
+                    tint = FruitLogixTheme.colors.onPrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.spacing.xs))
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
             Column {
                 Text(
                     text = title,
-                    fontFamily = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily,
+                    fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
-                    style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.titleMedium,
-                    color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textOnDark
+                    style = FruitLogixTheme.typography.titleMedium,
+                    color = FruitLogixTheme.colors.textOnDark
                 )
                 Text(
                     text = subtitle.uppercase(),
-                    style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.labelSmall,
-                    color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textMuted,
+                    style = FruitLogixTheme.typography.labelSmall,
+                    color = FruitLogixTheme.colors.textMuted,
                     fontWeight = FontWeight.Medium
                 )
             }
         }
 
-        // Controls: Language Toggle Pill + Notification Bell + Avatar
+        // Controls Section
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.spacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)
         ) {
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.LanguageTogglePill(
-                selectedLanguage = selectedLanguage,
-                onLanguageSelected = onLanguageSelected
-            )
+            if (showLanguageToggle) {
+                LanguageTogglePill(
+                    selectedLanguage = selectedLanguage,
+                    onLanguageSelected = onLanguageSelected
+                )
+            }
+
+            if (onMessagesClick != null) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onMessagesClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppIcon(
+                        id = R.drawable.ic_contact_driver,
+                        contentDescription = "Messages",
+                        tint = FruitLogixTheme.colors.textOnDark,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    if (unreadMessages > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .align(Alignment.TopEnd)
+                                .clip(CircleShape)
+                                .background(FruitLogixTheme.colors.primary)
+                        )
+                    }
+                }
+            }
 
             Box(
                 modifier = Modifier
@@ -117,10 +151,10 @@ fun FruitLogixTopBar(
                     .clickable(onClick = onNotificationClick),
                 contentAlignment = Alignment.Center
             ) {
-                _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppIcon(
+                AppIcon(
                     id = R.drawable.ic_notifications,
                     contentDescription = "Notifications",
-                    tint = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textOnDark,
+                    tint = FruitLogixTheme.colors.textOnDark,
                     modifier = Modifier.size(24.dp)
                 )
                 if (hasUnreadNotifications) {
@@ -129,7 +163,7 @@ fun FruitLogixTopBar(
                             .size(8.dp)
                             .align(Alignment.TopEnd)
                             .clip(CircleShape)
-                            .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.dangerStrong)
+                            .background(FruitLogixTheme.colors.dangerStrong)
                     )
                 }
             }
@@ -138,14 +172,14 @@ fun FruitLogixTopBar(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.surfaceDark)
+                    .background(FruitLogixTheme.colors.surfaceDark)
                     .clickable(onClick = onProfileClick),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = userInitials,
-                    style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.bodySmall,
-                    color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.primary,
+                    style = FruitLogixTheme.typography.bodySmall,
+                    color = FruitLogixTheme.colors.primary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -155,25 +189,25 @@ fun FruitLogixTopBar(
 
 @Composable
 private fun LanguageTogglePill(
-    selectedLanguage: com.rebootech.fruitlogix.shared.ui.components.AppLanguage,
-    onLanguageSelected: (com.rebootech.fruitlogix.shared.ui.components.AppLanguage) -> Unit
+    selectedLanguage: AppLanguage,
+    onLanguageSelected: (AppLanguage) -> Unit
 ) {
     Row(
         modifier = Modifier
-            .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
-            .background(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.surfaceDark)
+            .clip(FruitLogixTheme.shapes.Pill)
+            .background(FruitLogixTheme.colors.surfaceDark)
             .padding(2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.LanguageOptionItem(
+        LanguageOptionItem(
             languageText = "ES",
-            isSelected = selectedLanguage == _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppLanguage.ES,
-            onClick = { onLanguageSelected(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppLanguage.ES) }
+            isSelected = selectedLanguage == AppLanguage.ES,
+            onClick = { onLanguageSelected(AppLanguage.ES) }
         )
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.LanguageOptionItem(
+        LanguageOptionItem(
             languageText = "EN",
-            isSelected = selectedLanguage == _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppLanguage.EN,
-            onClick = { onLanguageSelected(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppLanguage.EN) }
+            isSelected = selectedLanguage == AppLanguage.EN,
+            onClick = { onLanguageSelected(AppLanguage.EN) }
         )
     }
 }
@@ -186,16 +220,16 @@ private fun LanguageOptionItem(
 ) {
     Box(
         modifier = Modifier
-            .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
-            .background(if (isSelected) _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.primary else Color.Transparent)
+            .clip(FruitLogixTheme.shapes.Pill)
+            .background(if (isSelected) FruitLogixTheme.colors.primary else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = languageText,
-            style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.labelSmall,
-            color = if (isSelected) _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.onPrimary else _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textMuted,
+            style = FruitLogixTheme.typography.labelSmall,
+            color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textMuted,
             fontWeight = FontWeight.Bold
         )
     }
@@ -204,11 +238,11 @@ private fun LanguageOptionItem(
 @Preview
 @Composable
 private fun FruitLogixTopBarPreview() {
-    _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme {
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.FruitLogixTopBar(
+    FruitLogixTheme {
+        FruitLogixTopBar(
             title = "FruitLogix",
             subtitle = "DISTRIBUTOR COMMAND",
-            selectedLanguage = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.AppLanguage.ES,
+            selectedLanguage = AppLanguage.ES,
             onLanguageSelected = {},
             onNotificationClick = {},
             onProfileClick = {}

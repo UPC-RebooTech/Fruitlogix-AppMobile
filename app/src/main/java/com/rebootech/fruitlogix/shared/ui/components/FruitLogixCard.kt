@@ -21,14 +21,15 @@ import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 enum class CardVariant {
     Dark,
     Light,
-    White
+    White,
+    Tint
 }
 
 /**
- * Universal Card component for FruitLogix Design System supporting Dark, Light and White surface variants.
+ * Universal Card component for FruitLogix Design System supporting Dark, Light, White and Tint surface variants.
  *
  * @param modifier Modifier to apply to the card container
- * @param variant Visual variant (Dark, Light, White)
+ * @param variant Visual variant (Dark, Light, White, Tint)
  * @param shape Card shape (defaults to FruitLogixTheme.shapes.Card 24dp)
  * @param border Optional border stroke
  * @param elevation Card elevation specification
@@ -58,6 +59,16 @@ fun FruitLogixCard(
             FruitLogixTheme.colors.white,
             FruitLogixTheme.colors.textOnLight
         )
+        CardVariant.Tint -> Pair(
+            FruitLogixTheme.colors.surfaceTint,
+            FruitLogixTheme.colors.textOnLight
+        )
+    }
+
+    val resolvedBorder = border ?: if (variant == CardVariant.Tint) {
+        BorderStroke(1.dp, FruitLogixTheme.colors.primary.copy(alpha = 0.35f))
+    } else {
+        null
     }
 
     Card(
@@ -67,7 +78,7 @@ fun FruitLogixCard(
                 if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
             ),
         shape = shape,
-        border = border,
+        border = resolvedBorder,
         elevation = elevation,
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
@@ -101,11 +112,17 @@ private fun FruitLogixCardPreview() {
 
             FruitLogixCard(
                 variant = CardVariant.White,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             ) {
                 Text("White Card", modifier = Modifier.padding(16.dp))
+            }
+
+            FruitLogixCard(
+                variant = CardVariant.Tint,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Tint Card", modifier = Modifier.padding(16.dp))
             }
         }
     }
 }
-
