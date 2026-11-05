@@ -1,6 +1,62 @@
 <resources>
+    <!-- Producer Navigation -->
+    <string name="producer_nav_home">Home</string>
+    <string name="producer_nav_orders">Orders</string>
+    <string name="producer_nav_stock">Stock</string>
+    <string name="producer_nav_reports">Reports</string>
+    <string name="producer_nav_harvests">Harvests</string>
+    <string name="producer_nav_payouts">Payouts</string>
+    <string name="producer_nav_messaging">Messages</string>
+    <string name="producer_nav_notifications">Notifications</string>
+    <string name="producer_nav_profile">My Farm</string>
+    <string name="order_history_filter_producer_example">E.g. Finca Los Andes</string>
+
     <!-- Top Bar -->
     <string name="topbar_title">FruitLogix</string>
     <string name="topbar_subtitle">DISTRIBUTOR COMMAND</string>
     <string name="producer_topbar_subtitle">PRODUCER FIELD</string>
+
+    <!-- Producer Orders Screen -->
+    <string name="producer_orders_search_placeholder">Search order ID or client...</string>
+    <string name="producer_orders_tile_awaiting_action">Awaiting action</string>
+    <string name="producer_orders_tile_in_shed">In shed</string>
+    <string name="producer_orders_tile_active_vol">Active volume</string>
+    <string name="producer_orders_tile_volume_format">%1$s kg</string>
+    <string name="producer_orders_tile_order_singular">%1$d Order</string>
+    <string name="producer_orders_tile_orders_plural">%1$d Orders</string>
+    <string name="producer_orders_tile_active">%1$d Active</string>
+    <string name="producer_orders_chip_all">All</string>
+    <string name="producer_orders_chip_pending">Pending</string>
+    <string name="producer_orders_chip_in_preparation">In Preparation</string>
+    <string name="producer_orders_chip_in_transit">In Transit</string>
+    <string name="producer_orders_chip_delivered">Delivered</string>
+    <string name="producer_orders_chip_rejected">Rejected</string>
+    <string name="producer_orders_chip_cancelled">Cancelled</string>
+    <string name="producer_orders_due_date">Due %1$s</string>
+    <string name="producer_orders_respond_within">Respond within %1$d h</string>
+    <string name="producer_orders_overdue">Overdue</string>
+    <string name="producer_orders_btn_review">Review</string>
+    <string name="producer_orders_btn_accept">Accept Order</string>
+    <string name="producer_orders_btn_review_respond">Review &amp; respond</string>
+    <string name="producer_orders_btn_update_inspection">Update Inspection</string>
+    <string name="producer_orders_btn_view_report">View report</string>
+    <string name="producer_orders_btn_reinspect">Re-inspect</string>
+    <string name="producer_orders_btn_view_details">View details</string>
+    <string name="producer_orders_short_by">Short by %1$d kg of %2$s</string>
+    <string name="producer_orders_quality_approved">Quality Approved</string>
+    <string name="producer_orders_quality_pending">Quality Pending Check</string>
+    <string name="producer_orders_quality_rejected">Quality Rejected</string>
+    <string name="producer_orders_ready_to_load">Ready to load</string>
+    <string name="producer_orders_truck_assigned">Truck %1$s assigned</string>
+    <string name="producer_orders_dispatched_at">Dispatched %1$s</string>
+    <string name="producer_orders_delivered_at">Delivered %1$s</string>
+    <string name="producer_orders_eta">ETA %1$s</string>
+    <string name="producer_orders_footer_loaded">All orders loaded</string>
+    <string name="producer_orders_empty_title">No orders found</string>
+    <string name="producer_orders_empty_desc">Try adjusting your search or filters</string>
+    <string name="producer_orders_accept_dialog_title">Accept order %1$s?</string>
+    <string name="producer_orders_accept_dialog_desc">This order will move to preparation and reserve the required stock.</string>
+    <string name="producer_orders_accept_confirm">Accept</string>
+    <string name="producer_orders_accept_cancel">Cancel</string>
+    <string name="producer_orders_accept_success">Order %1$s accepted successfully</string>
 </resources>

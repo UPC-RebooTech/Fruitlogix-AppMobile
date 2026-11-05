@@ -35,7 +35,7 @@ fun ProducerNavHost(
             )
         }
         composable(ProducerRoute.Orders.route) {
-            ProducerOrdersScreen()
+            ProducerOrdersScreen(onNavigate = { route -> navController.navigate(route) })
         }
         composable(ProducerRoute.Stock.route) {
             ProducerStockScreen()

@@ -71,6 +71,7 @@ class FakeOrderRepository : OrderRepository {
                     dueDate = today.plusDays(1),
                     status = OrderStatus.IN_PREPARATION,
                     qualityStatus = QualityStatus.REJECTED,
+                    qualityRejectionReason = "Bruising above 4% limit · Re-grading requested",
                     rejectionReason = "Bruising above 4% limit"
                 ),
                 Order(
@@ -99,7 +100,16 @@ class FakeOrderRepository : OrderRepository {
                         OrderItem(productId = "grapes", productName = "Red Globe Grapes", kg = 150)
                     ),
                     dueDate = today,
-                    status = OrderStatus.IN_TRANSIT
+                    status = OrderStatus.IN_TRANSIT,
+                    dispatchedAtFormatted = "today · 08:30 AM",
+                    assignedTruck = AssignedTruck(
+                        plate = "FL-302",
+                        vehicleType = "Reefer Truck 2.5T",
+                        driverName = "Mario Rossi",
+                        driverPhone = "+51 912 345 678",
+                        etaMinutes = 135,
+                        etaFormatted = "2 h 15 min"
+                    )
                 ),
                 Order(
                     id = "#1030",
@@ -109,10 +119,10 @@ class FakeOrderRepository : OrderRepository {
                         OrderItem(productId = "mango", productName = "Kent Mango", kg = 350)
                     ),
                     dueDate = today.minusDays(1),
-                    status = OrderStatus.DELIVERED
+                    status = OrderStatus.DELIVERED,
+                    deliveredAtFormatted = "Oct 30"
                 )
             )
         }
     }
 }
-
