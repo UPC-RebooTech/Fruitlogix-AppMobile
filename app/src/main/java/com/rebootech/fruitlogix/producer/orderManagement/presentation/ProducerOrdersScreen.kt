@@ -23,16 +23,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.logisticsMonitoring.ProducerLogisticsMonitoringRoutes
+import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
+import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderStatus
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.ActiveFilterChipsRow
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.NoOrdersFoundCard
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderCard
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderSearchBar
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderStatusChips
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderSummaryTiles
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.PendingAllCaughtUpCard
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.shared.ui.components.ConfirmDialog
 import com.rebootech.fruitlogix.shared.ui.components.EmptyState
@@ -48,10 +54,13 @@ fun ProducerOrdersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { orderId ->
-            snackbarHostState.showSnackbar("Pedido  aceptado exitosamente")
+            snackbarHostState.showSnackbar(
+                context.getString(R.string.producer_orders_accept_success, orderId)
+            )
             viewModel.onSnackbarDismissed()
         }
     }
@@ -83,7 +92,7 @@ fun ProducerOrdersScreen(
                         OfflineBanner(isOffline = uiState.isOffline)
                     }
 
-                    // 1. Barra de búsqueda y filtros
+                    // 1. Barra de búsqueda y botón de filtros
                     item {
                         Spacer(modifier = Modifier.height(10.dp))
                         OrderSearchBar(
@@ -97,6 +106,19 @@ fun ProducerOrdersScreen(
                             },
                             hasActiveFilters = uiState.filters.hasActiveFilters
                         )
+                    }
+
+                    // 1.1 Fila de píldoras de filtros activos (si existen)
+                    if (uiState.filters.hasActiveFilters) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ActiveFilterChipsRow(
+                                filters = uiState.filters,
+                                onRemoveStatus = { viewModel.onRemoveStatusFilter(it) },
+                                onRemoveClient = { viewModel.onRemoveClientFilter(it) },
+                                onClearQuery = { viewModel.onClearQuery() }
+                            )
+                        }
                     }
 
                     // 2. Tres tiles de resumen
@@ -120,14 +142,44 @@ fun ProducerOrdersScreen(
                         Spacer(modifier = Modifier.height(14.dp))
                     }
 
-                    // 4. Lista de pedidos filtrados o EmptyState
+                    // 4. Lista de pedidos filtrados o Estados Vacíos (Casos A, B, C)
                     if (uiState.filteredOrders.isEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(30.dp))
-                            EmptyState(
-                                title = stringResource(R.string.producer_orders_empty_title),
-                                message = stringResource(R.string.producer_orders_empty_desc)
-                            )
+                        val isPendingTabOnly = uiState.filters.statuses == setOf(OrderStatus.PENDING) &&
+                                uiState.filters.query.isBlank() &&
+                                uiState.filters.clientIds.isEmpty()
+
+                        if (isPendingTabOnly) {
+                            // CASO B: tab Pending sin pedidos
+                            item {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                PendingAllCaughtUpCard(
+                                    distributorName = uiState.distributorName,
+                                    inShedCount = uiState.inShedCount,
+                                    lastAcceptedOrder = uiState.lastAcceptedOrder,
+                                    lastAcceptedTime = uiState.lastAcceptedTimeFormatted,
+                                    onViewInPrep = { viewModel.onApplySuggestedInPrep() },
+                                    onCheckStock = { onNavigate(ProducerRoute.Stock.route) }
+                                )
+                            }
+                        } else if (uiState.filters.hasActiveFilters) {
+                            // CASO A: sin resultados de búsqueda o filtros activos
+                            item {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                NoOrdersFoundCard(
+                                    onClearFilters = { viewModel.onClearAllFilters() },
+                                    onApplyInPrep = { viewModel.onApplySuggestedInPrep() },
+                                    onApplyInTransit = { viewModel.onApplySuggestedInTransit() }
+                                )
+                            }
+                        } else {
+                            // CASO C: cualquier otro tab vacío o lista general
+                            item {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                EmptyState(
+                                    title = stringResource(R.string.producer_orders_empty_title),
+                                    message = stringResource(R.string.producer_orders_empty_desc)
+                                )
+                            }
                         }
                     } else {
                         items(

@@ -382,4 +382,21 @@
     <string name="producer_orders_accept_confirm">Accept</string>
     <string name="producer_orders_accept_cancel">Cancel</string>
     <string name="producer_orders_accept_success">Order %1$s accepted successfully</string>
+    <!-- Producer Orders Empty States & Filters -->
+    <string name="producer_orders_filter_query">Search: %1$s</string>
+    <string name="producer_orders_filter_status">Status: %1$s</string>
+    <string name="producer_orders_filter_client">Client: %1$s</string>
+    <string name="producer_orders_clear_filters">Clear filters</string>
+    <string name="producer_orders_no_results_desc">No orders match the applied filters. Try adjusting your search query, date range, or active status filters.</string>
+    <string name="producer_orders_filter_tip">Tip: You can also reset individual filter pills above.</string>
+    <string name="producer_orders_suggested_views">Suggested views</string>
+    <string name="producer_orders_suggested_in_prep">In preparation</string>
+    <string name="producer_orders_suggested_in_transit">In transit</string>
+    <string name="producer_orders_caught_up_title">All caught up!</string>
+    <string name="producer_orders_caught_up_subtitle">No pending orders right now</string>
+    <string name="producer_orders_caught_up_desc">New orders assigned by %1$s (FruitLogix Distributor) will appear here instantly with sound and push notifications.</string>
+    <string name="producer_orders_recent_activity">RECENT ACTIVITY</string>
+    <string name="producer_orders_activity_accepted">Order %1$s accepted · Moved to In Preparation</string>
+    <string name="producer_orders_btn_view_in_prep">View In Preparation (%1$d)</string>
+    <string name="producer_orders_btn_check_stock">Check Farm Stock</string>
 </resources>

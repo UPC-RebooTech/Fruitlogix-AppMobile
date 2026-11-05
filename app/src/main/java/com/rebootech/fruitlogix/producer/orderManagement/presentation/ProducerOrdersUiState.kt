@@ -19,5 +19,8 @@ data class ProducerOrdersUiState(
     val stockShortages: Map<String, StockShortage> = emptyMap(),
     val pendingAcceptOrder: Order? = null,
     val showAcceptConfirmDialog: Boolean = false,
-    val snackbarMessage: String? = null
+    val snackbarMessage: String? = null,
+    val lastAcceptedOrder: Order? = null,
+    val lastAcceptedTimeFormatted: String? = null,
+    val distributorName: String = "Carlos Mendoza"
 )

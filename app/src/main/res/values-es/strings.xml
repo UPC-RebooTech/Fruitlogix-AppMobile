@@ -367,4 +367,21 @@
     <string name="producer_orders_accept_confirm">Aceptar</string>
     <string name="producer_orders_accept_cancel">Cancelar</string>
     <string name="producer_orders_accept_success">Pedido %1$s aceptado exitosamente</string>
+    <!-- Producer Orders Empty States & Filters -->
+    <string name="producer_orders_filter_query">Búsqueda: %1$s</string>
+    <string name="producer_orders_filter_status">Estado: %1$s</string>
+    <string name="producer_orders_filter_client">Cliente: %1$s</string>
+    <string name="producer_orders_clear_filters">Limpiar filtros</string>
+    <string name="producer_orders_no_results_desc">Ningún pedido coincide con los filtros aplicados. Intenta ajustar la búsqueda, rango de fechas o filtros de estado.</string>
+    <string name="producer_orders_filter_tip">Consejo: También puedes restablecer los filtros individuales arriba.</string>
+    <string name="producer_orders_suggested_views">Vistas sugeridas</string>
+    <string name="producer_orders_suggested_in_prep">En preparación</string>
+    <string name="producer_orders_suggested_in_transit">En tránsito</string>
+    <string name="producer_orders_caught_up_title">¡Todo al día!</string>
+    <string name="producer_orders_caught_up_subtitle">No hay pedidos pendientes en este momento</string>
+    <string name="producer_orders_caught_up_desc">Los nuevos pedidos asignados por %1$s (Distribuidor FruitLogix) aparecerán aquí al instante con notificaciones push y sonido.</string>
+    <string name="producer_orders_recent_activity">ACTIVIDAD RECIENTE</string>
+    <string name="producer_orders_activity_accepted">Pedido %1$s aceptado · Pasó a En Preparación</string>
+    <string name="producer_orders_btn_view_in_prep">Ver En Preparación (%1$d)</string>
+    <string name="producer_orders_btn_check_stock">Ver Stock del Fundo</string>
 </resources>

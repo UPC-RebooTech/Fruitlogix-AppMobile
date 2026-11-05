@@ -18,4 +18,10 @@ data class OrderFilters(
                 statuses.isNotEmpty() ||
                 dateRange != null ||
                 clientIds.isNotEmpty()
+
+    fun clearAll() = OrderFilters()
+    fun removeStatus(status: OrderStatus) = copy(statuses = statuses - status)
+    fun removeClient(clientName: String) = copy(clientIds = clientIds - clientName)
+    fun clearQuery() = copy(query = "")
+    fun clearDateRange() = copy(dateRange = null)
 }

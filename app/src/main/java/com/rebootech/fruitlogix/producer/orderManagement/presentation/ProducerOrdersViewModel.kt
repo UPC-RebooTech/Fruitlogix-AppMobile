@@ -18,6 +18,9 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class ProducerOrdersViewModel(
     private val orderRepository: OrderRepository = FakeOrderRepository.instance,
@@ -42,16 +45,31 @@ class ProducerOrdersViewModel(
                 stockRepository.observeStock(),
                 _filters
             ) { orders, stock, filters ->
+                val distributorName = orders.firstOrNull()?.distributorName ?: "Carlos Mendoza"
                 val awaitingCount = orders.count { it.status == OrderStatus.PENDING }
                 val inShedCount = orders.count { it.status == OrderStatus.IN_PREPARATION }
                 val activeVolume = orders
                     .filter { it.status in setOf(OrderStatus.PENDING, OrderStatus.IN_PREPARATION, OrderStatus.IN_TRANSIT) }
                     .sumOf { it.totalKg }
 
+                // Base filtered by search & clients to dynamically derive status counts
+                val baseFilteredOrders = orders.filter { order ->
+                    val matchesQuery = if (filters.query.isBlank()) true else {
+                        val q = filters.query.trim().lowercase()
+                        order.id.lowercase().contains(q) ||
+                        order.clientName.lowercase().contains(q) ||
+                        order.items.any { it.productName.lowercase().contains(q) }
+                    }
+                    val matchesClients = if (filters.clientIds.isEmpty()) true else {
+                        order.clientName in filters.clientIds
+                    }
+                    matchesQuery && matchesClients
+                }
+
                 val counts = mutableMapOf<OrderStatus?, Int>()
-                counts[null] = orders.size
+                counts[null] = baseFilteredOrders.size
                 for (status in OrderStatus.values()) {
-                    counts[status] = orders.count { it.status == status }
+                    counts[status] = baseFilteredOrders.count { it.status == status }
                 }
 
                 val shortages = mutableMapOf<String, StockShortage>()
@@ -74,7 +92,7 @@ class ProducerOrdersViewModel(
 
                 val filtered = filterOrdersUseCase(orders, filters)
 
-                Triple(orders, filtered, Triple(awaitingCount, inShedCount, activeVolume)) to (counts to shortages)
+                Triple(orders, filtered, Triple(awaitingCount, inShedCount, activeVolume)) to (counts to (shortages to distributorName))
             }
                 .catch { ex ->
                     _uiState.update {
@@ -87,7 +105,8 @@ class ProducerOrdersViewModel(
                 .collect { (ordersData, metaData) ->
                     val (allOrders, filteredOrders, metrics) = ordersData
                     val (awaiting, inShed, volume) = metrics
-                    val (counts, shortages) = metaData
+                    val (counts, secondMeta) = metaData
+                    val (shortages, distributorName) = secondMeta
 
                     _uiState.update { current ->
                         current.copy(
@@ -100,7 +119,8 @@ class ProducerOrdersViewModel(
                             inShedCount = inShed,
                             activeVolumeKg = volume,
                             statusCounts = counts,
-                            stockShortages = shortages
+                            stockShortages = shortages,
+                            distributorName = distributorName
                         )
                     }
                 }
@@ -111,6 +131,10 @@ class ProducerOrdersViewModel(
         _filters.update { it.copy(query = query) }
     }
 
+    fun onClearQuery() {
+        _filters.update { it.clearQuery() }
+    }
+
     fun onStatusChipSelect(status: OrderStatus?) {
         _filters.update {
             if (status == null) {
@@ -119,6 +143,26 @@ class ProducerOrdersViewModel(
                 it.copy(statuses = setOf(status))
             }
         }
+    }
+
+    fun onRemoveStatusFilter(status: OrderStatus) {
+        _filters.update { it.removeStatus(status) }
+    }
+
+    fun onRemoveClientFilter(clientName: String) {
+        _filters.update { it.removeClient(clientName) }
+    }
+
+    fun onClearAllFilters() {
+        _filters.update { it.clearAll() }
+    }
+
+    fun onApplySuggestedInPrep() {
+        _filters.update { it.copy(statuses = setOf(OrderStatus.IN_PREPARATION)) }
+    }
+
+    fun onApplySuggestedInTransit() {
+        _filters.update { it.copy(statuses = setOf(OrderStatus.IN_TRANSIT)) }
     }
 
     fun onAcceptOrderClick(order: Order) {
@@ -135,8 +179,13 @@ class ProducerOrdersViewModel(
             _uiState.update { it.copy(showAcceptConfirmDialog = false, pendingAcceptOrder = null) }
             val success = orderRepository.acceptOrder(order.id)
             if (success) {
+                val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
                 _uiState.update {
-                    it.copy(snackbarMessage = order.id)
+                    it.copy(
+                        snackbarMessage = order.id,
+                        lastAcceptedOrder = order,
+                        lastAcceptedTimeFormatted = nowTime
+                    )
                 }
             }
         }
