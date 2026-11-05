@@ -6,13 +6,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.rebootech.fruitlogix.producer.dashboard.presentation.ProducerHomeScreen
-import com.rebootech.fruitlogix.producer.infrastructureIot.presentation.ProducerNotificationsScreen
-import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
+import com.rebootech.fruitlogix.producer.infrastructureIot.producerInfrastructureIotGraph
+import com.rebootech.fruitlogix.producer.logisticsMonitoring.producerLogisticsMonitoringGraph
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersScreen
-import com.rebootech.fruitlogix.producer.paymentManagement.presentation.ProducerPayoutsScreen
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.ProducerProfileScreen
-import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerHarvestsScreen
+import com.rebootech.fruitlogix.producer.orderManagement.producerOrderManagementGraph
+import com.rebootech.fruitlogix.producer.paymentManagement.producerPaymentManagementGraph
+import com.rebootech.fruitlogix.producer.profilesManagement.producerProfilesManagementGraph
 import com.rebootech.fruitlogix.producer.qualityControl.presentation.ProducerQualityScreen
+import com.rebootech.fruitlogix.producer.qualityControl.producerQualityControlGraph
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 
 @Composable
@@ -20,39 +21,35 @@ fun ProducerNavHost(
     navController: NavHostController,
     onSwitchRole: () -> Unit,
     modifier: Modifier = Modifier,
-    startDestination: String = ProducerRoutes.Home
+    startDestination: String = ProducerRoute.Home.route
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
-        composable(ProducerRoutes.Home) {
-            ProducerHomeScreen(onSwitchRole = onSwitchRole)
+        composable(ProducerRoute.Home.route) {
+            ProducerHomeScreen(
+                onSwitchRole = onSwitchRole,
+                onNavigate = { route -> navController.navigate(route) }
+            )
         }
-        composable(ProducerRoutes.Orders) {
+        composable(ProducerRoute.Orders.route) {
             ProducerOrdersScreen()
         }
-        composable(ProducerRoutes.Stock) {
+        composable(ProducerRoute.Stock.route) {
             ProducerStockScreen()
         }
-        composable(ProducerRoutes.Reports) {
+        composable(ProducerRoute.Reports.route) {
             ProducerQualityScreen()
         }
-        composable(ProducerRoutes.Harvests) {
-            ProducerHarvestsScreen()
-        }
-        composable(ProducerRoutes.Payouts) {
-            ProducerPayoutsScreen()
-        }
-        composable(ProducerRoutes.Messaging) {
-            ProducerMessagingScreen()
-        }
-        composable(ProducerRoutes.Notifications) {
-            ProducerNotificationsScreen()
-        }
-        composable(ProducerRoutes.Profile) {
-            ProducerProfileScreen(onSwitchRole = onSwitchRole)
-        }
+
+        // Bounded context subgraphs
+        producerOrderManagementGraph(navController)
+        producerQualityControlGraph(navController)
+        producerLogisticsMonitoringGraph(navController)
+        producerInfrastructureIotGraph(navController)
+        producerPaymentManagementGraph(navController)
+        producerProfilesManagementGraph(navController, onSwitchRole = onSwitchRole)
     }
 }

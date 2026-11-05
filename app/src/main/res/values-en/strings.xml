@@ -1,0 +1,6 @@
+<resources>
+    <!-- Top Bar -->
+    <string name="topbar_title">FruitLogix</string>
+    <string name="topbar_subtitle">DISTRIBUTOR COMMAND</string>
+    <string name="producer_topbar_subtitle">PRODUCER FIELD</string>
+</resources>

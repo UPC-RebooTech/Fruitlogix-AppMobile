@@ -22,21 +22,22 @@ enum class StatusBadgeType {
     WARNING,
     DANGER,
     INFO,
-    NEUTRAL
+    NEUTRAL,
+    HIGHLIGHT
 }
 
 /**
  * Status Badge component: pill shape, uppercase small text, translucent tinted background.
  *
  * @param text Badge text
- * @param type Semantic state type (SUCCESS, WARNING, DANGER, INFO, NEUTRAL)
+ * @param type Semantic state type (SUCCESS, WARNING, DANGER, INFO, NEUTRAL, HIGHLIGHT)
  * @param modifier Modifier to apply
  * @param icon Optional leading icon composable
  */
 @Composable
 fun StatusBadge(
     text: String,
-    type: com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType,
+    type: StatusBadgeType,
     modifier: Modifier = Modifier,
     maxLines: Int = Int.MAX_VALUE,
     softWrap: Boolean = true,
@@ -45,31 +46,35 @@ fun StatusBadge(
     icon: (@Composable () -> Unit)? = null
 ) {
     val (backgroundColor, textColor) = when (type) {
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.SUCCESS -> Pair(
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.success.copy(alpha = 0.18f),
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.success
+        StatusBadgeType.SUCCESS -> Pair(
+            FruitLogixTheme.colors.success.copy(alpha = 0.18f),
+            FruitLogixTheme.colors.success
         )
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.WARNING -> Pair(
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.warning.copy(alpha = 0.18f),
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.warning
+        StatusBadgeType.WARNING -> Pair(
+            FruitLogixTheme.colors.warning.copy(alpha = 0.18f),
+            FruitLogixTheme.colors.warning
         )
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.DANGER -> Pair(
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.18f),
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.dangerStrong
+        StatusBadgeType.DANGER -> Pair(
+            FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.18f),
+            FruitLogixTheme.colors.dangerStrong
         )
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.INFO -> Pair(
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.info.copy(alpha = 0.18f),
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.info
+        StatusBadgeType.INFO -> Pair(
+            FruitLogixTheme.colors.info.copy(alpha = 0.18f),
+            FruitLogixTheme.colors.info
         )
-        _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.NEUTRAL -> Pair(
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textMuted.copy(alpha = 0.18f),
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.colors.textMuted
+        StatusBadgeType.NEUTRAL -> Pair(
+            FruitLogixTheme.colors.textMuted.copy(alpha = 0.18f),
+            FruitLogixTheme.colors.textMuted
+        )
+        StatusBadgeType.HIGHLIGHT -> Pair(
+            FruitLogixTheme.colors.primary.copy(alpha = 0.24f),
+            FruitLogixTheme.colors.primary
         )
     }
 
     Box(
         modifier = modifier
-            .clip(_root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.shapes.Pill)
+            .clip(FruitLogixTheme.shapes.Pill)
             .background(backgroundColor)
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         contentAlignment = Alignment.Center
@@ -82,7 +87,7 @@ fun StatusBadge(
             Text(
                 text = text.uppercase(),
                 color = textColor,
-                style = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme.typography.labelSmall,
+                style = FruitLogixTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = maxLines,
                 softWrap = softWrap
@@ -94,30 +99,34 @@ fun StatusBadge(
 @Preview
 @Composable
 private fun StatusBadgePreview() {
-    _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme {
+    FruitLogixTheme {
         Row(
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadge(
+            StatusBadge(
                 text = "Delivered",
-                type = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.SUCCESS
+                type = StatusBadgeType.SUCCESS
             )
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadge(
+            StatusBadge(
                 text = "Customs Delay",
-                type = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.WARNING
+                type = StatusBadgeType.WARNING
             )
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadge(
+            StatusBadge(
                 text = "Overdue",
-                type = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.DANGER
+                type = StatusBadgeType.DANGER
             )
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadge(
+            StatusBadge(
                 text = "In Transit",
-                type = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.INFO
+                type = StatusBadgeType.INFO
             )
-            _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadge(
+            StatusBadge(
                 text = "Draft",
-                type = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType.NEUTRAL
+                type = StatusBadgeType.NEUTRAL
+            )
+            StatusBadge(
+                text = "Ready to load",
+                type = StatusBadgeType.HIGHLIGHT
             )
         }
     }
