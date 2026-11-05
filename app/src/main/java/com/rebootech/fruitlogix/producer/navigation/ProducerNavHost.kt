@@ -29,7 +29,10 @@ fun ProducerNavHost(
         modifier = modifier
     ) {
         composable(ProducerRoute.Home.route) {
-            ProducerHomeScreen(onSwitchRole = onSwitchRole)
+            ProducerHomeScreen(
+                onSwitchRole = onSwitchRole,
+                onNavigate = { route -> navController.navigate(route) }
+            )
         }
         composable(ProducerRoute.Orders.route) {
             ProducerOrdersScreen()

@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.res.stringResource
+import com.rebootech.fruitlogix.R
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,10 +62,15 @@ fun ProducerShell(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(FruitLogixTheme.colors.appbar)
+                    .statusBarsPadding()
+            ) {
                 FruitLogixTopBar(
-                    title = "FruitLogix",
-                    subtitle = "PRODUCER FIELD",
+                    title = stringResource(R.string.topbar_title),
+                    subtitle = stringResource(R.string.producer_topbar_subtitle),
                     selectedLanguage = selectedLanguage,
                     onLanguageSelected = { selectedLanguage = it },
                     onNotificationClick = {
@@ -72,7 +80,7 @@ fun ProducerShell(
                         navController.navigate(ProducerProfilesManagementRoutes.Profile)
                     },
                     showLanguageToggle = false,
-                    unreadMessages = 0,
+                    unreadMessages = 3, // TODO(producer): vincular con conteo reactivo de mensajes no leídos
                     onMessagesClick = {
                         navController.navigate(ProducerOrderManagementRoutes.Inbox)
                     },

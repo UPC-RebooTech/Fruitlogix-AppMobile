@@ -21,6 +21,7 @@
     <!-- Top Bar -->
     <string name="topbar_title">FruitLogix</string>
     <string name="topbar_subtitle">COMANDO DISTRIBUIDOR</string>
+    <string name="producer_topbar_subtitle">CAMPO PRODUCTOR</string>
 
     <!-- Greeting -->
     <string name="greeting_welcome">Bienvenido, %1$s</string>
