@@ -27,6 +27,8 @@ import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderFilte
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private sealed interface ActiveFilterPill {
     val key: String
@@ -48,9 +50,24 @@ fun ActiveFilterChipsRow(
     onRemoveStatus: (OrderStatus) -> Unit,
     onRemoveClient: (String) -> Unit,
     onClearQuery: () -> Unit,
+    onRemoveDateRange: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val pills = mutableListOf<ActiveFilterPill>()
+
+    // Date range pill
+    if (filters.dateRange != null) {
+        val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
+        val dateText = "${filters.dateRange.start.format(formatter)} – ${filters.dateRange.end.format(formatter)}"
+        pills.add(
+            SimpleActiveFilterPill(
+                key = "date_range",
+                label = stringResource(R.string.producer_orders_filter_date_pill, dateText),
+                iconRes = R.drawable.ic_schedule,
+                onRemove = onRemoveDateRange
+            )
+        )
+    }
 
     // Client pills
     for (clientId in filters.clientIds) {

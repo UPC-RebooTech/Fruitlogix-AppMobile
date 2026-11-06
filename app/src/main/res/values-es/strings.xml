@@ -384,4 +384,27 @@
     <string name="producer_orders_activity_accepted">Pedido %1$s aceptado · Pasó a En Preparación</string>
     <string name="producer_orders_btn_view_in_prep">Ver En Preparación (%1$d)</string>
     <string name="producer_orders_btn_check_stock">Ver Stock del Fundo</string>
+    <!-- Producer Order Filter Sheet -->
+    <string name="producer_orders_filter_title">Filtrar Pedidos</string>
+    <string name="producer_orders_filter_active_count">%1$d activos</string>
+    <string name="producer_orders_filter_subtitle">Refina los pedidos de cosecha por estado, cliente o período</string>
+    <string name="producer_orders_filter_date_range">Rango de fechas</string>
+    <string name="producer_orders_filter_week_format">Semana %1$d</string>
+    <string name="producer_orders_filter_date_all_time">Todo el tiempo</string>
+    <string name="producer_orders_filter_date_today">Hoy</string>
+    <string name="producer_orders_filter_date_this_week">Esta semana</string>
+    <string name="producer_orders_filter_date_custom_range">Rango personalizado</string>
+    <string name="producer_orders_filter_select_date_range">Seleccionar rango de fechas</string>
+    <string name="producer_orders_filter_date_confirm">Guardar</string>
+    <string name="producer_orders_filter_date_cancel">Cancelar</string>
+    <string name="producer_orders_filter_order_status">Estado del Pedido</string>
+    <string name="producer_orders_filter_status_selected_format">%1$d Seleccionados</string>
+    <string name="producer_orders_filter_client_destination">Destino del Cliente</string>
+    <string name="producer_orders_filter_select_all">Seleccionar todos</string>
+    <string name="producer_orders_filter_all_clients">Todos los clientes</string>
+    <string name="producer_orders_filter_active_orders_format">%1$d pedidos activos</string>
+    <string name="producer_orders_filter_clear">Limpiar</string>
+    <string name="producer_orders_filter_apply_format">Aplicar filtros (%1$d)</string>
+    <string name="producer_orders_filter_date_pill">Fecha: %1$s</string>
+    <string name="producer_orders_filter_close">Cerrar filtros</string>
 </resources>

@@ -76,4 +76,27 @@
     <string name="producer_orders_activity_accepted">Order %1$s accepted · Moved to In Preparation</string>
     <string name="producer_orders_btn_view_in_prep">View In Preparation (%1$d)</string>
     <string name="producer_orders_btn_check_stock">Check Farm Stock</string>
+    <!-- Producer Order Filter Sheet -->
+    <string name="producer_orders_filter_title">Filter Orders</string>
+    <string name="producer_orders_filter_active_count">%1$d active</string>
+    <string name="producer_orders_filter_subtitle">Refine harvest orders by status, client or timeframe</string>
+    <string name="producer_orders_filter_date_range">Date Range</string>
+    <string name="producer_orders_filter_week_format">Week %1$d</string>
+    <string name="producer_orders_filter_date_all_time">All time</string>
+    <string name="producer_orders_filter_date_today">Today</string>
+    <string name="producer_orders_filter_date_this_week">This week</string>
+    <string name="producer_orders_filter_date_custom_range">Custom range</string>
+    <string name="producer_orders_filter_select_date_range">Select date range</string>
+    <string name="producer_orders_filter_date_confirm">Save</string>
+    <string name="producer_orders_filter_date_cancel">Cancel</string>
+    <string name="producer_orders_filter_order_status">Order Status</string>
+    <string name="producer_orders_filter_status_selected_format">%1$d Selected</string>
+    <string name="producer_orders_filter_client_destination">Client Destination</string>
+    <string name="producer_orders_filter_select_all">Select all</string>
+    <string name="producer_orders_filter_all_clients">All clients</string>
+    <string name="producer_orders_filter_active_orders_format">%1$d active orders</string>
+    <string name="producer_orders_filter_clear">Clear</string>
+    <string name="producer_orders_filter_apply_format">Apply filters (%1$d)</string>
+    <string name="producer_orders_filter_date_pill">Date: %1$s</string>
+    <string name="producer_orders_filter_close">Close filters</string>
 </resources>
