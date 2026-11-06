@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface PaymentRepository {
     fun observePaymentSummary(): Flow<PaymentSummary>
+    suspend fun getPaymentSummary(): PaymentSummary
 }
 

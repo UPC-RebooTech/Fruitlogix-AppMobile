@@ -17,6 +17,9 @@ class FakePaymentRepository : PaymentRepository {
 
     override fun observePaymentSummary(): Flow<PaymentSummary> = _summary.asStateFlow()
 
+    override suspend fun getPaymentSummary(): PaymentSummary {
+        return _summary.value
+    }
     companion object {
         val instance: FakePaymentRepository by lazy { FakePaymentRepository() }
     }
