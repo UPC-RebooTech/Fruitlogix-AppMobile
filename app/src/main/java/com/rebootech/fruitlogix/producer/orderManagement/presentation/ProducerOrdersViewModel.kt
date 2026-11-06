@@ -195,7 +195,22 @@ class ProducerOrdersViewModel(
         _uiState.update { it.copy(snackbarMessage = null) }
     }
 
+    fun onRemoveDateRangeFilter() {
+        _filters.update { it.clearDateRange() }
+    }
+
     fun onFilterButtonClick() {
-        // TODO(producer): Abrir OrderFilterSheet en siguiente prompt
+        _uiState.update { it.copy(showFilterSheet = true) }
+    }
+
+    fun onDismissFilterSheet() {
+        _uiState.update { it.copy(showFilterSheet = false) }
+    }
+
+    fun onApplyFilters(newFilters: OrderFilters) {
+        _filters.update { current ->
+            newFilters.copy(query = current.query)
+        }
+        _uiState.update { it.copy(showFilterSheet = false) }
     }
 }

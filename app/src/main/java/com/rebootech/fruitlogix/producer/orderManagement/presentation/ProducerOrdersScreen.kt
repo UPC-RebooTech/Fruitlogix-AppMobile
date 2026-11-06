@@ -37,6 +37,7 @@ import com.rebootech.fruitlogix.producer.orderManagement.presentation.components
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderCard
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderSearchBar
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderStatusChips
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderFilterSheet
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.OrderSummaryTiles
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.components.PendingAllCaughtUpCard
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
@@ -116,7 +117,8 @@ fun ProducerOrdersScreen(
                                 filters = uiState.filters,
                                 onRemoveStatus = { viewModel.onRemoveStatusFilter(it) },
                                 onRemoveClient = { viewModel.onRemoveClientFilter(it) },
-                                onClearQuery = { viewModel.onClearQuery() }
+                                onClearQuery = { viewModel.onClearQuery() },
+                                onRemoveDateRange = { viewModel.onRemoveDateRangeFilter() },
                             )
                         }
                     }
@@ -247,6 +249,19 @@ fun ProducerOrdersScreen(
                 dismissText = stringResource(R.string.producer_orders_accept_cancel),
                 onConfirm = { viewModel.onConfirmAcceptOrder() },
                 onDismiss = { viewModel.onDismissAcceptDialog() }
+            )
+        }
+
+        // Hoja Modal de Filtros (OrderFilterSheet)
+        if (uiState.showFilterSheet) {
+            OrderFilterSheet(
+                initialFilters = uiState.filters,
+                allOrders = uiState.allOrders,
+                statusCounts = uiState.statusCounts,
+                onDismiss = { viewModel.onDismissFilterSheet() },
+                onApplyFilters = { newFilters ->
+                    viewModel.onApplyFilters(newFilters)
+                }
             )
         }
 
