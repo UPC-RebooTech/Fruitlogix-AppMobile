@@ -24,7 +24,8 @@ data class IotDevice(
     val vehicleId: String,
     val connectionStatus: DeviceConnectionStatus,
     val batteryPercent: Int,
-    val lastReading: SensorReading
+    val lastReading: SensorReading,
+    val lastSyncLabel: String = "En vivo"
 )
 
 data class IotAlert(
@@ -35,4 +36,13 @@ data class IotAlert(
     val severity: AlertSeverity,
     val timestamp: String,
     val isResolved: Boolean = false
+)
+
+data class FruitThreshold(
+    val id: String,
+    val fruitName: String,
+    val minTempCelsius: Double,
+    val maxTempCelsius: Double,
+    val minHumidityPercent: Double,
+    val maxHumidityPercent: Double
 )

@@ -87,6 +87,11 @@ fun AppNavHost(
                 },
                 onArrivalsClick = {
                     navController.navigate(LogisticsMonitoringRoutes.Arrivals)
+                },
+                onLimitsClick = {
+                    navController.navigate(
+                        com.rebootech.fruitlogix.distributor.infrastructureIot.InfrastructureIotRoutes.SensorsAlerts
+                    )
                 }
             )
         }
