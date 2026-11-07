@@ -7,9 +7,21 @@
     <string name="nav_producers">Productores</string>
     <string name="nav_more">Más</string>
 
+    <!-- Producer Navigation -->
+    <string name="producer_nav_home">Inicio</string>
+    <string name="producer_nav_orders">Pedidos</string>
+    <string name="producer_nav_stock">Stock</string>
+    <string name="producer_nav_reports">Reportes</string>
+    <string name="producer_nav_harvests">Cosechas</string>
+    <string name="producer_nav_payouts">Liquidaciones</string>
+    <string name="producer_nav_messaging">Mensajes</string>
+    <string name="producer_nav_notifications">Notificaciones</string>
+    <string name="producer_nav_profile">Mi Fundo</string>
+
     <!-- Top Bar -->
     <string name="topbar_title">FruitLogix</string>
     <string name="topbar_subtitle">COMANDO DISTRIBUIDOR</string>
+    <string name="producer_topbar_subtitle">CAMPO PRODUCTOR</string>
 
     <!-- Greeting -->
     <string name="greeting_welcome">Bienvenido, %1$s</string>
@@ -312,4 +324,87 @@
     <string name="invoice_detail_not_found_title">Factura no disponible</string>
     <string name="invoice_detail_not_found_message">No se pudo encontrar la factura %1$s. Es posible que ya no esté disponible.</string>
     <string name="invoice_detail_back_to_invoices">Volver a facturas</string>
+    <!-- Producer Orders Screen -->
+    <string name="producer_orders_search_placeholder">Buscar ID de pedido o cliente...</string>
+    <string name="producer_orders_tile_awaiting_action">Acción requerida</string>
+    <string name="producer_orders_tile_in_shed">En planta</string>
+    <string name="producer_orders_tile_active_vol">Volumen activo</string>
+    <string name="producer_orders_tile_volume_format">%1$s kg</string>
+    <string name="producer_orders_tile_order_singular">%1$d Pedido</string>
+    <string name="producer_orders_tile_orders_plural">%1$d Pedidos</string>
+    <string name="producer_orders_tile_active">%1$d Activos</string>
+    <string name="producer_orders_chip_all">Todos</string>
+    <string name="producer_orders_chip_pending">Pendientes</string>
+    <string name="producer_orders_chip_in_preparation">En Preparación</string>
+    <string name="producer_orders_chip_in_transit">En Tránsito</string>
+    <string name="producer_orders_chip_delivered">Entregados</string>
+    <string name="producer_orders_chip_rejected">Rechazados</string>
+    <string name="producer_orders_chip_cancelled">Cancelados</string>
+    <string name="producer_orders_due_date">Entrega %1$s</string>
+    <string name="producer_orders_respond_within">Responder en %1$d h</string>
+    <string name="producer_orders_overdue">Vencido</string>
+    <string name="producer_orders_btn_review">Revisar</string>
+    <string name="producer_orders_btn_accept">Aceptar Pedido</string>
+    <string name="producer_orders_btn_review_respond">Revisar y responder</string>
+    <string name="producer_orders_btn_update_inspection">Actualizar Inspección</string>
+    <string name="producer_orders_btn_view_report">Ver reporte</string>
+    <string name="producer_orders_btn_reinspect">Re-inspeccionar</string>
+    <string name="producer_orders_btn_view_details">Ver detalles</string>
+    <string name="producer_orders_short_by">Faltan %1$d kg de %2$s</string>
+    <string name="producer_orders_quality_approved">Calidad Aprobada</string>
+    <string name="producer_orders_quality_pending">Calidad Pendiente</string>
+    <string name="producer_orders_quality_rejected">Calidad Rechazada</string>
+    <string name="producer_orders_ready_to_load">Listo para cargar</string>
+    <string name="producer_orders_truck_assigned">Camión %1$s asignado</string>
+    <string name="producer_orders_dispatched_at">Despachado %1$s</string>
+    <string name="producer_orders_delivered_at">Entregado %1$s</string>
+    <string name="producer_orders_eta">ETA %1$s</string>
+    <string name="producer_orders_footer_loaded">Todos los pedidos cargados</string>
+    <string name="producer_orders_empty_title">No se encontraron pedidos</string>
+    <string name="producer_orders_empty_desc">Intenta ajustar la búsqueda o los filtros</string>
+    <string name="producer_orders_accept_dialog_title">¿Aceptar pedido %1$s?</string>
+    <string name="producer_orders_accept_dialog_desc">Este pedido pasará a preparación y reservará el stock requerido.</string>
+    <string name="producer_orders_accept_confirm">Aceptar</string>
+    <string name="producer_orders_accept_cancel">Cancelar</string>
+    <string name="producer_orders_accept_success">Pedido %1$s aceptado exitosamente</string>
+    <!-- Producer Orders Empty States & Filters -->
+    <string name="producer_orders_filter_query">Búsqueda: %1$s</string>
+    <string name="producer_orders_filter_status">Estado: %1$s</string>
+    <string name="producer_orders_filter_client">Cliente: %1$s</string>
+    <string name="producer_orders_clear_filters">Limpiar filtros</string>
+    <string name="producer_orders_no_results_desc">Ningún pedido coincide con los filtros aplicados. Intenta ajustar la búsqueda, rango de fechas o filtros de estado.</string>
+    <string name="producer_orders_filter_tip">Consejo: También puedes restablecer los filtros individuales arriba.</string>
+    <string name="producer_orders_suggested_views">Vistas sugeridas</string>
+    <string name="producer_orders_suggested_in_prep">En preparación</string>
+    <string name="producer_orders_suggested_in_transit">En tránsito</string>
+    <string name="producer_orders_caught_up_title">¡Todo al día!</string>
+    <string name="producer_orders_caught_up_subtitle">No hay pedidos pendientes en este momento</string>
+    <string name="producer_orders_caught_up_desc">Los nuevos pedidos asignados por %1$s (Distribuidor FruitLogix) aparecerán aquí al instante con notificaciones push y sonido.</string>
+    <string name="producer_orders_recent_activity">ACTIVIDAD RECIENTE</string>
+    <string name="producer_orders_activity_accepted">Pedido %1$s aceptado · Pasó a En Preparación</string>
+    <string name="producer_orders_btn_view_in_prep">Ver En Preparación (%1$d)</string>
+    <string name="producer_orders_btn_check_stock">Ver Stock del Fundo</string>
+    <!-- Producer Order Filter Sheet -->
+    <string name="producer_orders_filter_title">Filtrar Pedidos</string>
+    <string name="producer_orders_filter_active_count">%1$d activos</string>
+    <string name="producer_orders_filter_subtitle">Refina los pedidos de cosecha por estado, cliente o período</string>
+    <string name="producer_orders_filter_date_range">Rango de fechas</string>
+    <string name="producer_orders_filter_week_format">Semana %1$d</string>
+    <string name="producer_orders_filter_date_all_time">Todo el tiempo</string>
+    <string name="producer_orders_filter_date_today">Hoy</string>
+    <string name="producer_orders_filter_date_this_week">Esta semana</string>
+    <string name="producer_orders_filter_date_custom_range">Rango personalizado</string>
+    <string name="producer_orders_filter_select_date_range">Seleccionar rango de fechas</string>
+    <string name="producer_orders_filter_date_confirm">Guardar</string>
+    <string name="producer_orders_filter_date_cancel">Cancelar</string>
+    <string name="producer_orders_filter_order_status">Estado del Pedido</string>
+    <string name="producer_orders_filter_status_selected_format">%1$d Seleccionados</string>
+    <string name="producer_orders_filter_client_destination">Destino del Cliente</string>
+    <string name="producer_orders_filter_select_all">Seleccionar todos</string>
+    <string name="producer_orders_filter_all_clients">Todos los clientes</string>
+    <string name="producer_orders_filter_active_orders_format">%1$d pedidos activos</string>
+    <string name="producer_orders_filter_clear">Limpiar</string>
+    <string name="producer_orders_filter_apply_format">Aplicar filtros (%1$d)</string>
+    <string name="producer_orders_filter_date_pill">Fecha: %1$s</string>
+    <string name="producer_orders_filter_close">Cerrar filtros</string>
 </resources>

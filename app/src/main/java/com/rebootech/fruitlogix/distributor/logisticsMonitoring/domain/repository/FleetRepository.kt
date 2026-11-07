@@ -1,0 +1,35 @@
+﻿package com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.repository
+
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Arrival
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchDetail
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchSummary
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.FleetAlert
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Sensor
+
+/**
+ * Repository interface for the Fleet Control Center.
+ * The domain layer depends only on this abstraction.
+ */
+interface FleetRepository {
+
+    /** Returns the list of active dispatches (on-route trucks). */
+    fun getActiveDispatches(): List<DispatchSummary>
+
+    /** Returns the list of active fleet alerts. */
+    fun getFleetAlerts(): List<FleetAlert>
+
+    /** Returns all sensors tracked by the system. */
+    fun getAllSensors(): List<Sensor>
+
+    /** Returns inbound arrivals tracked by geofence at Callao Cold Hub. */
+    fun getArrivals(): List<Arrival>
+
+    /** Returns the count of dispatches currently on route. */
+    fun getOnRouteCount(): Int = getActiveDispatches().size
+
+    /** Returns the count of active alerts. */
+    fun getAlertCount(): Int = getFleetAlerts().size
+
+    /** Returns full dispatch detail for a specific unit ID. */
+    fun getDispatchDetail(unitId: String): DispatchDetail?
+}

@@ -49,47 +49,59 @@ val ColorWarning = Color(0xFFF5B800)
 /** Informational notices */
 val ColorInfo = Color(0xFF4C8DFF)
 
+/** Light surface for cards and containers */
+val ColorSurfaceLight = Color(0xFFF2F8F0)
+
+/** Surface tint for accent chips, quick actions, and secondary light cards */
+val ColorSurfaceTint = Color(0xFFDCE8D8)
+
+/** Pure white for cards and highlighted backgrounds */
+val ColorWhite = Color(0xFFFFFFFF)
+
 // ==========================================
 // 2. Extended FruitLogix Color Scheme
 // ==========================================
 
 @Immutable
 data class FruitLogixColors(
-    val bg: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorBg,
-    val surfaceDark: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorSurfaceDark,
-    val appbar: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorAppbar,
-    val primary: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorPrimary,
-    val onPrimary: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorOnPrimary,
-    val textOnLight: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnLight,
-    val textOnDark: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnDark,
-    val textMuted: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextMuted,
-    val danger: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorDanger,
-    val dangerStrong: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorDangerStrong,
-    val success: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorSuccess,
-    val warning: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorWarning,
-    val info: Color = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorInfo
+    val bg: Color = ColorBg,
+    val surfaceDark: Color = ColorSurfaceDark,
+    val appbar: Color = ColorAppbar,
+    val primary: Color = ColorPrimary,
+    val onPrimary: Color = ColorOnPrimary,
+    val textOnLight: Color = ColorTextOnLight,
+    val textOnDark: Color = ColorTextOnDark,
+    val textMuted: Color = ColorTextMuted,
+    val danger: Color = ColorDanger,
+    val dangerStrong: Color = ColorDangerStrong,
+    val success: Color = ColorSuccess,
+    val warning: Color = ColorWarning,
+    val info: Color = ColorInfo,
+    val surfaceLight: Color = ColorSurfaceLight,
+    val surfaceTint: Color = ColorSurfaceTint,
+    val white: Color = ColorWhite
 )
 
-val LocalFruitLogixColors = staticCompositionLocalOf { _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.FruitLogixColors() }
+val LocalFruitLogixColors = staticCompositionLocalOf { FruitLogixColors() }
 
 // ==========================================
 // 3. Material 3 ColorScheme Mapping
 // ==========================================
 
 val FruitLogixColorScheme: ColorScheme = darkColorScheme(
-    primary = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorPrimary,
-    onPrimary = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorOnPrimary,
-    primaryContainer = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorAppbar,
-    onPrimaryContainer = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorPrimary,
-    secondary = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorPrimary,
-    onSecondary = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorOnPrimary,
-    background = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorBg,
-    onBackground = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnLight,
-    surface = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorSurfaceDark,
-    onSurface = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnDark,
-    surfaceVariant = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorAppbar,
-    onSurfaceVariant = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextMuted,
-    error = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorDanger,
-    onError = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnDark,
-    outline = _root_ide_package_.com.rebootech.fruitlogix.shared.ui.theme.ColorTextMuted
+    primary = ColorPrimary,
+    onPrimary = ColorOnPrimary,
+    primaryContainer = ColorAppbar,
+    onPrimaryContainer = ColorPrimary,
+    secondary = ColorPrimary,
+    onSecondary = ColorOnPrimary,
+    background = ColorBg,
+    onBackground = ColorTextOnLight,
+    surface = ColorSurfaceDark,
+    onSurface = ColorTextOnDark,
+    surfaceVariant = ColorAppbar,
+    onSurfaceVariant = ColorTextMuted,
+    error = ColorDanger,
+    onError = ColorTextOnDark,
+    outline = ColorTextMuted
 )

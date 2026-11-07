@@ -34,7 +34,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,10 +61,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.fleetManagement.FleetManagementRoutes
-import com.rebootech.fruitlogix.infrastructureIot.InfrastructureIotRoutes
-import com.rebootech.fruitlogix.profilesManagement.ProfilesManagementRoutes
-import com.rebootech.fruitlogix.qualityControl.QualityControlRoutes
+import com.rebootech.fruitlogix.distributor.fleetManagement.FleetManagementRoutes
+import com.rebootech.fruitlogix.distributor.infrastructureIot.InfrastructureIotRoutes
+import com.rebootech.fruitlogix.distributor.profilesManagement.ProfilesManagementRoutes
+import com.rebootech.fruitlogix.distributor.qualityControl.QualityControlRoutes
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.RobotoFontFamily
@@ -76,28 +75,58 @@ import kotlinx.coroutines.delay
  */
 data class MoreMenuItem(
     val id: String,
-    @StringRes val labelRes: Int,
-    @DrawableRes val iconRes: Int,
+    @param:StringRes val labelRes: Int,
+    @param:DrawableRes val iconRes: Int,
     val route: String,
     val badgeCount: Int? = null
 )
 
 /**
- * Set of routes belonging to the 5 More destinations.
+ * Default tabs for the Distributor role.
  */
-private val moreSectionRoutes = setOf(
-    InfrastructureIotRoutes.SensorsAlerts,
-    QualityControlRoutes.QualityControl,
-    ProfilesManagementRoutes.Producers,
-    FleetManagementRoutes.FleetResources,
-    ProfilesManagementRoutes.Profile
+val defaultDistributorTabs: List<BottomNavTab> = primaryNavRoutes.map { it.toNavTab() }
+
+/**
+ * Default More menu items for the Distributor role.
+ */
+val defaultDistributorMoreItems: List<MoreMenuItem> = listOf(
+    MoreMenuItem(
+        id = "sensors",
+        labelRes = R.string.menu_label_sensors,
+        iconRes = R.drawable.ic_sensor_waves,
+        route = InfrastructureIotRoutes.SensorsAlerts
+    ),
+    MoreMenuItem(
+        id = "quality",
+        labelRes = R.string.menu_label_quality,
+        iconRes = R.drawable.ic_shield_check,
+        route = QualityControlRoutes.QualityControl
+    ),
+    MoreMenuItem(
+        id = "producers",
+        labelRes = R.string.menu_label_producers,
+        iconRes = R.drawable.ic_producers,
+        route = ProfilesManagementRoutes.Producers
+    ),
+    MoreMenuItem(
+        id = "drivers",
+        labelRes = R.string.menu_label_drivers,
+        iconRes = R.drawable.ic_dispatch_truck,
+        route = FleetManagementRoutes.FleetResources
+    ),
+    MoreMenuItem(
+        id = "profile",
+        labelRes = R.string.menu_label_profile,
+        iconRes = R.drawable.ic_contact_driver,
+        route = ProfilesManagementRoutes.Profile
+    )
 )
 
 /**
  * FruitLogix Bottom Navigation Bar.
  *
  * BAR LAYOUT:
- * - 5 slots: Home, Orders, Fleet, Invoices, and [More button].
+ * - 5 slots: 4 regular tabs passed in [tabs], and [More button] in the 5th slot.
  * - First 4 are regular tabs (icon + 12sp label, textMuted inactive, white label + lime pill when active).
  * - 5th slot (far RIGHT end) is a lime circular button (52dp) with a menu icon, cleaner look (no label below).
  *
@@ -110,7 +139,7 @@ private val moreSectionRoutes = setOf(
  *   Label pill uses translucent surface-dark with white text (Roboto 14sp). Lime is the only accent (red only for critical badge dot).
  *
  * TOP-LEVEL NAVIGATION BEHAVIOR:
- * - The 5 More destinations (Sensors, Quality, Producers, Drivers, Profile) behave as top-level screens:
+ * - The More destinations behave as top-level screens:
  *   Bottom navigation bar stays visible, navigation uses launchSingleTop and saveState/restoreState.
  * - While active, none of the 4 tabs shows the lime pill highlight; the More button shows an active lime ring.
  */
@@ -118,6 +147,8 @@ private val moreSectionRoutes = setOf(
 fun BottomNavBar(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    tabs: List<BottomNavTab> = defaultDistributorTabs,
+    moreItems: List<MoreMenuItem> = defaultDistributorMoreItems,
     initialMenuOpen: Boolean = false
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -126,6 +157,7 @@ fun BottomNavBar(
     var isMenuOpen by remember { mutableStateOf(initialMenuOpen) }
     var isPopupMounted by remember { mutableStateOf(initialMenuOpen) }
 
+    val moreSectionRoutes = remember(moreItems) { moreItems.map { it.route }.toSet() }
     val isMoreSectionActive = currentDestination?.hierarchy?.any { it.route in moreSectionRoutes } == true
 
     LaunchedEffect(isMenuOpen) {
@@ -139,42 +171,6 @@ fun BottomNavBar(
 
     BackHandler(enabled = isMenuOpen) {
         isMenuOpen = false
-    }
-
-    // 5 Simplified Items: Sensors, Quality, Producers, Drivers, Profile
-    val moreMenuItems = remember {
-        listOf(
-            MoreMenuItem(
-                id = "sensors",
-                labelRes = R.string.menu_label_sensors,
-                iconRes = R.drawable.ic_sensor_waves,
-                route = InfrastructureIotRoutes.SensorsAlerts
-            ),
-            MoreMenuItem(
-                id = "quality",
-                labelRes = R.string.menu_label_quality,
-                iconRes = R.drawable.ic_shield_check,
-                route = QualityControlRoutes.QualityControl
-            ),
-            MoreMenuItem(
-                id = "producers",
-                labelRes = R.string.menu_label_producers,
-                iconRes = R.drawable.ic_producers,
-                route = ProfilesManagementRoutes.Producers
-            ),
-            MoreMenuItem(
-                id = "drivers",
-                labelRes = R.string.menu_label_drivers,
-                iconRes = R.drawable.ic_dispatch_truck,
-                route = FleetManagementRoutes.FleetResources
-            ),
-            MoreMenuItem(
-                id = "profile",
-                labelRes = R.string.menu_label_profile,
-                iconRes = R.drawable.ic_contact_driver,
-                route = ProfilesManagementRoutes.Profile
-            )
-        )
     }
 
     BoxWithConstraints(
@@ -224,12 +220,12 @@ fun BottomNavBar(
                             .navigationBarsPadding()
                             .padding(bottom = 82.dp, end = bubbleEndPadding)
                     ) {
-                        moreMenuItems.reversed().forEachIndexed { reverseIndex, item ->
-                            val originalIndex = moreMenuItems.size - 1 - reverseIndex
+                        moreItems.reversed().forEachIndexed { reverseIndex, item ->
+                            val originalIndex = moreItems.size - 1 - reverseIndex
                             SecondaryNavItemRow(
                                 item = item,
                                 indexFromBottom = originalIndex,
-                                totalItems = moreMenuItems.size,
+                                totalItems = moreItems.size,
                                 isMenuOpen = isMenuOpen,
                                 onItemClick = {
                                     isMenuOpen = false
@@ -264,17 +260,17 @@ fun BottomNavBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 4 Regular Primary Tabs
-                primaryNavRoutes.forEach { routeItem ->
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == routeItem.route } == true
+                tabs.forEach { tabItem ->
+                    val isSelected = currentDestination?.hierarchy?.any { it.route == tabItem.route } == true
                     BottomNavItem(
-                        routeItem = routeItem,
+                        tabItem = tabItem,
                         isSelected = isSelected && !isMenuOpen && !isMoreSectionActive,
                         onClick = {
                             if (isMenuOpen) {
                                 isMenuOpen = false
                             }
                             if (!isSelected) {
-                                navController.navigate(routeItem.route) {
+                                navController.navigate(tabItem.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
                                     }
@@ -457,11 +453,11 @@ private fun SecondaryNavItemRow(
 }
 
 /**
- * Regular Tab Item for the 4 main bottom navigation routes.
+ * Regular Tab Item for main bottom navigation routes.
  */
 @Composable
 private fun BottomNavItem(
-    routeItem: Route,
+    tabItem: BottomNavTab,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -501,8 +497,8 @@ private fun BottomNavItem(
             contentAlignment = Alignment.Center
         ) {
             AppIcon(
-                id = routeItem.iconRes,
-                contentDescription = stringResource(id = routeItem.labelRes),
+                id = tabItem.iconRes,
+                contentDescription = stringResource(id = tabItem.labelRes),
                 tint = iconTintColor,
                 modifier = Modifier.size(20.dp)
             )
@@ -511,7 +507,7 @@ private fun BottomNavItem(
         Spacer(modifier = Modifier.height(3.dp))
 
         Text(
-            text = stringResource(id = routeItem.labelRes),
+            text = stringResource(id = tabItem.labelRes),
             color = labelTextColor,
             fontFamily = RobotoFontFamily,
             fontSize = 12.sp,
