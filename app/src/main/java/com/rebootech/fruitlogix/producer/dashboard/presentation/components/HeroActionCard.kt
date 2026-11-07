@@ -143,15 +143,14 @@ fun HeroActionCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        PrimaryButton(
-                            text = "Aceptar Pedido",
-                            onClick = { onAcceptClick(order) },
-                            modifier = Modifier.weight(1f)
-                        )
-
                         SecondaryButton(
                             text = "Ver detalles",
                             onClick = { onReviewDetailsClick(order) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        PrimaryButton(
+                            text = "Aceptar Pedido",
+                            onClick = { onAcceptClick(order) },
                             modifier = Modifier.weight(1f)
                         )
                     }

@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerChatScreen
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrderDetailScreen
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersViewModel
@@ -47,6 +48,30 @@ fun NavGraphBuilder.producerOrderManagementGraph(
             onAcceptOrder = {
                 ordersViewModel.onAcceptOrderById(orderId)
                 navController.popBackStack()
+            },
+            onOpenChat = { targetOrderId ->
+                navController.navigate(ProducerOrderManagementRoutes.chat(targetOrderId))
+            }
+        )
+    }
+
+    // Chat con el distribuidor (US23)
+    composable(
+        route = ProducerOrderManagementRoutes.Chat,
+        arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val orderId = backStackEntry.arguments?.getString("orderId")?.removePrefix("#").orEmpty()
+        ProducerChatScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() }
+        )
+    }
+
+    // Inbox de Mensajería
+    composable(ProducerOrderManagementRoutes.Inbox) {
+        ProducerMessagingScreen(
+            onOpenChat = { orderId ->
+                navController.navigate(ProducerOrderManagementRoutes.chat(orderId))
             }
         )
     }
