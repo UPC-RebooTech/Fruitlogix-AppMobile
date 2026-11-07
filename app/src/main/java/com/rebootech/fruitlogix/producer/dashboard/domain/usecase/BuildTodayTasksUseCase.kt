@@ -27,7 +27,7 @@ class BuildTodayTasksUseCase {
                     title = "New order to accept",
                     detail = "${order.id} ${order.clientName} • ${order.items.joinToString { "${it.productName} ${it.kg} kg" }}",
                     priority = TaskPriority.MEDIUM,
-                    destinationRoute = ProducerOrderManagementRoutes.respondOrder(order.id)
+                    destinationRoute = ProducerOrderManagementRoutes.orderDetail(order.id)
                 )
             )
         }

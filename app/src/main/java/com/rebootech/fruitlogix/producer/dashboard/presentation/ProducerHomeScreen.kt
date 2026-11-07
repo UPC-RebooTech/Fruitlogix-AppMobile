@@ -173,9 +173,6 @@ fun ProducerHomeScreen(
                         order = uiState.heroOrder,
                         shortageWarning = uiState.heroStockShortage,
                         onAcceptClick = { order -> viewModel.onAcceptOrderClick(order) },
-                        onReviewRespondClick = { order ->
-                            onNavigate(ProducerOrderManagementRoutes.respondOrder(order.id))
-                        },
                         onReviewDetailsClick = { order ->
                             onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
                         }

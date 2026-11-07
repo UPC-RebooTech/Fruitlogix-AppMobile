@@ -213,4 +213,25 @@ class ProducerOrdersViewModel(
         }
         _uiState.update { it.copy(showFilterSheet = false) }
     }
+
+    fun onAcceptOrderById(orderId: String) {
+        val cleanId = orderId.removePrefix("#")
+        viewModelScope.launch {
+            val targetOrder = _uiState.value.allOrders.find {
+                it.id.removePrefix("#") == cleanId
+            }
+            val idToAccept = targetOrder?.id ?: cleanId
+            val success = orderRepository.acceptOrder(idToAccept)
+            if (success && targetOrder != null) {
+                val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+                _uiState.update {
+                    it.copy(
+                        snackbarMessage = targetOrder.id,
+                        lastAcceptedOrder = targetOrder,
+                        lastAcceptedTimeFormatted = nowTime
+                    )
+                }
+            }
+        }
+    }
 }
