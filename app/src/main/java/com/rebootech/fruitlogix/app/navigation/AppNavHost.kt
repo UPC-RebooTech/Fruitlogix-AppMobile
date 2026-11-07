@@ -33,7 +33,30 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(Route.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onScanLotClick = {
+                    navController.navigate(OrderManagementRoutes.ScanReception)
+                },
+                onDispatchFleetClick = {
+                    navController.navigate(Route.Fleet.route)
+                },
+                onSensorsClick = {
+                    navController.navigate(
+                        com.rebootech.fruitlogix.distributor.infrastructureIot.InfrastructureIotRoutes.SensorsAlerts
+                    )
+                },
+                onReviewReeferClick = { unitId ->
+                    navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
+                },
+                onFleetUnitClick = { unitId ->
+                    navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
+                },
+                onProfileClick = {
+                    navController.navigate(
+                        com.rebootech.fruitlogix.distributor.profilesManagement.ProfilesManagementRoutes.Profile
+                    )
+                }
+            )
         }
         composable(Route.Orders.route) {
             OrdersScreen(

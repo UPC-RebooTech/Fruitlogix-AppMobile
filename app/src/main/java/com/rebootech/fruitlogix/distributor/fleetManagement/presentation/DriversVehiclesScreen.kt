@@ -47,6 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Driver
@@ -632,15 +635,22 @@ private fun AssignDriverVehicleDialog(
                     fontSize = 13.sp
                 )
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    errorMessage?.let {
-                        Text(
-                            text = it,
-                            color = ColorDangerStrong,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 380.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = ColorDangerStrong,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
 
                     Text("1. Despacho pendiente:", color = ColorPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     dispatches.forEach { d ->

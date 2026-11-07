@@ -70,9 +70,15 @@ import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 import com.rebootech.fruitlogix.shared.ui.theme.RobotoFontFamily
 import com.rebootech.fruitlogix.shared.ui.theme.Spacing
-
+import androidx.compose.foundation.clickable
 @Composable
 fun HomeScreen(
+    onScanLotClick: () -> Unit = {},
+    onDispatchFleetClick: () -> Unit = {},
+    onSensorsClick: () -> Unit = {},
+    onReviewReeferClick: (String) -> Unit = {},
+    onFleetUnitClick: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -81,6 +87,12 @@ fun HomeScreen(
     HomeScreenContent(
         state = state,
         onLanguageSelected = viewModel::onLanguageSelected,
+        onScanLotClick = onScanLotClick,
+        onDispatchFleetClick = onDispatchFleetClick,
+        onSensorsClick = onSensorsClick,
+        onReviewReeferClick = onReviewReeferClick,
+        onFleetUnitClick = onFleetUnitClick,
+        onProfileClick = onProfileClick,
         modifier = modifier
     )
 }
@@ -89,6 +101,12 @@ fun HomeScreen(
 private fun HomeScreenContent(
     state: HomeUiState,
     onLanguageSelected: (AppLanguage) -> Unit,
+    onScanLotClick: () -> Unit = {},
+    onDispatchFleetClick: () -> Unit = {},
+    onSensorsClick: () -> Unit = {},
+    onReviewReeferClick: (String) -> Unit = {},
+    onFleetUnitClick: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -103,15 +121,18 @@ private fun HomeScreenContent(
                 subtitle = stringResource(R.string.topbar_subtitle),
                 selectedLanguage = state.selectedLanguage,
                 onLanguageSelected = onLanguageSelected,
-                onNotificationClick = {},
-                onProfileClick = {}
+                onNotificationClick = onSensorsClick,
+                onProfileClick = onProfileClick
             )
         }
 
         // 2. Greeting Section
         item {
             state.greeting?.let { greeting ->
-                GreetingSection(greeting = greeting)
+                GreetingSection(
+                    greeting = greeting,
+                    onSensorsClick = onSensorsClick
+                )
             }
         }
 
@@ -119,14 +140,24 @@ private fun HomeScreenContent(
         item {
             PriorityActionsSection(
                 actions = state.priorityActions,
-                readyCount = state.priorityReadyCount
+                readyCount = state.priorityReadyCount,
+                onActionClick = { action ->
+                    when (action.titleRes) {
+                        R.string.action_scan_lot -> onScanLotClick()
+                        R.string.action_dispatch_fleet -> onDispatchFleetClick()
+                        R.string.action_sensors -> onSensorsClick()
+                    }
+                }
             )
         }
 
         // 4. Predictive Alert Card
         item {
             state.predictiveAlert?.let { alert ->
-                PredictiveAlertCard(alert = alert)
+                PredictiveAlertCard(
+                    alert = alert,
+                    onReviewReeferClick = { onReviewReeferClick(alert.unitId) }
+                )
             }
         }
 
@@ -140,7 +171,7 @@ private fun HomeScreenContent(
             ActionCenterSection(
                 items = state.actionItems,
                 onClearAllClick = {},
-                onActionClick = {}
+                onActionClick = { onDispatchFleetClick() }
             )
         }
 
@@ -149,8 +180,8 @@ private fun HomeScreenContent(
             LiveFleetSection(
                 fleetUnits = state.fleetUnits,
                 inTransitCount = state.fleetInTransitCount,
-                onMapViewClick = {},
-                onFleetUnitClick = {}
+                onMapViewClick = onDispatchFleetClick,
+                onFleetUnitClick = onFleetUnitClick
             )
         }
 
@@ -172,13 +203,15 @@ private fun HomeScreenContent(
 // Section 2: Greeting
 // =============================================================================
 @Composable
-private fun GreetingSection(greeting: GreetingInfo) {
+private fun GreetingSection(
+    greeting: GreetingInfo,
+    onSensorsClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.sm, vertical = Spacing.sm)
     ) {
-        // Date line with green dot
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
@@ -196,7 +229,6 @@ private fun GreetingSection(greeting: GreetingInfo) {
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
-        // Welcome line + sensor button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -216,12 +248,12 @@ private fun GreetingSection(greeting: GreetingInfo) {
                     color = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f)
                 )
             }
-            // Sensor icon button
             Box(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(FruitLogixTheme.colors.surfaceDark),
+                    .background(FruitLogixTheme.colors.surfaceDark)
+                    .clickable { onSensorsClick() },
                 contentAlignment = Alignment.Center
             ) {
                 AppIcon(
@@ -241,14 +273,14 @@ private fun GreetingSection(greeting: GreetingInfo) {
 @Composable
 private fun PriorityActionsSection(
     actions: List<PriorityAction>,
-    readyCount: Int
+    readyCount: Int,
+    onActionClick: (PriorityAction) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = Spacing.xs)
     ) {
-        // Header row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -272,20 +304,25 @@ private fun PriorityActionsSection(
 
         Spacer(modifier = Modifier.height(Spacing.xs))
 
-        // Compact horizontal row of 3 pill chips (min height 48dp)
         LazyRow(
             contentPadding = PaddingValues(horizontal = Spacing.sm),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(actions) { action ->
-                PriorityActionChip(action = action)
+                PriorityActionChip(
+                    action = action,
+                    onClick = { onActionClick(action) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun PriorityActionChip(action: PriorityAction) {
+private fun PriorityActionChip(
+    action: PriorityAction,
+    onClick: () -> Unit = {}
+) {
     val isLime = action.style == PriorityActionStyle.LIME
     val bgColor = if (isLime) FruitLogixTheme.colors.primary else FruitLogixTheme.colors.surfaceDark
     val contentColor = if (isLime) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnDark
@@ -295,6 +332,7 @@ private fun PriorityActionChip(action: PriorityAction) {
             .defaultMinSize(minHeight = 48.dp)
             .clip(FruitLogixTheme.shapes.Pill)
             .background(bgColor)
+            .clickable { onClick() }
             .padding(horizontal = Spacing.sm, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
@@ -319,11 +357,20 @@ private fun PriorityActionChip(action: PriorityAction) {
 // Section 4: Predictive Alert Card
 // =============================================================================
 @Composable
-private fun PredictiveAlertCard(alert: PredictiveAlert) {
+private fun PredictiveAlertCard(
+    alert: PredictiveAlert,
+    onReviewReeferClick: () -> Unit = {}
+) {
     when (alert.status) {
         PredictiveAlertStatus.NOMINAL -> NominalAlertCard()
-        PredictiveAlertStatus.BREACHED -> BreachedAlertCard(alert = alert)
-        PredictiveAlertStatus.PREDICTIVE -> PredictiveAlertContentCard(alert = alert)
+        PredictiveAlertStatus.BREACHED -> BreachedAlertCard(
+            alert = alert,
+            onReviewReeferClick = onReviewReeferClick
+        )
+        PredictiveAlertStatus.PREDICTIVE -> PredictiveAlertContentCard(
+            alert = alert,
+            onReviewReeferClick = onReviewReeferClick
+        )
     }
 }
 
@@ -371,7 +418,10 @@ private fun NominalAlertCard() {
 }
 
 @Composable
-private fun BreachedAlertCard(alert: PredictiveAlert) {
+private fun BreachedAlertCard(
+    alert: PredictiveAlert,
+    onReviewReeferClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -383,7 +433,6 @@ private fun BreachedAlertCard(alert: PredictiveAlert) {
         )
     ) {
         Column(modifier = Modifier.padding(Spacing.sm)) {
-            // Overline title
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AppIcon(
                     id = R.drawable.ic_warning,
@@ -402,7 +451,6 @@ private fun BreachedAlertCard(alert: PredictiveAlert) {
 
             Spacer(modifier = Modifier.height(Spacing.xs))
 
-            // Unit line + current temp
             Text(
                 text = stringResource(R.string.alert_predictive_unit_line, alert.unitId, alert.cargoDescription),
                 style = FruitLogixTheme.typography.bodySmall,
@@ -426,7 +474,7 @@ private fun BreachedAlertCard(alert: PredictiveAlert) {
             ) {
                 PrimaryButton(
                     text = stringResource(R.string.alert_review_reefer),
-                    onClick = {}
+                    onClick = onReviewReeferClick
                 )
             }
         }
@@ -434,7 +482,10 @@ private fun BreachedAlertCard(alert: PredictiveAlert) {
 }
 
 @Composable
-private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
+private fun PredictiveAlertContentCard(
+    alert: PredictiveAlert,
+    onReviewReeferClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -446,7 +497,6 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
         )
     ) {
         Column(modifier = Modifier.padding(Spacing.sm)) {
-            // Overline: PREDICTIVE ALERT (amber) + warning icon
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AppIcon(
                     id = R.drawable.ic_warning,
@@ -465,7 +515,6 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Unit line
             Text(
                 text = stringResource(R.string.alert_predictive_unit_line, alert.unitId, alert.cargoDescription),
                 style = FruitLogixTheme.typography.bodySmall,
@@ -474,7 +523,6 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
 
             Spacer(modifier = Modifier.height(Spacing.xs))
 
-            // Big Poppins headline: "Will exceed 4.0°C in 12 min"
             Text(
                 text = stringResource(
                     R.string.alert_predictive_headline,
@@ -487,7 +535,6 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
                 fontWeight = FontWeight.Bold
             )
 
-            // Sub-line: "Rising 0.4°C/min • Now 3.2°C"
             val rateText = if (alert.ratePerMinute < 0.1) "0.4°C" else String.format("%.1f°C", alert.ratePerMinute)
             Text(
                 text = stringResource(
@@ -501,7 +548,6 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Canvas Sparkline
             val ceilingLabel = stringResource(R.string.alert_predictive_ceiling, "${alert.thresholdCelsius}°C")
             SparklineCanvas(
                 readings = alert.readings,
@@ -516,7 +562,6 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
 
             Spacer(modifier = Modifier.height(Spacing.sm))
 
-            // Bottom row: IMMEDIATE ACTION badge + Review reefer lime button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -528,16 +573,13 @@ private fun PredictiveAlertContentCard(alert: PredictiveAlert) {
                 )
                 PrimaryButton(
                     text = stringResource(R.string.alert_review_reefer),
-                    onClick = {}
+                    onClick = onReviewReeferClick
                 )
             }
         }
     }
 }
 
-// =============================================================================
-// Sparkline drawn with Compose Canvas (No third-party libraries)
-// =============================================================================
 @Composable
 private fun SparklineCanvas(
     readings: List<TemperatureReading>,
