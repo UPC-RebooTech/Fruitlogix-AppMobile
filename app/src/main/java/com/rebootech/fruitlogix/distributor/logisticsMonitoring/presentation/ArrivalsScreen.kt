@@ -57,9 +57,8 @@ import kotlinx.coroutines.launch
 
 // Placeholder route constant owned by orderManagement bounded context
 // TODO: Replace with OrderManagementRoutes.ScanReception when orderManagement exposes its reception route
-const val ORDER_RECEPTION_ROUTE = "orders/reception/{unitId}"
-fun orderReceptionRoute(unitId: String) = "orders/reception/$unitId"
-
+const val ORDER_RECEPTION_ROUTE = "orders_scan_reception"
+fun orderReceptionRoute(unitId: String) = "orders_scan_reception"
 /**
  * Entry point for the Inbound Arrivals Screen.
  */

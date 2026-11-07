@@ -80,7 +80,7 @@ import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Mil
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.RouteMilestone
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
-
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.DispatchOperationsSection
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DispatchDetailScreen(
@@ -300,7 +300,8 @@ private fun DispatchDetailContent(
 
         // f. Checkpoints & Stops
         CheckpointsCard(milestones = detail.milestones)
-
+        // g. Operaciones de Despacho, Reefer, Entrega Final, Certificado y Línea de Tiempo (US14, US16, US17, US52, US56, US64, US71, US72)
+        DispatchOperationsSection(detail = detail)
         // Extra spacing so sticky bottom bar doesn't overlap scrollable end
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -1504,6 +1505,7 @@ private fun MilestoneItemRow(milestone: RouteMilestone, isLast: Boolean) {
 @Composable
 private fun StickyBottomActions(
     detail: DispatchDetail,
+    onViewSensorClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -1552,7 +1554,7 @@ private fun StickyBottomActions(
 
             // Dark Button: View sensor
             Button(
-                onClick = { /* Placeholder action for View sensor */ },
+                onClick = onViewSensorClick,
                 modifier = Modifier
                     .weight(1f)
                     .height(44.dp),
