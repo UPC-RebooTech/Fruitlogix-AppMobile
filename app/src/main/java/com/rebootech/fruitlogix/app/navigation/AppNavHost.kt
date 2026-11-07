@@ -8,19 +8,19 @@ import androidx.navigation.compose.composable
 import com.rebootech.fruitlogix.distributor.dashboard.presentation.HomeScreen
 import com.rebootech.fruitlogix.distributor.fleetManagement.fleetManagementGraph
 import com.rebootech.fruitlogix.distributor.infrastructureIot.infrastructureIotGraph
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.LogisticsMonitoringRoutes
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringArrivalsGraph
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringGraph
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.FleetScreen
+import com.rebootech.fruitlogix.distributor.orderManagement.OrderManagementRoutes
+import com.rebootech.fruitlogix.distributor.orderManagement.orderManagementGraph
 import com.rebootech.fruitlogix.distributor.orderManagement.presentation.OrdersScreen
+import com.rebootech.fruitlogix.distributor.paymentManagement.PaymentManagementRoutes
+import com.rebootech.fruitlogix.distributor.paymentManagement.paymentManagementGraph
 import com.rebootech.fruitlogix.distributor.paymentManagement.presentation.InvoicesScreen
 import com.rebootech.fruitlogix.distributor.profilesManagement.profilesManagementGraph
 import com.rebootech.fruitlogix.distributor.qualityControl.qualityControlGraph
-import com.rebootech.fruitlogix.distributor.orderManagement.OrderManagementRoutes
-import com.rebootech.fruitlogix.distributor.orderManagement.orderManagementGraph
 
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.LogisticsMonitoringRoutes
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringGraph
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringArrivalsGraph
-import com.rebootech.fruitlogix.distributor.paymentManagement.paymentManagementGraph
-import com.rebootech.fruitlogix.distributor.paymentManagement.PaymentManagementRoutes
 @Composable
 fun AppNavHost(
     navController: NavHostController,
