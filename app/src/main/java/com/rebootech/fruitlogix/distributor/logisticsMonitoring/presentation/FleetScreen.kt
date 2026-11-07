@@ -65,6 +65,7 @@ fun FleetScreen(
     modifier: Modifier = Modifier,
     onDispatchClick: (String) -> Unit = {},
     onArrivalsClick: () -> Unit = {},
+    onLimitsClick: () -> Unit = {},
     viewModel: FleetViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -77,7 +78,7 @@ fun FleetScreen(
         onDismissSensorSheet = viewModel::onDismissSensorSheet,
         onDispatchClick = onDispatchClick,
         onArrivalsClick = onArrivalsClick,
-        onLimitsClick = { /* TODO: navigate to Thresholds screen */ },
+        onLimitsClick = onLimitsClick,
         modifier = modifier
     )
 }
