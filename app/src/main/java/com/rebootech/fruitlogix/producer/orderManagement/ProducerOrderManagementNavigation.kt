@@ -19,6 +19,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrderDetailScreen
 import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
@@ -47,10 +48,16 @@ fun NavGraphBuilder.producerOrderManagementGraph(
         route = ProducerOrderManagementRoutes.OrderDetail,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
-        val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Detalle del Pedido $orderId",
-            onBack = { navController.popBackStack() }
+        val orderId = backStackEntry.arguments?.getString("orderId") ?: "1052"
+        ProducerOrderDetailScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onAcceptOrder = {
+                navController.popBackStack()
+            },
+            onRespondOrder = {
+                navController.navigate(ProducerOrderManagementRoutes.respondOrder(orderId))
+            }
         )
     }
 
