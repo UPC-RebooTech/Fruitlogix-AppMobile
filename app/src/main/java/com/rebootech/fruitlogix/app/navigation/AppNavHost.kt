@@ -8,19 +8,19 @@ import androidx.navigation.compose.composable
 import com.rebootech.fruitlogix.distributor.dashboard.presentation.HomeScreen
 import com.rebootech.fruitlogix.distributor.fleetManagement.fleetManagementGraph
 import com.rebootech.fruitlogix.distributor.infrastructureIot.infrastructureIotGraph
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.LogisticsMonitoringRoutes
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringArrivalsGraph
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringGraph
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.FleetScreen
+import com.rebootech.fruitlogix.distributor.orderManagement.OrderManagementRoutes
+import com.rebootech.fruitlogix.distributor.orderManagement.orderManagementGraph
 import com.rebootech.fruitlogix.distributor.orderManagement.presentation.OrdersScreen
+import com.rebootech.fruitlogix.distributor.paymentManagement.PaymentManagementRoutes
+import com.rebootech.fruitlogix.distributor.paymentManagement.paymentManagementGraph
 import com.rebootech.fruitlogix.distributor.paymentManagement.presentation.InvoicesScreen
 import com.rebootech.fruitlogix.distributor.profilesManagement.profilesManagementGraph
 import com.rebootech.fruitlogix.distributor.qualityControl.qualityControlGraph
-import com.rebootech.fruitlogix.distributor.orderManagement.OrderManagementRoutes
-import com.rebootech.fruitlogix.distributor.orderManagement.orderManagementGraph
 
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.LogisticsMonitoringRoutes
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringGraph
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringArrivalsGraph
-import com.rebootech.fruitlogix.distributor.paymentManagement.paymentManagementGraph
-import com.rebootech.fruitlogix.distributor.paymentManagement.PaymentManagementRoutes
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -33,7 +33,30 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(Route.Home.route) {
-            HomeScreen()
+            HomeScreen(
+                onScanLotClick = {
+                    navController.navigate(OrderManagementRoutes.ScanReception)
+                },
+                onDispatchFleetClick = {
+                    navController.navigate(Route.Fleet.route)
+                },
+                onSensorsClick = {
+                    navController.navigate(
+                        com.rebootech.fruitlogix.distributor.infrastructureIot.InfrastructureIotRoutes.SensorsAlerts
+                    )
+                },
+                onReviewReeferClick = { unitId ->
+                    navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
+                },
+                onFleetUnitClick = { unitId ->
+                    navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
+                },
+                onProfileClick = {
+                    navController.navigate(
+                        com.rebootech.fruitlogix.distributor.profilesManagement.ProfilesManagementRoutes.Profile
+                    )
+                }
+            )
         }
         composable(Route.Orders.route) {
             OrdersScreen(
