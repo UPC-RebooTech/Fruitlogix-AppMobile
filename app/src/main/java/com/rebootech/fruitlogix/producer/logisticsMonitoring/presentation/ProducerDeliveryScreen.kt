@@ -42,7 +42,7 @@ fun ProducerDeliveryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Recojo en Fundo", fontWeight = FontWeight.Bold) },
+                title = { Text("Recojo en Fundo", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
