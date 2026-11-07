@@ -21,7 +21,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,8 +39,7 @@ import com.rebootech.fruitlogix.R
 fun ProducerOrderDetailScreen(
     orderId: String,
     onNavigateBack: () -> Unit = {},
-    onAcceptOrder: () -> Unit = {},
-    onRespondOrder: () -> Unit = {}
+    onAcceptOrder: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -210,26 +208,15 @@ fun ProducerOrderDetailScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Botones de acción comercial
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            // Botón único para Aceptar Pedido
+            Button(
+                onClick = onAcceptOrder,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp)
             ) {
-                OutlinedButton(
-                    onClick = onRespondOrder,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Contraofertar")
-                }
-
-                Button(
-                    onClick = onAcceptOrder,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Aceptar Pedido", fontWeight = FontWeight.Bold)
-                }
+                Text("Aceptar Pedido", fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(24.dp))

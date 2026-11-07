@@ -201,7 +201,7 @@ fun ProducerOrdersScreen(
                                     viewModel.onAcceptOrderClick(order)
                                 },
                                 onRespondOrder = {
-                                    onNavigate(ProducerOrderManagementRoutes.respondOrder(order.id))
+                                    onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
                                 },
                                 onReviewOrder = {
                                     onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
