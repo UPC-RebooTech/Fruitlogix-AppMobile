@@ -39,7 +39,8 @@ import com.rebootech.fruitlogix.R
 fun ProducerOrderDetailScreen(
     orderId: String,
     onNavigateBack: () -> Unit = {},
-    onAcceptOrder: () -> Unit = {}
+    onAcceptOrder: () -> Unit = {},
+    onOpenChat: (String) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -56,6 +57,16 @@ fun ProducerOrderDetailScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Volver"
+                        )
+                    }
+                },
+                actions = {
+                    // Acceso directo al chat de esta orden específica
+                    IconButton(onClick = { onOpenChat(orderId) }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_chat), // o Icons.Default.Email / Icons.AutoMirrored.Filled.Send
+                            contentDescription = "Contactar distribuidor",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
