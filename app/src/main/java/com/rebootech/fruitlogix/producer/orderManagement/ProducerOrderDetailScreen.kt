@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.res.painterResource
-import com.rebootech.fruitlogix.R
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,8 +30,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rebootech.fruitlogix.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,9 +47,8 @@ fun ProducerOrderDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    val id = if (orderId.isEmpty()) "1052" else orderId
                     Text(
-                        text = "Detalle de Pedido #$id",
+                        text = "Detalle de Pedido #$orderId",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -146,7 +145,11 @@ fun ProducerOrderDetailScreen(
                     ) {
                         Column {
                             Text("Mango Kent (Exportación)", fontWeight = FontWeight.SemiBold)
-                            Text("Calibre 8-10 • Empaque en cajas 4kg", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                            Text(
+                                text = "Calibre 8-10 • Empaque en cajas 4kg",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
                         }
                         Text("500 kg", fontWeight = FontWeight.Bold)
                     }
@@ -159,7 +162,11 @@ fun ProducerOrderDetailScreen(
                     ) {
                         Column {
                             Text("Arándano Ventura", fontWeight = FontWeight.SemiBold)
-                            Text("Clamshells 125g • Certificación GlobalGAP", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                            Text(
+                                text = "Clamshells 125g • Certificación GlobalGAP",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
                         }
                         Text("80 kg", fontWeight = FontWeight.Bold)
                     }
@@ -181,11 +188,20 @@ fun ProducerOrderDetailScreen(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    Text("Modalidad: Recojo en puerta de fundo por distribuidor", style = MaterialTheme.typography.bodyMedium)
-                    Text("Fecha pactada: Domingo, 8 de Noviembre de 2026", style = MaterialTheme.typography.bodyMedium)
-                    Text("Rango horario estimado: 08:00 AM - 11:30 AM", style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        "Nota del cliente: Mantener cadena de frío para arándanos (2°C a 4°C).",
+                        text = "Modalidad: Recojo en puerta de fundo por distribuidor",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Fecha pactada: Domingo, 8 de Noviembre de 2026",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Rango horario estimado: 08:00 AM - 11:30 AM",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Nota del cliente: Mantener cadena de frío para arándanos (2°C a 4°C).",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outline
                     )

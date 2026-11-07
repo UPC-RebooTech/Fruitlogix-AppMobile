@@ -38,7 +38,7 @@ fun NavGraphBuilder.producerOrderManagementGraph(
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
         ProducerPlaceholderScreen(
-            title = "Responder Pedido $orderId",
+            title = "Responder Pedido ${orderId}",
             onBack = { navController.popBackStack() }
         )
     }
@@ -48,16 +48,12 @@ fun NavGraphBuilder.producerOrderManagementGraph(
         route = ProducerOrderManagementRoutes.OrderDetail,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
-        val orderId = backStackEntry.arguments?.getString("orderId") ?: "1052"
+        val orderId = backStackEntry.arguments?.getString("orderId")?.removePrefix("#").orEmpty()
         ProducerOrderDetailScreen(
             orderId = orderId,
             onNavigateBack = { navController.popBackStack() },
-            onAcceptOrder = {
-                navController.popBackStack()
-            },
-            onRespondOrder = {
-                navController.navigate(ProducerOrderManagementRoutes.respondOrder(orderId))
-            }
+            onAcceptOrder = { navController.popBackStack() },
+            onRespondOrder = { navController.navigate(ProducerOrderManagementRoutes.respondOrder(orderId)) }
         )
     }
 
