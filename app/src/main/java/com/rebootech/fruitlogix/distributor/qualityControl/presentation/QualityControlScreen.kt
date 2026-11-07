@@ -2,6 +2,8 @@ package com.rebootech.fruitlogix.distributor.qualityControl.presentation
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,7 +21,6 @@ import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.shared.ui.theme.*
 import kotlinx.coroutines.delay
 
-// Modelo para Reportes de Calidad de Lote (US10 + US53 + US57)
 data class QualityReport(
     val id: String,
     val lotCode: String,
@@ -34,6 +35,16 @@ data class QualityReport(
 )
 
 enum class QualityStatus { PENDING, APPROVED, REJECTED }
+
+data class ShrinkageRecord(
+    val id: String,
+    val period: String,
+    val stage: String,
+    val cause: String,
+    val product: String,
+    val lostKg: Int,
+    val estimatedCostPen: Double
+)
 
 @Composable
 fun QualityControlScreen(
@@ -52,6 +63,15 @@ fun QualityControlScreen(
         )
     }
 
+    val shrinkageList = remember {
+        listOf(
+            ShrinkageRecord("m1", "Oct 2026", "Transporte", "Excursión térmica (>8°C)", "Arándano Biloxi", 45, 810.0),
+            ShrinkageRecord("m2", "Oct 2026", "Recepción", "Daño mecánico en cajas", "Palta Hass", 62, 558.0),
+            ShrinkageRecord("m3", "Oct 2026", "Cosecha", "Calibre menor al estándar", "Mango Kent", 30, 210.0),
+            ShrinkageRecord("m4", "Sep 2026", "Transporte", "Demora en control de ruta", "Uva Red Globe", 28, 336.0)
+        )
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -62,7 +82,6 @@ fun QualityControlScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header
             Text(
                 text = "Control de Calidad",
                 color = ColorTextOnLight,
@@ -70,14 +89,13 @@ fun QualityControlScreen(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Gestión de lotes e incidencias con nota de voz",
+                text = "Validación de lotes, inspección offline, voz y reporte de mermas",
                 color = ColorAppbar,
                 fontSize = 12.sp
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // TabRow adaptado al tema
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = ColorSurfaceDark,
@@ -88,25 +106,24 @@ fun QualityControlScreen(
                     containerColor = ColorSurfaceDark,
                     contentColor = ColorPrimary
                 ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text("Lotes", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = if (selectedTab == 0) ColorPrimary else ColorTextMuted) }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text("Campo", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = if (selectedTab == 1) ColorPrimary else ColorTextMuted) }
-                    )
-                    Tab(
-                        selected = selectedTab == 2,
-                        onClick = { selectedTab = 2 },
-                        text = { Text("Incidencias", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = if (selectedTab == 2) ColorPrimary else ColorTextMuted) }
-                    )
+                    listOf("Lotes", "Campo", "Voz", "Mermas").forEachIndexed { index, label ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = {
+                                Text(
+                                    text = label,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = if (selectedTab == index) ColorPrimary else ColorTextMuted
+                                )
+                            }
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             when (selectedTab) {
                 0 -> {
@@ -117,7 +134,12 @@ fun QualityControlScreen(
                         items(reportsList) { report ->
                             QualityReportCard(
                                 report = report,
-                                onApprove = { report.status = QualityStatus.APPROVED },
+                                onApprove = {
+                                    val idx = reportsList.indexOf(report)
+                                    if (idx >= 0) {
+                                        reportsList[idx] = report.copy(status = QualityStatus.APPROVED)
+                                    }
+                                },
                                 onReject = {
                                     selectedReportForRejection = report
                                     showRejectDialog = true
@@ -166,6 +188,9 @@ fun QualityControlScreen(
                         }
                     )
                 }
+                3 -> {
+                    ShrinkageReportSection(records = shrinkageList)
+                }
             }
         }
 
@@ -180,7 +205,7 @@ fun QualityControlScreen(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            "Ingresa el motivo obligatorio del rechazo previo a descartar el lote.",
+                            "Ingresa el motivo obligatorio del rechazo previo a descartar el lote (US10).",
                             color = ColorTextMuted,
                             fontSize = 12.sp
                         )
@@ -204,8 +229,14 @@ fun QualityControlScreen(
                     Button(
                         onClick = {
                             if (rejectionInputText.isNotBlank()) {
-                                selectedReportForRejection?.status = QualityStatus.REJECTED
-                                selectedReportForRejection?.rejectionReason = rejectionInputText
+                                val target = selectedReportForRejection
+                                val idx = reportsList.indexOfFirst { it.id == target?.id }
+                                if (idx >= 0 && target != null) {
+                                    reportsList[idx] = target.copy(
+                                        status = QualityStatus.REJECTED,
+                                        rejectionReason = rejectionInputText
+                                    )
+                                }
                                 rejectionInputText = ""
                                 showRejectDialog = false
                             }
@@ -222,6 +253,136 @@ fun QualityControlScreen(
                     }
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun ShrinkageReportSection(records: List<ShrinkageRecord>) {
+    var selectedPeriod by remember { mutableStateOf("Oct 2026") }
+    val periods = listOf("Oct 2026", "Sep 2026", "Ago 2026 (Sin mermas)")
+
+    val filtered = records.filter { it.period == selectedPeriod }
+    val totalLostKg = filtered.sumOf { it.lostKg }
+    val totalCost = filtered.sumOf { it.estimatedCostPen }
+
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        item {
+            Text(
+                text = "Filtrar periodo de análisis (US73):",
+                color = ColorTextOnLight,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                periods.forEach { period ->
+                    val isSelected = selectedPeriod == period
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) ColorPrimary else ColorSurfaceDark)
+                            .clickable { selectedPeriod = period }
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = period,
+                            color = if (isSelected) ColorOnPrimary else ColorTextOnDark,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+
+        if (filtered.isEmpty()) {
+            // US73 Escenario 2: Sin mermas en el periodo
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(ColorSurfaceDark)
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No hay mermas registradas en este periodo",
+                        color = ColorPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Todas las entregas del rango seleccionado cumplieron con el 100% de integridad.",
+                        color = ColorTextMuted,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        } else {
+            // Resumen de pérdidas del periodo
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(ColorSurfaceDark)
+                            .padding(14.dp)
+                    ) {
+                        Text("MERMA TOTAL", color = ColorTextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("$totalLostKg kg", color = ColorDangerStrong, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(ColorSurfaceDark)
+                            .padding(14.dp)
+                    ) {
+                        Text("IMPACTO ECONÓMICO", color = ColorTextMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("S/ ${String.format("%.2f", totalCost)}", color = ColorWarning, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            items(filtered, key = { it.id }) { item ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(ColorSurfaceDark)
+                        .border(1.dp, ColorAppbar, RoundedCornerShape(16.dp))
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(ColorAppbar)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text("Etapa: ${item.stage}", color = ColorPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Text("-${item.lostKg} kg (S/ ${String.format("%.2f", item.estimatedCostPen)})", color = ColorDangerStrong, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(item.product, color = ColorTextOnDark, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("Causa: ${item.cause}", color = ColorTextMuted, fontSize = 12.sp)
+                }
+            }
         }
     }
 }
@@ -254,7 +415,7 @@ private fun QualityReportCard(
                             .background(ColorWarning.copy(alpha = 0.2f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Text("Pendiente sync", color = ColorWarning, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("Pendiente de sincronización", color = ColorWarning, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -365,7 +526,7 @@ private fun FieldInspectionForm(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Inspección en Campo", color = ColorTextOnDark, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Inspección en Campo (US53)", color = ColorTextOnDark, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -437,7 +598,7 @@ private fun FieldInspectionForm(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Button(
             onClick = {
@@ -455,7 +616,7 @@ private fun FieldInspectionForm(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Guardar Inspección", fontWeight = FontWeight.Bold)
+            Text("Guardar Inspección Offline", fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -469,6 +630,7 @@ private fun VoiceIncidentReportForm(
     var isRecording by remember { mutableStateOf(false) }
     var recordingSeconds by remember { mutableIntStateOf(0) }
     var recordedAudioDuration by remember { mutableStateOf<String?>(null) }
+    var audioErrorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(isRecording) {
         if (isRecording) {
@@ -488,8 +650,8 @@ private fun VoiceIncidentReportForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("Reportar Incidencia", color = ColorTextOnDark, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        Text("Adjunta notas de voz para agilizar el registro de observaciones.", color = ColorTextMuted, fontSize = 12.sp)
+        Text("Reportar Incidencia con Voz (US57)", color = ColorTextOnDark, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        Text("Graba una nota de voz de al menos 1 segundo para adjuntarla al lote.", color = ColorTextMuted, fontSize = 12.sp)
 
         OutlinedTextField(
             value = lotInput,
@@ -529,20 +691,32 @@ private fun VoiceIncidentReportForm(
 
             Text(
                 text = if (isRecording) "Grabando nota de voz ($formattedCurrentTime seg)..."
-                else if (recordedAudioDuration != null) "Audio grabado: $recordedAudioDuration"
+                else if (recordedAudioDuration != null) "Audio grabado válidamente: $recordedAudioDuration"
                 else "Presiona para grabar audio",
                 color = if (isRecording) ColorDangerStrong else ColorTextOnDark,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
             )
 
+            audioErrorMessage?.let { err ->
+                Text(text = err, color = ColorDangerStrong, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            }
+
             Button(
                 onClick = {
                     if (!isRecording) {
+                        audioErrorMessage = null
                         isRecording = true
                     } else {
                         isRecording = false
-                        recordedAudioDuration = String.format("%02d:%02d seg", recordingSeconds / 60, recordingSeconds % 60)
+                        // US57 Escenario 2: Grabación menor a 1 segundo se descarta y muestra error
+                        if (recordingSeconds < 1) {
+                            recordedAudioDuration = null
+                            audioErrorMessage = "Grabación interrumpida o menor a 1 segundo. Audio descartado, intenta nuevamente."
+                        } else {
+                            audioErrorMessage = null
+                            recordedAudioDuration = String.format("%02d:%02d seg", recordingSeconds / 60, recordingSeconds % 60)
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -568,21 +742,20 @@ private fun VoiceIncidentReportForm(
 
         Button(
             onClick = {
-                if (lotInput.isNotBlank() && descInput.isNotBlank()) {
-                    val finalDuration = recordedAudioDuration ?: "00:05 seg"
+                if (lotInput.isNotBlank() && descInput.isNotBlank() && recordedAudioDuration != null) {
                     onSaveIncident(
                         lotInput,
                         descInput,
-                        finalDuration
+                        recordedAudioDuration!!
                     )
                 }
             },
-            enabled = lotInput.isNotBlank() && descInput.isNotBlank(),
+            enabled = lotInput.isNotBlank() && descInput.isNotBlank() && recordedAudioDuration != null,
             colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Registrar Incidencia", fontWeight = FontWeight.Bold)
+            Text("Registrar Incidencia con Audio", fontWeight = FontWeight.Bold)
         }
     }
 }
