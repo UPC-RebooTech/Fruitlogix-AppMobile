@@ -1,7 +1,9 @@
 package com.rebootech.fruitlogix.distributor.profilesManagement.presentation
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,318 +15,765 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerEntityType
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerItem
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerKpiSummary
+import com.rebootech.fruitlogix.shared.ui.theme.*
 
-private val BackgroundDark = Color(0xFF141A14)
-private val CardBackground = Color(0xFF1E261D)
-private val CardBorder = Color(0xFF2E382C)
-private val AccentLime = Color(0xFFD2F852)
-private val TextWhite = Color(0xFFF5F5F5)
-private val TextMuted = Color(0xFF9EABA0)
-
-data class Producer(
-    val id: String,
-    val name: String,
-    val farmName: String,
-    val location: String,
-    val cropType: String,
-    val isPending: Boolean = false
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProducersScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ProducersViewModel = viewModel()
 ) {
-    var searchQuery by remember { mutableStateOf("") }
+    val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    var showRegisterDialog by remember { mutableStateOf(false) }
     var showInviteDialog by remember { mutableStateOf(false) }
+    var producerToEdit by remember { mutableStateOf<ProducerItem?>(null) }
+    var producerToDelete by remember { mutableStateOf<ProducerItem?>(null) }
 
-    // Lista de productores simulada
-    val producersList = remember {
-        mutableStateListOf(
-            Producer("1", "Agropecuaria El Valle", "Fundo Las Lilas", "Ica, Perú", "Palta Hass"),
-            Producer("2", "Miguel Ángel Torres", "Finca El Pedregal", "Chanchamayo, Junín", "Cítricos y Café"),
-            Producer("3", "Agrícola Olmos S.A.C.", "Sector B3", "Lambayeque, Perú", "Arándanos & Mango"),
-            Producer("4", "Hacienda San José", "Fundo Central", "Huaral, Lima", "Mandarina Satsuma"),
-            Producer("5", "Campos del Sur", "Valle de Majes", "Arequipa, Perú", "Uva de Mesa", isPending = true)
-        )
-    }
-
-    val filteredProducers = producersList.filter {
-        it.name.contains(searchQuery, ignoreCase = true) ||
-                it.location.contains(searchQuery, ignoreCase = true) ||
-                it.cropType.contains(searchQuery, ignoreCase = true)
-    }
-
-    Box(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(ColorBg),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Encabezado y Botón de Invitar
+        // Cabecera y botones de acción (US05 y US41)
+        item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Red de Productores",
-                        color = TextWhite,
+                        text = "Gestión de Productores",
+                        color = ColorTextOnLight,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${producersList.size} productores vinculados",
-                        color = TextMuted,
+                        text = "Red de abastecimiento y fichas técnicas",
+                        color = ColorAppbar,
                         fontSize = 12.sp
                     )
                 }
 
-                // Botón Invitar Productor (US41)
-                Button(
-                    onClick = { showInviteDialog = true },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AccentLime,
-                        contentColor = BackgroundDark
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "+ Invitar",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp
-                    )
-                }
-            }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.clearMessages()
+                            showInviteDialog = true
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorSurfaceDark),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Text("Invitar Link", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Campo de Búsqueda
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Buscar por nombre, valle o cultivo...", color = TextMuted) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = TextWhite,
-                    unfocusedTextColor = TextWhite,
-                    focusedBorderColor = AccentLime,
-                    unfocusedBorderColor = CardBorder,
-                    focusedContainerColor = CardBackground,
-                    unfocusedContainerColor = CardBackground
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Lista de Productores
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(filteredProducers) { producer ->
-                    ProducerCard(producer = producer)
+                    Button(
+                        onClick = {
+                            viewModel.clearMessages()
+                            showRegisterDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ColorPrimary,
+                            contentColor = ColorOnPrimary
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Text("+ Registrar", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
             }
         }
 
-        // Modal para Invitar Productor (US41)
-        if (showInviteDialog) {
-            InviteProducerDialog(
-                onDismiss = { showInviteDialog = false },
-                onSendInvite = { newName, newLocation, newCrop ->
-                    producersList.add(
-                        0,
-                        Producer(
-                            id = (producersList.size + 1).toString(),
-                            name = newName,
-                            farmName = "Fundo Nuevo",
-                            location = newLocation,
-                            cropType = newCrop,
-                            isPending = true
-                        )
+        // Banner de confirmación si existe
+        state.feedbackMessage?.let { msg ->
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ColorSurfaceDark)
+                        .border(1.dp, ColorPrimary, RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = msg,
+                        color = ColorPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f)
                     )
-                    showInviteDialog = false
+                    TextButton(onClick = { viewModel.clearMessages() }) {
+                        Text("OK", color = ColorTextOnDark, fontSize = 12.sp)
+                    }
                 }
+            }
+        }
+
+        // KPIs de Gestión de Productores (US42)
+        item {
+            ProducerKpisGrid(kpis = state.kpis)
+        }
+
+        // Buscador
+        item {
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = viewModel::onSearchQueryChange,
+                placeholder = { Text("Buscar por productor, fundo, valle o fruta...", color = ColorTextMuted) },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = ColorTextOnDark,
+                    unfocusedTextColor = ColorTextOnDark,
+                    focusedBorderColor = ColorPrimary,
+                    unfocusedBorderColor = ColorAppbar,
+                    focusedContainerColor = ColorSurfaceDark,
+                    unfocusedContainerColor = ColorSurfaceDark
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp)
+            )
+        }
+
+        // Lista de productores o estado vacío (US06 Escenario 1 y 2)
+        if (state.filteredProducers.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(ColorSurfaceDark)
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No se encontraron productores registrados",
+                            color = ColorTextOnDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Usa '+ Registrar' o 'Invitar Link' para vincular proveedores a tu red.",
+                            color = ColorTextMuted,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        } else {
+            items(state.filteredProducers, key = { it.id }) { producer ->
+                ProducerCardItem(
+                    producer = producer,
+                    onEditClick = {
+                        viewModel.clearMessages()
+                        producerToEdit = producer
+                    },
+                    onDeleteClick = {
+                        viewModel.clearMessages()
+                        producerToDelete = producer
+                    },
+                    onContactClick = {
+                        val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                            data = android.net.Uri.parse("tel:${producer.phone}")
+                        }
+                        context.startActivity(dialIntent)
+                    }
+                )
+            }
+        }
+    }
+
+    // Modal US05: Registrar productor con tipado estricto (Individual / Company)
+    if (showRegisterDialog) {
+        RegisterProducerDialog(
+            errorMessage = state.errorMessage,
+            onDismiss = {
+                viewModel.clearMessages()
+                showRegisterDialog = false
+            },
+            onConfirm = { name, farm, loc, crop, email, phone, entityType ->
+                viewModel.registerProducer(
+                    name = name,
+                    farmName = farm,
+                    location = loc,
+                    cropType = crop,
+                    email = email,
+                    phone = phone,
+                    entityType = entityType,
+                    onSuccess = { showRegisterDialog = false }
+                )
+            }
+        )
+    }
+
+    // Modal US41: Invitar productor a la red (Correo o Share Sheet WhatsApp)
+    if (showInviteDialog) {
+        InviteProducerShareDialog(
+            errorMessage = state.errorMessage,
+            onDismiss = {
+                viewModel.clearMessages()
+                showInviteDialog = false
+            },
+            onSendInvite = { name, contact, loc, crop ->
+                viewModel.inviteProducer(
+                    name = name,
+                    emailOrPhone = contact,
+                    location = loc,
+                    cropType = crop,
+                    onShareLinkReady = { shareText ->
+                        showInviteDialog = false
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, "Invitación a FruitLogix")
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                        }
+                        context.startActivity(
+                            Intent.createChooser(sendIntent, "Enviar invitación al productor vía")
+                        )
+                    }
+                )
+            }
+        )
+    }
+
+    // Modal US39: Editar ficha técnica de productor
+    producerToEdit?.let { current ->
+        EditProducerDialog(
+            producer = current,
+            errorMessage = state.errorMessage,
+            onDismiss = {
+                viewModel.clearMessages()
+                producerToEdit = null
+            },
+            onSave = { updated ->
+                viewModel.updateProducer(
+                    updated = updated,
+                    onSuccess = { producerToEdit = null }
+                )
+            }
+        )
+    }
+
+    // Modal US40: Eliminar productor con confirmación
+    producerToDelete?.let { target ->
+        AlertDialog(
+            onDismissRequest = { producerToDelete = null },
+            containerColor = ColorSurfaceDark,
+            shape = RoundedCornerShape(20.dp),
+            title = {
+                Text("Eliminar Productor", color = ColorTextOnDark, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(
+                    "¿Estás seguro de eliminar a '${target.name}' (${target.farmName}) de tu red activa de proveedores?",
+                    color = ColorTextMuted,
+                    fontSize = 13.sp
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteProducer(target.id)
+                        producerToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ColorDangerStrong,
+                        contentColor = ColorTextOnDark
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Eliminar", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { producerToDelete = null }) {
+                    Text("Cancelar", color = ColorTextMuted)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ProducerKpisGrid(kpis: ProducerKpiSummary) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ProducerKpiTile(
+                label = "TOTAL PRODUCTORES",
+                value = kpis.totalProducers.toString(),
+                badge = "Red activa",
+                modifier = Modifier.weight(1f)
+            )
+            ProducerKpiTile(
+                label = "CALIDAD PROMEDIO",
+                value = "${kpis.averageQuality} ★",
+                badge = "Óptimo",
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ProducerKpiTile(
+                label = "PRODUCCIÓN SEMANAL",
+                value = "${kpis.weeklyProductionTons} tn",
+                badge = "Abastecimiento",
+                modifier = Modifier.weight(1f)
+            )
+            ProducerKpiTile(
+                label = "INCIDENCIAS (30D)",
+                value = kpis.incidentsLast30d.toString(),
+                badge = if (kpis.incidentsLast30d == 0) "Sin alertas" else "En revisión",
+                modifier = Modifier.weight(1f)
             )
         }
     }
 }
 
 @Composable
-private fun ProducerCard(producer: Producer) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
+private fun ProducerKpiTile(
+    label: String,
+    value: String,
+    badge: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(CardBackground)
-            .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .background(ColorSurfaceDark)
+            .border(1.dp, ColorAppbar, RoundedCornerShape(16.dp))
+            .padding(14.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(if (producer.isPending) Color(0xFF332B14) else CardBorder),
-            contentAlignment = Alignment.Center
+        Text(
+            text = label,
+            color = ColorTextMuted,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_person),
-                contentDescription = null,
-                tint = if (producer.isPending) Color(0xFFFFC107) else AccentLime,
-                modifier = Modifier.size(28.dp)
+            Text(
+                text = value,
+                color = ColorTextOnDark,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = badge,
+                color = ColorPrimary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
+    }
+}
 
-        Spacer(modifier = Modifier.width(14.dp))
+@Composable
+private fun ProducerCardItem(
+    producer: ProducerItem,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onContactClick: () -> Unit
+) {
+    val initials = producer.name
+        .split(" ")
+        .mapNotNull { it.firstOrNull()?.uppercase() }
+        .take(2)
+        .joinToString("")
 
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(ColorSurfaceDark)
+            .border(1.dp, ColorAppbar, RoundedCornerShape(18.dp))
+            .padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(if (producer.isPending) Color(0xFF332B14) else ColorPrimary),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = producer.name,
-                    color = TextWhite,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    text = initials,
+                    color = if (producer.isPending) ColorWarning else ColorOnPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
-                if (producer.isPending) {
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = producer.name,
+                        color = ColorTextOnDark,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF332B14))
+                            .background(ColorAppbar)
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Text("Pendiente", color = Color(0xFFFFC107), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = producer.entityType.backendValue,
+                            color = ColorPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (producer.isPending) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFF332B14))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "Pendiente",
+                                color = ColorWarning,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
+                Text(
+                    text = "${producer.farmName} • ${producer.location}",
+                    color = ColorTextMuted,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = "Especialidad: ${producer.cropType} • ★ ${producer.qualityRating}",
+                    color = ColorPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        HorizontalDivider(color = ColorAppbar, thickness = 0.7.dp)
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "STOCK ACTUAL: ${producer.currentStockSummary}",
+            color = ColorTextMuted,
+            fontSize = 11.sp
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = "${producer.farmName} • ${producer.location}",
-                color = TextMuted,
-                fontSize = 12.sp
+                text = "${producer.activeOrdersCount} PEDIDOS ASIGNADOS",
+                color = ColorPrimary,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Cultivo: ${producer.cropType}",
-                color = AccentLime,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(
+                    onClick = onContactClick,
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    Text("Contactar", color = ColorTextOnDark, fontSize = 11.sp)
+                }
+
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_edit),
+                        contentDescription = "Editar ficha",
+                        tint = ColorPrimary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_close),
+                        contentDescription = "Eliminar productor",
+                        tint = ColorDangerStrong,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun InviteProducerDialog(
+private fun RegisterProducerDialog(
+    errorMessage: String?,
     onDismiss: () -> Unit,
-    onSendInvite: (name: String, location: String, crop: String) -> Unit
+    onConfirm: (
+        name: String,
+        farm: String,
+        location: String,
+        crop: String,
+        email: String,
+        phone: String,
+        entityType: ProducerEntityType
+    ) -> Unit
 ) {
-    var nameInput by remember { mutableStateOf("") }
-    var locationInput by remember { mutableStateOf("") }
-    var cropInput by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var farm by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var crop by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(ProducerEntityType.INDIVIDUAL) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(20.dp), // Fix: define la forma de la ventana emergente correctamente
-        containerColor = CardBackground,
+        containerColor = ColorSurfaceDark,
+        shape = RoundedCornerShape(20.dp),
         title = {
-            Text(
-                text = "Invitar Productor a la Red",
-                color = TextWhite,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text("Registrar Productor (US05)", color = ColorTextOnDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Ingresa los datos del productor agrícola para enviar la invitación de enlace a FruitLogix.",
-                    color = TextMuted,
+                    text = "Selecciona la naturaleza comercial estricta (Enum para el Backend):",
+                    color = ColorTextMuted,
                     fontSize = 12.sp
                 )
-                OutlinedTextField(
-                    value = nameInput,
-                    onValueChange = { nameInput = it },
-                    label = { Text("Nombre o Razón Social", color = TextMuted) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextWhite,
-                        unfocusedTextColor = TextWhite,
-                        focusedBorderColor = AccentLime,
-                        unfocusedBorderColor = CardBorder,
-                        focusedContainerColor = BackgroundDark,
-                        unfocusedContainerColor = BackgroundDark
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ProducerEntityType.entries.forEach { type ->
+                        val isSelected = selectedType == type
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) ColorPrimary else ColorAppbar)
+                                .clickable { selectedType = type }
+                                .padding(vertical = 8.dp, horizontal = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = type.backendValue,
+                                color = if (isSelected) ColorOnPrimary else ColorTextOnDark,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+
+                errorMessage?.let {
+                    Text(text = it, color = ColorDangerStrong, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                DialogField("Nombre o Razón Social *", name) { name = it }
+                DialogField("Nombre del Fundo / Parcela *", farm) { farm = it }
+                DialogField("Ubicación / Valle (ej. Ica, Perú) *", location) { location = it }
+                DialogField("Cultivo Principal (ej. Palta Hass) *", crop) { crop = it }
+                DialogField("Correo Electrónico", email) { email = it }
+                DialogField("Teléfono", phone) { phone = it }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(name, farm, location, crop, email, phone, selectedType) },
+                colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Guardar (${selectedType.backendValue})", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = ColorTextMuted)
+            }
+        }
+    )
+}
+
+@Composable
+private fun InviteProducerShareDialog(
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onSendInvite: (name: String, emailOrPhone: String, location: String, crop: String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var contact by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var crop by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = ColorSurfaceDark,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text("Invitar Productor a la Red (US41)", color = ColorTextOnDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Envía un enlace directo de registro por WhatsApp o correo electrónico mediante el Share Sheet nativo.",
+                    color = ColorTextMuted,
+                    fontSize = 12.sp
                 )
-                OutlinedTextField(
-                    value = locationInput,
-                    onValueChange = { locationInput = it },
-                    label = { Text("Ubicación / Fundo (ej. Huaral, Lima)", color = TextMuted) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextWhite,
-                        unfocusedTextColor = TextWhite,
-                        focusedBorderColor = AccentLime,
-                        unfocusedBorderColor = CardBorder,
-                        focusedContainerColor = BackgroundDark,
-                        unfocusedContainerColor = BackgroundDark
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = cropInput,
-                    onValueChange = { cropInput = it },
-                    label = { Text("Cultivo Principal (ej. Palta Hass)", color = TextMuted) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextWhite,
-                        unfocusedTextColor = TextWhite,
-                        focusedBorderColor = AccentLime,
-                        unfocusedBorderColor = CardBorder,
-                        focusedContainerColor = BackgroundDark,
-                        unfocusedContainerColor = BackgroundDark
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                errorMessage?.let {
+                    Text(text = it, color = ColorDangerStrong, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                DialogField("Nombre del Productor *", name) { name = it }
+                DialogField("Correo o Celular (+51...) *", contact) { contact = it }
+                DialogField("Valle / Ubicación", location) { location = it }
+                DialogField("Cultivo Principal", crop) { crop = it }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (nameInput.isNotBlank()) {
-                        onSendInvite(
-                            nameInput,
-                            locationInput.ifBlank { "Sin ubicación" },
-                            cropInput.ifBlank { "General" }
-                        )
+                    if (name.isNotBlank()) {
+                        onSendInvite(name, contact, location, crop)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = AccentLime, contentColor = BackgroundDark),
-                shape = RoundedCornerShape(12.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
+                shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Enviar Invitación", fontWeight = FontWeight.Bold)
+                Text("Compartir Invitación", fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = TextMuted)
+                Text("Cancelar", color = ColorTextMuted)
             }
         }
+    )
+}
+
+@Composable
+private fun EditProducerDialog(
+    producer: ProducerItem,
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onSave: (ProducerItem) -> Unit
+) {
+    var name by remember { mutableStateOf(producer.name) }
+    var farm by remember { mutableStateOf(producer.farmName) }
+    var location by remember { mutableStateOf(producer.location) }
+    var crop by remember { mutableStateOf(producer.cropType) }
+    var stock by remember { mutableStateOf(producer.currentStockSummary) }
+    var entityType by remember { mutableStateOf(producer.entityType) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = ColorSurfaceDark,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text("Editar Ficha Técnica (US39)", color = ColorTextOnDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                errorMessage?.let {
+                    Text(text = it, color = ColorDangerStrong, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                DialogField("Nombre o Razón Social *", name) { name = it }
+                DialogField("Fundo / Parcela *", farm) { farm = it }
+                DialogField("Ubicación *", location) { location = it }
+                DialogField("Especialidad / Cultivo *", crop) { crop = it }
+                DialogField("Resumen de Stock", stock) { stock = it }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(
+                        producer.copy(
+                            name = name,
+                            farmName = farm,
+                            location = location,
+                            cropType = crop,
+                            currentStockSummary = stock,
+                            entityType = entityType
+                        )
+                    )
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Guardar Cambios", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = ColorTextMuted)
+            }
+        }
+    )
+}
+
+@Composable
+private fun DialogField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, color = ColorTextMuted, fontSize = 11.sp) },
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = ColorTextOnDark,
+            unfocusedTextColor = ColorTextOnDark,
+            focusedBorderColor = ColorPrimary,
+            unfocusedBorderColor = ColorAppbar,
+            focusedContainerColor = ColorAppbar,
+            unfocusedContainerColor = ColorAppbar
+        ),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10.dp)
     )
 }
