@@ -17,27 +17,79 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.profilesManagement.data.FakeProfilesRepository
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.DistributorProfile
 import com.rebootech.fruitlogix.shared.ui.theme.*
 
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
-    // Estados simulados para la US23 (Visualizar) y US22 (Gestionar/Editar)
-    var isEditing by remember { mutableStateOf(false) }
+    val savedProfile by FakeProfilesRepository.distributorProfile.collectAsState()
 
-    var fullName by remember { mutableStateOf("Carlos Mendoza") }
-    var roleTitle by remember { mutableStateOf("Distribuidor Logístico / Admin") }
-    var companyHub by remember { mutableStateOf("Lima Central Hub - Panamericana") }
-    var email by remember { mutableStateOf("carlos.mendoza@fruitlogix.pe") }
-    var phone by remember { mutableStateOf("+51 987 654 321") }
-    var ruc by remember { mutableStateOf("20601234567") }
+    var isEditing by remember { mutableStateOf(false) }
+    var hasLoadError by remember { mutableStateOf(false) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var fullName by remember(savedProfile) { mutableStateOf(savedProfile.fullName) }
+    var roleTitle by remember(savedProfile) { mutableStateOf(savedProfile.roleTitle) }
+    var companyHub by remember(savedProfile) { mutableStateOf(savedProfile.companyHub) }
+    var email by remember(savedProfile) { mutableStateOf(savedProfile.email) }
+    var phone by remember(savedProfile) { mutableStateOf(savedProfile.phone) }
+    var ruc by remember(savedProfile) { mutableStateOf(savedProfile.ruc) }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(ColorBg) // Fondo blanco derivado de Color.kt
+            .background(ColorBg)
     ) {
+        if (hasLoadError) {
+            // US23 Escenario 2: Error al cargar con opción de reintentar
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(ColorSurfaceDark)
+                        .border(1.dp, ColorDangerStrong, RoundedCornerShape(20.dp))
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Fallo al cargar el perfil",
+                        color = ColorTextOnDark,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "No se pudo establecer comunicación con el servidor para obtener tus datos personales.",
+                        color = ColorTextMuted,
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { hasLoadError = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ColorPrimary,
+                            contentColor = ColorOnPrimary
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Reintentar carga", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            return@Box
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,7 +125,7 @@ fun ProfileScreen(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = fullName,
+                        text = savedProfile.fullName,
                         color = ColorTextOnDark,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
@@ -92,7 +144,34 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            errorMessage?.let { err ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ColorDanger)
+                        .padding(12.dp)
+                ) {
+                    Text(text = err, color = ColorTextOnDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            statusMessage?.let { msg ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ColorSurfaceDark)
+                        .border(1.dp, ColorPrimary, RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(text = msg, color = ColorPrimary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Sección de Detalle de Contacto
             Column(
@@ -121,21 +200,49 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     ProfileTextField(label = "Teléfono de Contacto", value = phone, onValueChange = { phone = it })
                     Spacer(modifier = Modifier.height(12.dp))
-                    ProfileTextField(label = "RUC Empresa / Operación", value = ruc, onValueChange = { ruc = it })
+                    ProfileTextField(label = "RUC Empresa / Operación (11 dígitos)", value = ruc, onValueChange = { ruc = it })
                 } else {
                     // MODO VISUALIZACIÓN (US23)
-                    ProfileInfoRow(label = "Nombre", value = fullName)
-                    ProfileInfoRow(label = "Correo", value = email)
-                    ProfileInfoRow(label = "Teléfono", value = phone)
-                    ProfileInfoRow(label = "RUC Operativo", value = ruc)
+                    ProfileInfoRow(label = "Nombre", value = savedProfile.fullName)
+                    ProfileInfoRow(label = "Correo", value = savedProfile.email)
+                    ProfileInfoRow(label = "Teléfono", value = savedProfile.phone)
+                    ProfileInfoRow(label = "RUC Operativo", value = savedProfile.ruc)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Botón de Acción (Alternar Editar / Guardar)
+            // Botón de Acción (Alternar Editar / Guardar con validación US22)
             Button(
-                onClick = { isEditing = !isEditing },
+                onClick = {
+                    if (isEditing) {
+                        val result = FakeProfilesRepository.updateDistributorProfile(
+                            DistributorProfile(
+                                fullName = fullName,
+                                roleTitle = roleTitle,
+                                companyHub = companyHub,
+                                email = email,
+                                phone = phone,
+                                ruc = ruc
+                            )
+                        )
+                        result.fold(
+                            onSuccess = {
+                                errorMessage = null
+                                statusMessage = "Perfil actualizado exitosamente."
+                                isEditing = false
+                            },
+                            onFailure = { err ->
+                                statusMessage = null
+                                errorMessage = err.message
+                            }
+                        )
+                    } else {
+                        errorMessage = null
+                        statusMessage = null
+                        isEditing = true
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
