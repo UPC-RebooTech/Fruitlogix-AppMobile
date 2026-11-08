@@ -1,7 +1,7 @@
 package com.rebootech.fruitlogix.fleetManagement
 
-import com.rebootech.fruitlogix.fleetManagement.domain.service.LicenseValidity
-import com.rebootech.fruitlogix.fleetManagement.domain.service.LicenseValidityState
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.service.LicenseValidity
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.service.LicenseValidityState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -9,27 +9,31 @@ import java.time.LocalDate
 
 class LicenseValidityTest {
 
-    private val currentDate: LocalDate = LocalDate.of(2026, 10, 6)
-
     @Test
-    fun checkValidity_returnsExpired_whenExpiryDateIsInThePast() {
-        val expiryDate = LocalDate.of(2023, 10, 12)
-        val result = LicenseValidity.checkValidity(expiryDate, currentDate)
-        assertEquals(LicenseValidityState.Expired, result)
+    fun validLicense_moreThan30Days_returnsValid() {
+        val today = LocalDate.of(2026, 6, 1)
+        val expiry = LocalDate.of(2026, 8, 15)
+
+        val result = LicenseValidity.checkValidity(expiry, today)
+        assertEquals(LicenseValidityState.Valid, result)
     }
 
     @Test
-    fun checkValidity_returnsExpiringSoon_whenExpiryDateIsWithin30Days() {
-        val expiryDate = LocalDate.of(2026, 10, 26) // 20 days remaining
-        val result = LicenseValidity.checkValidity(expiryDate, currentDate)
+    fun expiringSoonLicense_within30Days_returnsExpiringSoon() {
+        val today = LocalDate.of(2026, 6, 1)
+        val expiry = LocalDate.of(2026, 6, 21)
+
+        val result = LicenseValidity.checkValidity(expiry, today)
         assertTrue(result is LicenseValidityState.ExpiringSoon)
         assertEquals(20, (result as LicenseValidityState.ExpiringSoon).daysRemaining)
     }
 
     @Test
-    fun checkValidity_returnsValid_whenExpiryDateIsMoreThan30DaysInFuture() {
-        val expiryDate = LocalDate.of(2027, 11, 30)
-        val result = LicenseValidity.checkValidity(expiryDate, currentDate)
-        assertEquals(LicenseValidityState.Valid, result)
+    fun expiredLicense_beforeCurrentDate_returnsExpired() {
+        val today = LocalDate.of(2026, 6, 1)
+        val expiry = LocalDate.of(2026, 5, 31)
+
+        val result = LicenseValidity.checkValidity(expiry, today)
+        assertEquals(LicenseValidityState.Expired, result)
     }
 }

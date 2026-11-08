@@ -1,9 +1,10 @@
 package com.rebootech.fruitlogix.paymentManagement.presentation
 
-import com.rebootech.fruitlogix.paymentManagement.domain.model.Invoice
-import com.rebootech.fruitlogix.paymentManagement.domain.model.InvoiceStatus
-import com.rebootech.fruitlogix.paymentManagement.domain.model.InvoiceType
-import com.rebootech.fruitlogix.paymentManagement.domain.repository.BillingRepository
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceType
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository.BillingRepository
+import com.rebootech.fruitlogix.distributor.paymentManagement.presentation.InvoiceDetailViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -41,8 +42,7 @@ class InvoiceDetailViewModelTest {
 
     @Test
     fun loadInvoice_existingInvoice_updatesStateWithInvoice() {
-        val viewModel =
-            InvoiceDetailViewModel(repository)
+        val viewModel = InvoiceDetailViewModel(repository)
 
         viewModel.loadInvoice("INV-TEST-001")
 
@@ -51,28 +51,14 @@ class InvoiceDetailViewModelTest {
         assertFalse(state.isLoading)
         assertFalse(state.isNotFound)
         assertNotNull(state.invoice)
-
-        assertEquals(
-            "INV-TEST-001",
-            state.invoice?.id
-        )
-
-        assertEquals(
-            "Test Distributor",
-            state.invoice?.counterpartyName
-        )
-
-        assertEquals(
-            1500.00,
-            state.invoice?.amount ?: 0.0,
-            0.0
-        )
+        assertEquals("INV-TEST-001", state.invoice?.id)
+        assertEquals("Test Distributor", state.invoice?.counterpartyName)
+        assertEquals(1500.00, state.invoice?.amount ?: 0.0, 0.0)
     }
 
     @Test
     fun loadInvoice_unknownInvoice_updatesStateAsNotFound() {
-        val viewModel =
-            InvoiceDetailViewModel(repository)
+        val viewModel = InvoiceDetailViewModel(repository)
 
         viewModel.loadInvoice("INV-NOT-FOUND")
 
