@@ -19,6 +19,7 @@ import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import androidx.compose.ui.res.painterResource
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.repository.HarvestRepository
 
 @Composable
 fun ProducerHarvestsScreen(
@@ -26,7 +27,7 @@ fun ProducerHarvestsScreen(
     onNavigateToRegisterHarvest: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedDayTab by remember { mutableStateOf("31") } // Día seleccionado en el calendario
+    var selectedDayTab by remember { mutableStateOf("31") }
 
     Column(
         modifier = modifier
@@ -34,7 +35,6 @@ fun ProducerHarvestsScreen(
             .background(FruitLogixTheme.colors.bg)
             .padding(16.dp)
     ) {
-        // Título Principal
         Text(
             text = "Control de Cosechas",
             style = FruitLogixTheme.typography.displayLarge,
@@ -48,67 +48,40 @@ fun ProducerHarvestsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contenido en LazyColumn
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 1. Weekly Forecast Banner
             item {
-                FruitLogixCard(
-                    variant = CardVariant.Dark,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                FruitLogixCard(variant = CardVariant.Dark, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "WEEKLY FORECAST • 11.45 WEEK",
-                                style = FruitLogixTheme.typography.labelSmall,
-                                color = FruitLogixTheme.colors.primary
-                            )
+                            Text("WEEKLY FORECAST • 11.45 WEEK", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.primary)
                             Surface(
                                 color = FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.2f),
                                 shape = RoundedCornerShape(4.dp)
                             ) {
-                                Text(
-                                    text = "Export Grade",
-                                    style = FruitLogixTheme.typography.labelSmall,
-                                    color = FruitLogixTheme.colors.white,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                                Text("Export Grade", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.white, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                             }
                         }
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Kent Mango: 900 kg requested",
-                            style = FruitLogixTheme.typography.titleMedium,
-                            color = FruitLogixTheme.colors.white
-                        )
+                        Text("Kent Mango: 900 kg requested", style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.white)
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Committed to: Supermercados Wong • Cencosud Mkt",
-                            style = FruitLogixTheme.typography.bodySmall,
-                            color = FruitLogixTheme.colors.textMuted
-                        )
+                        Text("Committed to: Supermercados Wong • Cencosud Mkt", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
                         Spacer(modifier = Modifier.height(10.dp))
                         LinearProgressIndicator(
                             progress = { 640f / 900f },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
                             color = FruitLogixTheme.colors.primary,
                             trackColor = FruitLogixTheme.colors.surfaceTint
                         )
                         Spacer(modifier = Modifier.height(6.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Fulfilled so far:", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
                             Text("640 / 900 kg (71%)", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.primary)
                         }
@@ -119,22 +92,13 @@ fun ProducerHarvestsScreen(
             // 2. Harvest Schedule (Calendario)
             item {
                 Column {
-                    Text(
-                        text = "Harvest Schedule",
-                        style = FruitLogixTheme.typography.titleMedium,
-                        color = FruitLogixTheme.colors.textOnLight
-                    )
+                    Text("Harvest Schedule", style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.textOnLight)
                     Spacer(modifier = Modifier.height(8.dp))
-
                     val scheduleDays = listOf(
                         Pair("27", "Mon"), Pair("28", "Tue"), Pair("29", "Wed"),
                         Pair("30", "Thu"), Pair("31", "Fri"), Pair("1", "Sat"), Pair("2", "Sun")
                     )
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         items(scheduleDays) { (day, weekday) ->
                             val isSelected = selectedDayTab == day
                             Column(
@@ -145,16 +109,8 @@ fun ProducerHarvestsScreen(
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(
-                                    text = weekday,
-                                    style = FruitLogixTheme.typography.labelSmall,
-                                    color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textMuted
-                                )
-                                Text(
-                                    text = day,
-                                    style = FruitLogixTheme.typography.titleMedium,
-                                    color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnLight
-                                )
+                                Text(text = weekday, style = FruitLogixTheme.typography.labelSmall, color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textMuted)
+                                Text(text = day, style = FruitLogixTheme.typography.titleMedium, color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnLight)
                             }
                         }
                     }
@@ -168,17 +124,8 @@ fun ProducerHarvestsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Upcoming Harvests",
-                        style = FruitLogixTheme.typography.titleMedium,
-                        color = FruitLogixTheme.colors.textOnLight
-                    )
-                    Text(
-                        text = "2 Queued",
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Upcoming Harvests", style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.textOnLight)
+                    Text("2 Queued", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -194,145 +141,64 @@ fun ProducerHarvestsScreen(
                 )
             }
 
-            item {
-                UpcomingHarvestCard(
-                    fruitName = "Kent Mango",
-                    dateTime = "Nov 7 • Friday Staging",
-                    estYield = "~450 kg",
-                    locationLabel = "ORCHARD SECTOR",
-                    locationValue = "Sector 2A • Grade A",
-                    assignedCrewText = "Export Certified Spec (Brix 14.5+)",
-                    status = "Planned"
-                )
-            }
-
-            // 4. Recent Harvests in Stock
+            // 4. Recent Harvests in Stock (Lista dinámica)
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Recent Harvests in Stock",
-                        style = FruitLogixTheme.typography.titleMedium,
-                        color = FruitLogixTheme.colors.textOnLight
-                    )
-                    Text(
-                        text = "Last 72 hrs",
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
+                    Text("Recent Harvests in Stock", style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.textOnLight)
+                    Text("Live Ledger", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.primary, fontWeight = FontWeight.Bold)
                 }
             }
 
-            item {
+            items(HarvestRepository.recentHarvests) { harvest ->
                 RecentHarvestCard(
-                    fruitName = "Red Globe Grapes",
-                    dateTime = "Today • 08:30 AM",
-                    weight = "120 kg",
-                    lotCode = "#RG-402",
+                    fruitName = harvest.fruitName,
+                    dateTime = harvest.dateTime,
+                    weight = harvest.weight,
+                    lotCode = harvest.lotCode,
                     footerLeftIconRes = R.drawable.ic_id,
-                    footerLeftText = "Crew Alpha",
-                    footerRightIconRes = R.drawable.ic_check,
-                    footerRightText = "Vault ledger updated"
-                )
-            }
-            item {
-                RecentHarvestCard(
-                    fruitName = "Hass Avocado",
-                    dateTime = "Oct 30 • 14:15 PM",
-                    weight = "320 kg",
-                    lotCode = "#HA-882",
-                    footerLeftIconRes = R.drawable.ic_id,
-                    footerLeftText = "Crew Delta",
-                    footerRightText = "Chamber 02-B"
-                )
-            }
-            item {
-                RecentHarvestCard(
-                    fruitName = "Kent Mango",
-                    dateTime = "Oct 29 • 09:00 AM",
-                    weight = "280 kg",
-                    lotCode = "#KM-104",
-                    footerLeftIconRes = R.drawable.ic_bus,
-                    footerLeftText = "Transport Cleared",
-                    footerRightIconRes = R.drawable.ic_check,
-                    footerRightText = "All weight verified"
+                    footerLeftText = harvest.crewOrTransport,
+                    footerRightText = harvest.sectorOrVault
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Botón Global Inferior
         Button(
             onClick = onNavigateToRegisterHarvest,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
+            modifier = Modifier.fillMaxWidth().height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(
-                text = "+ Register Harvest",
-                style = FruitLogixTheme.typography.titleMedium,
-                color = FruitLogixTheme.colors.onPrimary
-            )
+            Text(text = "+ Register Harvest", style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.onPrimary)
         }
     }
 }
 
 @Composable
 fun UpcomingHarvestCard(
-    fruitName: String,
-    dateTime: String,
-    estYield: String,
-    locationLabel: String,
-    locationValue: String,
-    assignedCrewText: String,
-    status: String
+    fruitName: String, dateTime: String, estYield: String,
+    locationLabel: String, locationValue: String, assignedCrewText: String, status: String
 ) {
-    FruitLogixCard(
-        variant = CardVariant.White,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    FruitLogixCard(variant = CardVariant.White, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text(text = fruitName, style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.textOnLight)
                     Text(text = dateTime, style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
                 }
-                Surface(
-                    color = FruitLogixTheme.colors.surfaceTint,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = status,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textOnLight,
-                        fontWeight = FontWeight.Bold
-                    )
+                Surface(color = FruitLogixTheme.colors.surfaceTint, shape = RoundedCornerShape(12.dp)) {
+                    Text(text = status, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textOnLight, fontWeight = FontWeight.Bold)
                 }
             }
-
             Spacer(modifier = Modifier.height(10.dp))
-
-            Surface(
-                color = FruitLogixTheme.colors.surfaceLight,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Surface(color = FruitLogixTheme.colors.surfaceLight, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(10.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
                             Text("EST. YIELD", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
                             Text(estYield, style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.textOnLight, fontWeight = FontWeight.Bold)
@@ -343,21 +209,10 @@ fun UpcomingHarvestCard(
                         }
                     }
                     Spacer(modifier = Modifier.height(6.dp))
-
-                    // Icono R.drawable.ic_groups
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_groups),
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.textMuted,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Icon(painter = painterResource(id = R.drawable.ic_groups), contentDescription = null, tint = FruitLogixTheme.colors.textMuted, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Assigned: $assignedCrewText",
-                            style = FruitLogixTheme.typography.bodySmall,
-                            color = FruitLogixTheme.colors.textMuted
-                        )
+                        Text(text = "Assigned: $assignedCrewText", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
                     }
                 }
             }
@@ -367,48 +222,21 @@ fun UpcomingHarvestCard(
 
 @Composable
 fun RecentHarvestCard(
-    fruitName: String,
-    dateTime: String,
-    weight: String,
-    lotCode: String,
-    footerLeftIconRes: Int,
-    footerLeftText: String,
-    footerRightIconRes: Int? = null,
-    footerRightText: String
+    fruitName: String, dateTime: String, weight: String, lotCode: String,
+    footerLeftIconRes: Int, footerLeftText: String, footerRightIconRes: Int? = null, footerRightText: String
 ) {
-    FruitLogixCard(
-        variant = CardVariant.White,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    FruitLogixCard(variant = CardVariant.White, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(text = fruitName, style = FruitLogixTheme.typography.bodyLarge, color = FruitLogixTheme.colors.textOnLight, fontWeight = FontWeight.Bold)
-                Surface(
-                    color = FruitLogixTheme.colors.success.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = "Registered",
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.success,
-                        fontWeight = FontWeight.Bold
-                    )
+                Surface(color = FruitLogixTheme.colors.success.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp)) {
+                    Text(text = "Registered", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.success, fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(modifier = Modifier.height(2.dp))
             Text(text = dateTime, style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
-
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column {
                     Text("LOGGED QUANTITY", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
                     Text(weight, style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.primary, fontWeight = FontWeight.Bold)
@@ -418,37 +246,18 @@ fun RecentHarvestCard(
                     Text(lotCode, style = FruitLogixTheme.typography.bodyMedium, color = FruitLogixTheme.colors.textOnLight, fontWeight = FontWeight.Bold)
                 }
             }
-
             Spacer(modifier = Modifier.height(8.dp))
             HorizontalDivider(color = FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.5f))
             Spacer(modifier = Modifier.height(6.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Pie izquierdo con icono local (ic_id)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = footerLeftIconRes),
-                        contentDescription = null,
-                        tint = FruitLogixTheme.colors.textMuted,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Icon(painter = painterResource(id = footerLeftIconRes), contentDescription = null, tint = FruitLogixTheme.colors.textMuted, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(footerLeftText, style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
                 }
-
-                // Pie derecho con icono local opcional (ic_check, etc.)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (footerRightIconRes != null) {
-                        Icon(
-                            painter = painterResource(id = footerRightIconRes),
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.textMuted,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Icon(painter = painterResource(id = footerRightIconRes), contentDescription = null, tint = FruitLogixTheme.colors.textMuted, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                     }
                     Text(footerRightText, style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)

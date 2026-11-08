@@ -9,12 +9,12 @@ import com.rebootech.fruitlogix.producer.orderManagement.ProducerPlaceholderScre
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerHarvestsScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockDetailScreen
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerRegisterHarvestScreen
 
 fun NavGraphBuilder.producerQualityControlGraph(
     navController: NavHostController
 ) {
     // 1. Pantalla principal de Stock (Inventario)
-    // *Asegúrate de agregar const val Stock = "quality_stock_main" en tu objeto ProducerQualityControlRoutes si no la tienes*
     composable(route = "quality_stock_main") {
         ProducerStockScreen(
             onNavigateToDetail = { productId ->
@@ -41,7 +41,7 @@ fun NavGraphBuilder.producerQualityControlGraph(
 
     // 3. Registrar Cosecha
     composable(route = ProducerQualityControlRoutes.RegisterHarvest) {
-        ProducerHarvestsScreen(
+        ProducerRegisterHarvestScreen(
             onNavigateBack = { navController.popBackStack() }
         )
     }
