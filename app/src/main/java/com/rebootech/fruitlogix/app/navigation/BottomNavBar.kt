@@ -261,7 +261,7 @@ fun BottomNavBar(
             ) {
                 // 4 Regular Primary Tabs
                 tabs.forEach { tabItem ->
-                    val isSelected = currentDestination?.hierarchy?.any { it.route == tabItem.route } == true
+                    val isSelected = currentDestination?.route == tabItem.route
                     BottomNavItem(
                         tabItem = tabItem,
                         isSelected = isSelected && !isMenuOpen && !isMoreSectionActive,
@@ -269,7 +269,12 @@ fun BottomNavBar(
                             if (isMenuOpen) {
                                 isMenuOpen = false
                             }
-                            if (!isSelected) {
+                            if (tabItem.route == Route.Home.route) {
+                                navController.popBackStack(
+                                    route = Route.Home.route,
+                                    inclusive = false
+                                )
+                            } else if (!isSelected) {
                                 navController.navigate(tabItem.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
