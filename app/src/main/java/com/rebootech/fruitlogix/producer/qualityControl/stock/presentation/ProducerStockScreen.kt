@@ -12,26 +12,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockItem
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockStatus
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
 fun ProducerStockScreen(
     onNavigateToDetail: (String) -> Unit,
     onNavigateToRegisterHarvest: () -> Unit,
+    onNavigateToHarvestsTab: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Inventory, 1: Harvests
-
-    // Estado mutable de la lista para permitir sumar/restar stock en tiempo real
     var stockItems by remember {
         mutableStateOf(
             listOf(
@@ -55,16 +49,13 @@ fun ProducerStockScreen(
         // Título Principal
         Text(
             text = "Stock en Fundo",
-            fontFamily = PoppinsFontFamily,
-            fontWeight = FontWeight.Bold,
             style = FruitLogixTheme.typography.displayLarge,
             color = FruitLogixTheme.colors.textOnLight
         )
         Text(
             text = "INVENTARIO DE CAMPO Y CÁMARAS LOCALES",
             style = FruitLogixTheme.typography.labelSmall,
-            color = FruitLogixTheme.colors.textMuted,
-            fontWeight = FontWeight.Bold
+            color = FruitLogixTheme.colors.textMuted
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -97,7 +88,7 @@ fun ProducerStockScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Pestañas (Inventory vs Harvests)
+        // Pestañas (Inventory activo aquí, Harvests navega a su ruta)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,50 +99,39 @@ fun ProducerStockScreen(
         ) {
             StockTabButton(
                 text = "Inventory (${stockItems.size})",
-                selected = selectedTab == 0,
+                selected = true,
                 modifier = Modifier.weight(1f)
-            ) { selectedTab = 0 }
+            ) { }
             StockTabButton(
                 text = "Harvests (12)",
-                selected = selectedTab == 1,
-                modifier = Modifier.weight(1f)
-            ) { selectedTab = 1 }
+                selected = false,
+                modifier = Modifier.weight(1f),
+                onClick = onNavigateToHarvestsTab
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contenido según pestaña
+        // Lista de Inventario de Stock
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (selectedTab == 0) {
-                items(stockItems) { item ->
-                    InventoryCardItem(
-                        item = item,
-                        onIncrement = {
-                            stockItems = stockItems.map {
-                                if (it.productId == item.productId) it.copy(availableKg = it.availableKg + 5) else it
-                            }
-                        },
-                        onDecrement = {
-                            stockItems = stockItems.map {
-                                if (it.productId == item.productId) it.copy(availableKg = (it.availableKg - 5).coerceAtLeast(0)) else it
-                            }
-                        },
-                        onClick = { onNavigateToDetail(item.productId) }
-                    )
-                }
-            } else {
-                items(
-                    listOf(
-                        Triple("Red Globe Grapes", "Today • 08:30 AM", "+120 kg (Lot #RG-402)"),
-                        Triple("Hass Avocado", "Oct 31 • 04:15 PM", "+320 kg (Lot #HA-882)"),
-                        Triple("Kent Mango", "Oct 30 • 09:30 AM", "+280 kg (Lot #M-104)")
-                    )
-                ) { (fruit, time, qty) ->
-                    HarvestHistoryCardItem(fruit = fruit, time = time, qty = qty)
-                }
+            items(stockItems) { item ->
+                InventoryCardItem(
+                    item = item,
+                    onIncrement = {
+                        stockItems = stockItems.map {
+                            if (it.productId == item.productId) it.copy(availableKg = it.availableKg + 5) else it
+                        }
+                    },
+                    onDecrement = {
+                        stockItems = stockItems.map {
+                            if (it.productId == item.productId) it.copy(availableKg = (it.availableKg - 5).coerceAtLeast(0)) else it
+                        }
+                    },
+                    onClick = { onNavigateToDetail(item.productId) }
+                )
             }
         }
 
@@ -168,8 +148,7 @@ fun ProducerStockScreen(
         ) {
             Text(
                 text = "+ Register Harvest",
-                fontFamily = PoppinsFontFamily,
-                fontWeight = FontWeight.Bold,
+                style = FruitLogixTheme.typography.titleMedium,
                 color = FruitLogixTheme.colors.onPrimary
             )
         }
@@ -177,7 +156,7 @@ fun ProducerStockScreen(
 }
 
 @Composable
-fun StockTabButton(text: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun StockTabButton(text: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     val backgroundColor = if (selected) FruitLogixTheme.colors.surfaceDark else Color.Transparent
     val textColor = if (selected) FruitLogixTheme.colors.white else FruitLogixTheme.colors.textOnLight
 
@@ -189,7 +168,7 @@ fun StockTabButton(text: String, selected: Boolean, modifier: Modifier = Modifie
             .padding(vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = text, fontWeight = FontWeight.Bold, color = textColor, style = FruitLogixTheme.typography.bodyMedium)
+        Text(text = text, color = textColor, style = FruitLogixTheme.typography.bodyMedium)
     }
 }
 
@@ -207,7 +186,6 @@ fun InventoryCardItem(
             .clickable(onClick = onClick)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Fila superior: Nombre del producto y control compacto [-] [+]
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -215,14 +193,11 @@ fun InventoryCardItem(
             ) {
                 Text(
                     text = item.productName,
-                    fontFamily = PoppinsFontFamily,
-                    fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleMedium,
                     color = FruitLogixTheme.colors.white,
                     modifier = Modifier.weight(1f)
                 )
 
-                // Controles [-] [+] limpios tipo píldora unida
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -235,12 +210,7 @@ fun InventoryCardItem(
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "-",
-                            fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.textOnLight,
-                            style = FruitLogixTheme.typography.bodyMedium
-                        )
+                        Text(text = "-", color = FruitLogixTheme.colors.textOnLight, style = FruitLogixTheme.typography.bodyMedium)
                     }
                     Box(
                         modifier = Modifier
@@ -249,19 +219,13 @@ fun InventoryCardItem(
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "+",
-                            fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.onPrimary,
-                            style = FruitLogixTheme.typography.bodyMedium
-                        )
+                        Text(text = "+", color = FruitLogixTheme.colors.onPrimary, style = FruitLogixTheme.typography.bodyMedium)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            // Estado (HEALTHY / DEFICIT)
             val isCritical = item.status == StockStatus.CRITICAL
             val statusText = if (isCritical) "DEFICIT -15KG" else "HEALTHY"
             val statusColor = if (isCritical) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.success
@@ -275,8 +239,7 @@ fun InventoryCardItem(
                     text = statusText,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     style = FruitLogixTheme.typography.labelSmall,
-                    color = statusColor,
-                    fontWeight = FontWeight.Bold
+                    color = statusColor
                 )
             }
 
@@ -285,8 +248,7 @@ fun InventoryCardItem(
             Text(
                 text = "${item.availableKg} kg total",
                 style = FruitLogixTheme.typography.titleLarge,
-                color = FruitLogixTheme.colors.primary,
-                fontWeight = FontWeight.Bold
+                color = FruitLogixTheme.colors.primary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -310,25 +272,6 @@ fun InventoryCardItem(
                 Text("Available: ${item.freeKg} kg", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
                 Text("Reserved: ${item.reservedKg} kg", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
             }
-        }
-    }
-}
-@Composable
-fun HarvestHistoryCardItem(fruit: String, time: String, qty: String) {
-    FruitLogixCard(
-        variant = CardVariant.White,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = fruit, fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.textOnLight)
-                Text(text = qty, fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.success)
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(text = time, style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
         }
     }
 }
