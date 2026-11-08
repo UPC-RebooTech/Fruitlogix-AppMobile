@@ -38,7 +38,13 @@ fun AppNavHost(
                     navController.navigate(OrderManagementRoutes.ScanReception)
                 },
                 onDispatchFleetClick = {
-                    navController.navigate(Route.Fleet.route)
+                    navController.navigate(Route.Fleet.route) {
+                        popUpTo(Route.Home.route) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
                 onSensorsClick = {
                     navController.navigate(
