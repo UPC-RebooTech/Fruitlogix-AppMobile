@@ -7,12 +7,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerPlaceholderScreen
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerHarvestsScreen
+import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockDetailScreen
 
 fun NavGraphBuilder.producerQualityControlGraph(
     navController: NavHostController
 ) {
     composable(ProducerQualityControlRoutes.Harvests) {
-        ProducerHarvestsScreen()
+        ProducerHarvestsScreen(
+            onNavigateBack = { navController.popBackStack() }
+        )
     }
 
     // TODO(producer): Preparar Pedido
@@ -89,17 +92,16 @@ fun NavGraphBuilder.producerQualityControlGraph(
         arguments = listOf(navArgument("productId") { type = NavType.StringType })
     ) { backStackEntry ->
         val productId = backStackEntry.arguments?.getString("productId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Detalle de Stock: ",
-            onBack = { navController.popBackStack() }
+        ProducerStockDetailScreen(
+            lotId = productId,
+            onNavigateBack = { navController.popBackStack() }
         )
     }
 
     // TODO(producer): Registrar Cosecha
     composable(ProducerQualityControlRoutes.RegisterHarvest) {
-        ProducerPlaceholderScreen(
-            title = "Registrar Cosecha",
-            onBack = { navController.popBackStack() }
+        ProducerHarvestsScreen(
+            onNavigateBack = { navController.popBackStack() }
         )
     }
 }

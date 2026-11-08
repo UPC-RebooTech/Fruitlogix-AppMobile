@@ -30,3 +30,5 @@ val producerMoreItems = listOf(
     MoreMenuItem("producer_notifications", R.string.producer_nav_notifications, R.drawable.ic_notifications, ProducerInfrastructureIotRoutes.Notifications),
     MoreMenuItem("producer_profile", R.string.producer_nav_profile, R.drawable.ic_producers, ProducerProfilesManagementRoutes.Profile)
 )
+
+

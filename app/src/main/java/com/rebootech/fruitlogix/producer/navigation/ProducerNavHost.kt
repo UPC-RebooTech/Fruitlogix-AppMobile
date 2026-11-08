@@ -12,6 +12,7 @@ import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOr
 import com.rebootech.fruitlogix.producer.orderManagement.producerOrderManagementGraph
 import com.rebootech.fruitlogix.producer.paymentManagement.producerPaymentManagementGraph
 import com.rebootech.fruitlogix.producer.profilesManagement.producerProfilesManagementGraph
+import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.producer.qualityControl.presentation.ProducerQualityScreen
 import com.rebootech.fruitlogix.producer.qualityControl.producerQualityControlGraph
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
@@ -38,7 +39,14 @@ fun ProducerNavHost(
             ProducerOrdersScreen(onNavigate = { route -> navController.navigate(route) })
         }
         composable(ProducerRoute.Stock.route) {
-            ProducerStockScreen()
+            ProducerStockScreen(
+                onNavigateToDetail = { productId ->
+                    navController.navigate(ProducerQualityControlRoutes.stockDetail(productId))
+                },
+                onNavigateToRegisterHarvest = {
+                    navController.navigate(ProducerQualityControlRoutes.RegisterHarvest)
+                }
+            )
         }
         composable(ProducerRoute.Reports.route) {
             ProducerQualityScreen()
