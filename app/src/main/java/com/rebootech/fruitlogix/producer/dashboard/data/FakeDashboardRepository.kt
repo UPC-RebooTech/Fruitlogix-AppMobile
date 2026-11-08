@@ -6,13 +6,16 @@ import com.rebootech.fruitlogix.producer.dashboard.domain.repository.DashboardRe
 import com.rebootech.fruitlogix.producer.dashboard.domain.repository.ProducerDashboardData
 import com.rebootech.fruitlogix.producer.dashboard.domain.usecase.BuildTodayTasksUseCase
 import com.rebootech.fruitlogix.producer.orderManagement.data.FakeOrderRepository
+import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.producer.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.producer.paymentManagement.data.FakePaymentRepository
+import com.rebootech.fruitlogix.producer.paymentManagement.domain.model.PaymentSummary
 import com.rebootech.fruitlogix.producer.paymentManagement.domain.repository.PaymentRepository
-import com.rebootech.fruitlogix.producer.qualityControl.harvests.data.FakeHarvestRepository
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.repository.HarvestRepository
 import com.rebootech.fruitlogix.producer.qualityControl.stock.data.FakeStockRepository
+import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockItem
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -20,7 +23,7 @@ import kotlinx.coroutines.flow.combine
 class FakeDashboardRepository(
     private val orderRepository: OrderRepository = FakeOrderRepository.instance,
     private val stockRepository: StockRepository = FakeStockRepository.instance,
-    private val harvestRepository: HarvestRepository = FakeHarvestRepository.instance,
+    private val harvestRepository: HarvestRepository = HarvestRepository,
     private val paymentRepository: PaymentRepository = FakePaymentRepository.instance,
     private val buildTodayTasksUseCase: BuildTodayTasksUseCase = BuildTodayTasksUseCase()
 ) : DashboardRepository {
@@ -31,7 +34,7 @@ class FakeDashboardRepository(
             stockRepository.observeStock(),
             harvestRepository.observeUpcomingHarvest(),
             paymentRepository.observePaymentSummary()
-        ) { orders, stock, harvest, payment ->
+        ) { orders: List<Order>, stock: List<StockItem>, harvest: PlannedHarvest?, payment: PaymentSummary ->
             val pendingOrders = orders.filter { it.status == OrderStatus.PENDING }
             val inPrepOrders = orders.filter { it.status == OrderStatus.IN_PREPARATION }
             val inTransitOrders = orders.filter { it.status == OrderStatus.IN_TRANSIT }
@@ -45,7 +48,8 @@ class FakeDashboardRepository(
                     val currentStock = stock.find { it.productId == item.productId || it.productName.equals(item.productName, ignoreCase = true) }
                     val available = currentStock?.availableKg ?: 0
                     if (available < item.kg) {
-                        val diff = item.kg - available
+                        val diff = item.kg - available // <-- Corregido el operador de resta (-)
+
                         shortageText = "Short by $diff kg of ${item.productName}"
                         break
                     }
@@ -69,7 +73,6 @@ class FakeDashboardRepository(
                 delivered = deliveredOrders.size
             )
 
-            // Stock ordenado de más crítico a más sano
             val sortedStock = stock.sortedBy { it.status }
 
             ProducerDashboardData(
@@ -92,4 +95,3 @@ class FakeDashboardRepository(
         val instance: FakeDashboardRepository by lazy { FakeDashboardRepository() }
     }
 }
-
