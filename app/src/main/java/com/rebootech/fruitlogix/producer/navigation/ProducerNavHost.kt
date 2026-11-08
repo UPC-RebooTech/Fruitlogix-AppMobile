@@ -41,10 +41,13 @@ fun ProducerNavHost(
         composable(ProducerRoute.Stock.route) {
             ProducerStockScreen(
                 onNavigateToDetail = { productId ->
-                    navController.navigate(ProducerQualityControlRoutes.stockDetail(productId))
+                    navController.navigate(route = ProducerQualityControlRoutes.stockDetail(productId))
                 },
                 onNavigateToRegisterHarvest = {
-                    navController.navigate(ProducerQualityControlRoutes.RegisterHarvest)
+                    navController.navigate(route = ProducerQualityControlRoutes.RegisterHarvest)
+                },
+                onNavigateToHarvestsTab = {
+                    navController.navigate(route = ProducerQualityControlRoutes.Harvests)
                 }
             )
         }
