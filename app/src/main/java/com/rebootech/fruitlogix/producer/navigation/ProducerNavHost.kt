@@ -13,7 +13,7 @@ import com.rebootech.fruitlogix.producer.orderManagement.producerOrderManagement
 import com.rebootech.fruitlogix.producer.paymentManagement.producerPaymentManagementGraph
 import com.rebootech.fruitlogix.producer.profilesManagement.producerProfilesManagementGraph
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
-import com.rebootech.fruitlogix.producer.qualityControl.presentation.ProducerQualityScreen
+import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
 import com.rebootech.fruitlogix.producer.qualityControl.producerQualityControlGraph
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 
@@ -52,7 +52,11 @@ fun ProducerNavHost(
             )
         }
         composable(ProducerRoute.Reports.route) {
-            ProducerQualityScreen()
+            ProducerQualityScreen(
+                onNavigateToDetail = { reportId ->
+                    navController.navigate(ProducerQualityControlRoutes.reportDetail(reportId))
+                }
+            )
         }
 
         // Bounded context subgraphs
