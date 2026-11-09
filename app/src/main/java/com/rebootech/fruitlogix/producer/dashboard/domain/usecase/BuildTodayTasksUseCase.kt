@@ -53,7 +53,7 @@ class BuildTodayTasksUseCase {
                     title = "Inspection pending",
                     detail = "${order.id} ${order.clientName} • ${order.items.joinToString { "${it.productName} ${it.kg} kg" }}",
                     priority = TaskPriority.MEDIUM,
-                    destinationRoute = ProducerQualityControlRoutes.prepareOrder(order.id)
+                    destinationRoute = ProducerQualityControlRoutes.inspection(order.id)
                 )
             )
         }

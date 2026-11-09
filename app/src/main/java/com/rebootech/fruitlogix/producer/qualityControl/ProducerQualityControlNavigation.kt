@@ -12,6 +12,9 @@ import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.Produ
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerRegisterHarvestScreen
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerReportDetailScreen
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
+import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.ProducerInspectionScreen
+import com.rebootech.fruitlogix.producer.qualityControl.review.presentation.ProducerReviewResultScreen
+import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
 
 fun NavGraphBuilder.producerQualityControlGraph(
     navController: NavHostController
@@ -87,9 +90,12 @@ fun NavGraphBuilder.producerQualityControlGraph(
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Preparar Pedido $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerInspectionScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onReviewReport = {
+                navController.navigate(ProducerQualityControlRoutes.reviewResult(orderId))
+            }
         )
     }
 
@@ -116,9 +122,13 @@ fun NavGraphBuilder.producerQualityControlGraph(
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Inspección de Calidad $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerInspectionScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onReviewReport = {
+                // Navega hacia la revisión o resultado de calidad
+                navController.navigate(ProducerQualityControlRoutes.reviewResult(orderId))
+            }
         )
     }
 
@@ -127,9 +137,18 @@ fun NavGraphBuilder.producerQualityControlGraph(
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Resultado de Calidad $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerReviewResultScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onEditInspection = { navController.popBackStack() },
+            onBackToOrder = {
+                // Te lleva de regreso a la vista/pestaña general de Pedidos
+                navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
+            },
+            onOpenChat = {
+                // Te lleva a la pantalla general de Inbox/Mensajes de orderManagement
+                navController.navigate(ProducerOrderManagementRoutes.Inbox)
+            }
         )
     }
 }

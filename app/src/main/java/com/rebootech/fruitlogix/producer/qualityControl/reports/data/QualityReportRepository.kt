@@ -7,7 +7,7 @@ import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualitySt
 object QualityReportRepository {
     val reports = mutableStateListOf(
         QualityReportItem(
-            id = "1",
+            id = "1048", // Cambiado para coincidir con el orderNumber
             orderNumber = "#1048",
             clientName = "Supermercados Wong",
             timestamp = "Today, 10:48 AM",
@@ -24,7 +24,7 @@ object QualityReportRepository {
             inspectorName = "Carlos Melgar"
         ),
         QualityReportItem(
-            id = "2",
+            id = "1041", // Cambiado para coincidir con el orderNumber
             orderNumber = "#1041",
             clientName = "Supermercados Wong",
             timestamp = "Today, 09:15 AM",
@@ -41,16 +41,16 @@ object QualityReportRepository {
             inspectorName = "Elena Quispe"
         ),
         QualityReportItem(
-            id = "3",
+            id = "1044", // Cambiado a "1044" para que coincida perfectamente con la orden
             orderNumber = "#1044",
             clientName = "Mercado Central S.A.",
             timestamp = "Yesterday, 16:30 PM",
             locationInfo = "Inspection Bay 1",
             status = QualityStatus.REJECTED,
-            productName = "Hass Avocado",
-            weightKg = 450,
-            cratesCount = 22,
-            lotCode = "Lot #HA-791",
+            productName = "Kent Mango",
+            weightKg = 400,
+            cratesCount = 20,
+            lotCode = "Lot #KM-04",
             visualScore = 3.0,
             defectsPercentage = 5.4,
             coreTemp = 7.2,
@@ -59,7 +59,7 @@ object QualityReportRepository {
             alertMessage = "Quality Alert: Bruising 5.4%. Exceeded standard 3.5% threshold. Lot quarantined for re-grading."
         ),
         QualityReportItem(
-            id = "4",
+            id = "1030", // Cambiado para coincidir con el orderNumber
             orderNumber = "#1030",
             clientName = "Cencosud Retail",
             timestamp = "Oct 29, 14:10 PM",

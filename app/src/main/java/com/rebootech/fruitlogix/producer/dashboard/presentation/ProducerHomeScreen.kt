@@ -425,7 +425,7 @@ fun ProducerHomeScreen(
             orders = uiState.inspectingOrdersList,
             onOrderSelected = { order ->
                 viewModel.onDismissOrderPicker()
-                onNavigate(ProducerQualityControlRoutes.prepareOrder(order.id))
+                onNavigate(ProducerQualityControlRoutes.inspection(order.id))
             },
             onDismiss = { viewModel.onDismissOrderPicker() }
         )

@@ -207,7 +207,7 @@ fun ProducerOrdersScreen(
                                     onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
                                 },
                                 onPrepareOrder = {
-                                    onNavigate(ProducerQualityControlRoutes.prepareOrder(order.id))
+                                    onNavigate(ProducerQualityControlRoutes.inspection(order.id))
                                 },
                                 onLoadTruck = {
                                     onNavigate(ProducerLogisticsMonitoringRoutes.loadTruck(order.id))
