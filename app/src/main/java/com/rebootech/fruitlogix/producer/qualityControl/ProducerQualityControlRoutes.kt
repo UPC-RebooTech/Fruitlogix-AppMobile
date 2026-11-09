@@ -13,12 +13,12 @@ object ProducerQualityControlRoutes {
     const val Harvests = "quality_harvests"                     // harvests
     const val RegisterHarvest = "quality_harvest_register"      // harvests
 
-    fun reports() = "quality_reports_main"                      // <--- Función helper
-    fun prepareOrder(id: String) = "quality_prepare/$id"
-    fun scanLot(id: String) = "quality_scan/$id"
-    fun inspection(id: String) = "quality_inspection/$id"
-    fun sendReport(id: String) = "quality_send/$id"
-    fun reviewResult(id: String) = "quality_result/$id"
-    fun reportDetail(id: String) = "quality_report/$id"
-    fun stockDetail(id: String) = "quality_stock/$id"
+    fun reports() = "quality_reports_main"
+    fun prepareOrder(id: String) = "quality_prepare/${id.removePrefix("#")}"
+    fun scanLot(id: String) = "quality_scan/${id.removePrefix("#")}"
+    fun inspection(id: String) = "quality_inspection/${id.removePrefix("#")}"
+    fun sendReport(id: String) = "quality_send/${id.removePrefix("#")}"
+    fun reviewResult(id: String) = "quality_result/${id.removePrefix("#")}"
+    fun reportDetail(id: String) = "quality_report/${id.removePrefix("#")}"
+    fun stockDetail(id: String) = "quality_stock/${id.removePrefix("#")}"
 }

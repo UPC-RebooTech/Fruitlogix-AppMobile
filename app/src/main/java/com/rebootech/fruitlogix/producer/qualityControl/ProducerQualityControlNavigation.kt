@@ -14,6 +14,7 @@ import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.Pro
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
 import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.ProducerInspectionScreen
 import com.rebootech.fruitlogix.producer.qualityControl.review.presentation.ProducerReviewResultScreen
+import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
 
 fun NavGraphBuilder.producerQualityControlGraph(
@@ -142,12 +143,14 @@ fun NavGraphBuilder.producerQualityControlGraph(
             onNavigateBack = { navController.popBackStack() },
             onEditInspection = { navController.popBackStack() },
             onBackToOrder = {
-                // Te lleva de regreso a la vista/pestaña general de Pedidos
-                navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
+                navController.navigate(ProducerRoute.Orders.route) {
+                    popUpTo(ProducerRoute.Home.route) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
             },
             onOpenChat = {
-                // Te lleva a la pantalla general de Inbox/Mensajes de orderManagement
-                navController.navigate(ProducerOrderManagementRoutes.Inbox)
+                navController.navigate(ProducerOrderManagementRoutes.chat(orderId))
             }
         )
     }

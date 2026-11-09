@@ -19,7 +19,7 @@ data class InspectionOrderDetails(
 
 object InspectionOrderRepository {
     fun getOrderById(orderId: String): InspectionOrderDetails {
-        val cleanId = orderId.replace("#", "").trim()
+        val cleanId = orderId.removePrefix("#").removePrefix("ORD-").trim()
 
         return when (cleanId) {
             "1044" -> InspectionOrderDetails(

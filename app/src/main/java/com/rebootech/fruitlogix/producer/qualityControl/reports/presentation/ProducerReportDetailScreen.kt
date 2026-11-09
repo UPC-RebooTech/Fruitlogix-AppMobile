@@ -37,8 +37,14 @@ fun ProducerReportDetailScreen(
     var showShareSheet by remember { mutableStateOf(false) }
     var includeHighRes by remember { mutableStateOf(true) }
 
-    // Buscamos el reporte en el repositorio global
-    val report = QualityReportRepository.reports.find { it.id == reportId } ?: QualityReportRepository.reports.first()
+    // Buscamos el reporte en el repositorio global (normalizando el ID con o sin #/ORD-)
+    val cleanReportId = reportId.removePrefix("#").removePrefix("ORD-").trim()
+    val report = remember(reportId) {
+        QualityReportRepository.reports.find {
+            it.id.removePrefix("#").removePrefix("ORD-").trim() == cleanReportId ||
+            it.orderNumber.removePrefix("#").removePrefix("ORD-").trim() == cleanReportId
+        } ?: QualityReportRepository.reports.first()
+    }
 
     val statusBg = when (report.status) {
         QualityStatus.APPROVED -> FruitLogixTheme.colors.success
