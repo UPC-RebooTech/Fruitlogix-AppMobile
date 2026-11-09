@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.producer.qualityControl.stock.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,6 +21,7 @@ import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +30,12 @@ fun ProducerStockDetailScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var currentTonnage by remember { mutableIntStateOf(85) }
+    val context = LocalContext.current
+
+    // Buscamos el ítem actual en el repositorio global basado en el ID recibido por parámetro
+    val stockItem = StockRepository.stockItems.find { it.id == lotId }
+
+    var currentTonnage by remember { mutableIntStateOf(stockItem?.availableKg ?: 85) }
     var safetyLimit by remember { mutableIntStateOf(100) }
 
     Scaffold(
@@ -36,7 +44,7 @@ fun ProducerStockDetailScreen(
                 title = {
                     Column {
                         Text("Overview • Fundo Santa Rosa (Block 3B)", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
-                        Text("Red Globe Grapes", fontFamily = PoppinsFontFamily, fontWeight = FontWeight.Bold, style = FruitLogixTheme.typography.titleLarge)
+                        Text(stockItem?.productName ?: "Red Globe Grapes", fontFamily = PoppinsFontFamily, fontWeight = FontWeight.Bold, style = FruitLogixTheme.typography.titleLarge)
                     }
                 },
                 navigationIcon = {
@@ -184,14 +192,20 @@ fun ProducerStockDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { /* Acción de guardar */ },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
+                        onClick = {
+                            // Actualizamos los kilos en el repositorio global compartido
+                            StockRepository.updateStockKg(
+                                id = lotId,
+                                newKg = currentTonnage
+                            )
+                            Toast.makeText(context, "Stock actualizado correctamente", Toast.LENGTH_SHORT).show()
+                            onNavigateBack()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Save Changes", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
+                        Text(text = "Save Stock Changes", style = FruitLogixTheme.typography.titleMedium, color = FruitLogixTheme.colors.onPrimary)
                     }
                 }
             }
@@ -233,7 +247,7 @@ fun ProducerStockDetailScreen(
                 }
             }
 
-            // 5. Audit Ledger (SHA-256 Verified Ledger)
+            // 5. Audit Ledger
             FruitLogixCard(
                 variant = CardVariant.White,
                 modifier = Modifier.fillMaxWidth()
