@@ -16,8 +16,8 @@ data class StockItem(
     val freeKg: Int get() = availableKg - reservedKg
 
     val status: StockStatus get() = when {
-        availableKg < minThresholdKg -> if (availableKg < minThresholdKg * 0.9) StockStatus.CRITICAL else StockStatus.LOW
-        availableKg < minThresholdKg * 1.5 -> StockStatus.LOW
+        availableKg < minThresholdKg -> StockStatus.CRITICAL
+        availableKg < (minThresholdKg * 1.5).toInt() -> StockStatus.LOW
         else -> StockStatus.HEALTHY
     }
 
@@ -27,4 +27,3 @@ data class StockItem(
      */
     val fillFraction: Float get() = (availableKg.toFloat() / (minThresholdKg * 4f)).coerceIn(0f, 1f)
 }
-

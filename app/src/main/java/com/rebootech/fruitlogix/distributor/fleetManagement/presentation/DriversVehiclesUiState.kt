@@ -1,6 +1,8 @@
 ﻿package com.rebootech.fruitlogix.distributor.fleetManagement.presentation
 
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Driver
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.PendingDispatchOption
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Vehicle
 
 enum class FleetTab {
     DRIVERS,
@@ -19,6 +21,12 @@ data class DriversVehiclesUiState(
     val selectedFilter: DriverFilter = DriverFilter.ALL,
     val drivers: List<Driver> = emptyList(),
     val filteredDrivers: List<Driver> = emptyList(),
+    val vehicles: List<Vehicle> = emptyList(),
+    val pendingDispatches: List<PendingDispatchOption> = emptyList(),
+    val selectedDriverDetail: Driver? = null,
+    val showAssignDialog: Boolean = false,
+    val assignmentFeedback: String? = null,
+    val assignmentError: String? = null,
     val availableCount: Int = 0,
     val onRouteCount: Int = 0,
     val offDutyCount: Int = 0,

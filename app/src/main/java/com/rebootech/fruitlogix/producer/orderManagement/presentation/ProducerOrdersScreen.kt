@@ -59,9 +59,7 @@ fun ProducerOrdersScreen(
 
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { orderId ->
-            snackbarHostState.showSnackbar(
-                context.getString(R.string.producer_orders_accept_success, orderId)
-            )
+            snackbarHostState.showSnackbar("Pedido #$orderId aceptado con éxito")
             viewModel.onSnackbarDismissed()
         }
     }
@@ -192,19 +190,24 @@ fun ProducerOrdersScreen(
                                 order = order,
                                 stockShortage = uiState.stockShortages[order.id],
                                 onCardClick = {
-                                    onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
+                                    // Si el pedido está en preparación o tránsito, abre el recojo del camión
+                                    if (order.status == OrderStatus.IN_PREPARATION || order.status == OrderStatus.IN_TRANSIT) {
+                                        onNavigate(ProducerLogisticsMonitoringRoutes.loadTruck(order.id))
+                                    } else {
+                                        onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
+                                    }
                                 },
                                 onAcceptOrder = {
                                     viewModel.onAcceptOrderClick(order)
                                 },
                                 onRespondOrder = {
-                                    onNavigate(ProducerOrderManagementRoutes.respondOrder(order.id))
+                                    onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
                                 },
                                 onReviewOrder = {
                                     onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
                                 },
                                 onPrepareOrder = {
-                                    onNavigate(ProducerQualityControlRoutes.prepareOrder(order.id))
+                                    onNavigate(ProducerQualityControlRoutes.inspection(order.id))
                                 },
                                 onLoadTruck = {
                                     onNavigate(ProducerLogisticsMonitoringRoutes.loadTruck(order.id))

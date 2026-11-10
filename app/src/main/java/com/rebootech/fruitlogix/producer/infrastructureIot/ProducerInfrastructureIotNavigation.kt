@@ -9,7 +9,11 @@ fun NavGraphBuilder.producerInfrastructureIotGraph(
     navController: NavHostController
 ) {
     composable(ProducerInfrastructureIotRoutes.Notifications) {
-        ProducerNotificationsScreen()
+        ProducerNotificationsScreen(
+            onNavigate = { route ->
+                navController.navigate(route)
+            }
+        )
     }
 }
 

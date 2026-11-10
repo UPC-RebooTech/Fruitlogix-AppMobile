@@ -173,9 +173,6 @@ fun ProducerHomeScreen(
                         order = uiState.heroOrder,
                         shortageWarning = uiState.heroStockShortage,
                         onAcceptClick = { order -> viewModel.onAcceptOrderClick(order) },
-                        onReviewRespondClick = { order ->
-                            onNavigate(ProducerOrderManagementRoutes.respondOrder(order.id))
-                        },
                         onReviewDetailsClick = { order ->
                             onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
                         }
@@ -199,8 +196,7 @@ fun ProducerHomeScreen(
                             iconRes = R.drawable.ic_task_check,
                             label = "Nueva inspección",
                             onClick = {
-                                val list = uiState.heroOrder?.let { listOf(it) } ?: emptyList()
-                                viewModel.onQuickActionNewInspectionClick(list)
+                                onNavigate(ProducerRoute.Orders.route)
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -423,16 +419,17 @@ fun ProducerHomeScreen(
     }
 
     // Modal Bottom Sheet para "Nueva inspección"
-    if (uiState.showOrderPickerSheet) {
-        OrderPickerSheet(
-            orders = uiState.inspectingOrdersList,
-            onOrderSelected = { order ->
-                viewModel.onDismissOrderPicker()
-                onNavigate(ProducerQualityControlRoutes.prepareOrder(order.id))
-            },
-            onDismiss = { viewModel.onDismissOrderPicker() }
-        )
-    }
+
+//    if (uiState.showOrderPickerSheet) {
+//        OrderPickerSheet(
+//            orders = uiState.inspectingOrdersList,
+//            onOrderSelected = { order ->
+//                viewModel.onDismissOrderPicker()
+//                onNavigate(ProducerQualityControlRoutes.inspection(order.id))
+//            },
+//            onDismiss = { viewModel.onDismissOrderPicker() }
+//        )
+//    }
 
     // Dialogo de confirmación para Aceptar Pedido
     if (uiState.showAcceptConfirmDialog && uiState.pendingAcceptOrder != null) {

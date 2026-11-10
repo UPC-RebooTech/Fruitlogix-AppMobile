@@ -27,7 +27,7 @@ class BuildTodayTasksUseCase {
                     title = "New order to accept",
                     detail = "${order.id} ${order.clientName} • ${order.items.joinToString { "${it.productName} ${it.kg} kg" }}",
                     priority = TaskPriority.MEDIUM,
-                    destinationRoute = ProducerOrderManagementRoutes.respondOrder(order.id)
+                    destinationRoute = ProducerOrderManagementRoutes.orderDetail(order.id)
                 )
             )
         }
@@ -55,7 +55,7 @@ class BuildTodayTasksUseCase {
                     title = "Inspection pending",
                     detail = "${order.id} ${order.clientName} • ${order.items.joinToString { "${it.productName} ${it.kg} kg" }}",
                     priority = TaskPriority.MEDIUM,
-                    destinationRoute = ProducerQualityControlRoutes.prepareOrder(order.id)
+                    destinationRoute = ProducerQualityControlRoutes.inspection(order.id)
                 )
             )
         }

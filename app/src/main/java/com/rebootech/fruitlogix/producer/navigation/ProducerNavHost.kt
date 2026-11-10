@@ -12,7 +12,8 @@ import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOr
 import com.rebootech.fruitlogix.producer.orderManagement.producerOrderManagementGraph
 import com.rebootech.fruitlogix.producer.paymentManagement.producerPaymentManagementGraph
 import com.rebootech.fruitlogix.producer.profilesManagement.producerProfilesManagementGraph
-import com.rebootech.fruitlogix.producer.qualityControl.presentation.ProducerQualityScreen
+import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
+import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
 import com.rebootech.fruitlogix.producer.qualityControl.producerQualityControlGraph
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 
@@ -38,10 +39,24 @@ fun ProducerNavHost(
             ProducerOrdersScreen(onNavigate = { route -> navController.navigate(route) })
         }
         composable(ProducerRoute.Stock.route) {
-            ProducerStockScreen()
+            ProducerStockScreen(
+                onNavigateToDetail = { productId ->
+                    navController.navigate(route = ProducerQualityControlRoutes.stockDetail(productId))
+                },
+                onNavigateToRegisterHarvest = {
+                    navController.navigate(route = ProducerQualityControlRoutes.RegisterHarvest)
+                },
+                onNavigateToHarvestsTab = {
+                    navController.navigate(route = ProducerQualityControlRoutes.Harvests)
+                }
+            )
         }
         composable(ProducerRoute.Reports.route) {
-            ProducerQualityScreen()
+            ProducerQualityScreen(
+                onNavigateToDetail = { reportId ->
+                    navController.navigate(ProducerQualityControlRoutes.reportDetail(reportId))
+                }
+            )
         }
 
         // Bounded context subgraphs

@@ -38,7 +38,6 @@ fun HeroActionCard(
     order: Order?,
     shortageWarning: String?,
     onAcceptClick: (Order) -> Unit,
-    onReviewRespondClick: (Order) -> Unit,
     onReviewDetailsClick: (Order) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -144,23 +143,14 @@ fun HeroActionCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        if (shortageWarning == null) {
-                            PrimaryButton(
-                                text = "Aceptar Pedido",
-                                onClick = { onAcceptClick(order) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            PrimaryButton(
-                                text = "Revisar y responder",
-                                onClick = { onReviewRespondClick(order) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
                         SecondaryButton(
                             text = "Ver detalles",
                             onClick = { onReviewDetailsClick(order) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        PrimaryButton(
+                            text = "Aceptar Pedido",
+                            onClick = { onAcceptClick(order) },
                             modifier = Modifier.weight(1f)
                         )
                     }

@@ -317,20 +317,11 @@ private fun PendingOrderContent(
             onClick = onReviewOrder,
             modifier = Modifier.weight(1f)
         )
-
-        if (stockShortage != null) {
-            PrimaryButton(
-                text = stringResource(R.string.producer_orders_btn_review_respond),
-                onClick = onRespondOrder,
-                modifier = Modifier.weight(1f)
-            )
-        } else {
-            PrimaryButton(
-                text = stringResource(R.string.producer_orders_btn_accept),
-                onClick = onAcceptOrder,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        PrimaryButton(
+            text = stringResource(R.string.producer_orders_btn_accept),
+            onClick = onAcceptOrder,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 

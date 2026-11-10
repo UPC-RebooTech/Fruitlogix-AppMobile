@@ -13,12 +13,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerChatScreen
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrderDetailScreen
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersViewModel
 import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
@@ -30,31 +34,49 @@ fun NavGraphBuilder.producerOrderManagementGraph(
         ProducerMessagingScreen()
     }
 
-    // TODO(producer): Pantalla real de Responder Pedido
-    composable(
-        route = ProducerOrderManagementRoutes.RespondOrder,
-        arguments = listOf(navArgument("orderId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Responder Pedido $orderId",
-            onBack = { navController.popBackStack() }
-        )
-    }
-
-    // TODO(producer): Pantalla real de Detalle de Pedido
+    // Detalle de Pedido
     composable(
         route = ProducerOrderManagementRoutes.OrderDetail,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
-        val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Detalle del Pedido $orderId",
-            onBack = { navController.popBackStack() }
+        val orderId = backStackEntry.arguments?.getString("orderId")?.removePrefix("#").orEmpty()
+        val ordersViewModel: ProducerOrdersViewModel = viewModel()
+
+        ProducerOrderDetailScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onAcceptOrder = {
+                ordersViewModel.onAcceptOrderById(orderId)
+                navController.popBackStack()
+            },
+            onOpenChat = { targetOrderId ->
+                navController.navigate(ProducerOrderManagementRoutes.chat(targetOrderId))
+            }
         )
     }
 
-    // TODO(producer): Pantalla real de Historial de Pedidos
+    // Chat con el distribuidor (US23)
+    composable(
+        route = ProducerOrderManagementRoutes.Chat,
+        arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val orderId = backStackEntry.arguments?.getString("orderId")?.removePrefix("#").orEmpty()
+        ProducerChatScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() }
+        )
+    }
+
+    // Inbox de Mensajería
+    composable(ProducerOrderManagementRoutes.Inbox) {
+        ProducerMessagingScreen(
+            onOpenChat = { orderId ->
+                navController.navigate(ProducerOrderManagementRoutes.chat(orderId))
+            }
+        )
+    }
+
+    // Historial de Pedidos
     composable(ProducerOrderManagementRoutes.OrderHistory) {
         ProducerPlaceholderScreen(
             title = "Historial de Pedidos",

@@ -1,9 +1,11 @@
 package com.rebootech.fruitlogix.distributor.infrastructureIot.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,29 +15,50 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.AlertSeverity
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.DeviceConnectionStatus
+import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.FruitThreshold
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.IotAlert
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.IotDevice
+import com.rebootech.fruitlogix.shared.ui.theme.ColorAppbar
+import com.rebootech.fruitlogix.shared.ui.theme.ColorBg
+import com.rebootech.fruitlogix.shared.ui.theme.ColorDanger
+import com.rebootech.fruitlogix.shared.ui.theme.ColorDangerStrong
+import com.rebootech.fruitlogix.shared.ui.theme.ColorOnPrimary
+import com.rebootech.fruitlogix.shared.ui.theme.ColorPrimary
+import com.rebootech.fruitlogix.shared.ui.theme.ColorSuccess
+import com.rebootech.fruitlogix.shared.ui.theme.ColorSurfaceDark
+import com.rebootech.fruitlogix.shared.ui.theme.ColorTextMuted
+import com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnDark
+import com.rebootech.fruitlogix.shared.ui.theme.ColorTextOnLight
+import com.rebootech.fruitlogix.shared.ui.theme.ColorWarning
 
 @Composable
 fun SensorsAlertsScreen(
@@ -45,8 +68,8 @@ fun SensorsAlertsScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     if (uiState.isLoading) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        Box(modifier = modifier.fillMaxSize().background(ColorBg), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = ColorPrimary)
         }
         return
     }
@@ -54,27 +77,76 @@ fun SensorsAlertsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(ColorBg)
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(id = R.string.screen_iot_title),
-                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                color = ColorTextOnLight
+            )
+            Text(
+                text = "Monitoreo telemático, estado de baterías y umbrales por fruta",
+                fontSize = 12.sp,
+                color = ColorAppbar
             )
         }
 
-        // Sección 1: Alertas Telemáticas Activas
+        uiState.feedbackMessage?.let { msg ->
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ColorSurfaceDark)
+                        .border(1.dp, ColorPrimary, RoundedCornerShape(12.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = msg,
+                        color = ColorPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = viewModel::clearFeedback) {
+                        Text("OK", color = ColorTextOnDark, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+
+        // Sección 1: Umbrales por Tipo de Fruta (US62)
         item {
             Text(
+                text = "Umbrales de Conservación por Fruta (US62)",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorTextOnLight
+            )
+        }
+
+        items(uiState.thresholds, key = { it.id }) { threshold ->
+            FruitThresholdCard(
+                threshold = threshold,
+                onEditClick = { viewModel.onSelectThresholdToEdit(threshold) }
+            )
+        }
+
+        // Sección 2: Alertas Telemáticas Activas (US18 / US44)
+        item {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
                 text = stringResource(id = R.string.iot_alerts_section),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.error
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorDanger
             )
         }
 
@@ -82,12 +154,15 @@ fun SensorsAlertsScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = ColorSurfaceDark)
                 ) {
                     Text(
                         text = stringResource(id = R.string.iot_no_alerts),
                         modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
+                        color = ColorSuccess,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -100,13 +175,14 @@ fun SensorsAlertsScreen(
             }
         }
 
-        // Sección 2: Dispositivos IoT Activos
+        // Sección 3: Estado de Sensores y Batería (US45 / US63)
         item {
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(id = R.string.iot_devices_section),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = ColorTextOnLight
             )
         }
 
@@ -116,11 +192,179 @@ fun SensorsAlertsScreen(
                 onCalibrate = { viewModel.onCalibrateDevice(device.id) }
             )
         }
+    }
 
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
+    // Modal para configurar umbrales por fruta (US62)
+    uiState.editingThreshold?.let { threshold ->
+        EditThresholdDialog(
+            threshold = threshold,
+            errorMessage = uiState.thresholdError,
+            onDismiss = viewModel::onDismissThresholdDialog,
+            onSave = { minT, maxT, minH, maxH ->
+                viewModel.onSaveThreshold(threshold.id, minT, maxT, minH, maxH)
+            }
+        )
+    }
+}
+
+@Composable
+private fun FruitThresholdCard(
+    threshold: FruitThreshold,
+    onEditClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = ColorSurfaceDark)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = threshold.fruitName,
+                    color = ColorTextOnDark,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Temp: ${threshold.minTempCelsius}°C a ${threshold.maxTempCelsius}°C • Humedad: ${threshold.minHumidityPercent.toInt()}% a ${threshold.maxHumidityPercent.toInt()}%",
+                    color = ColorPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            Button(
+                onClick = onEditClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ColorPrimary,
+                    contentColor = ColorOnPrimary
+                ),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text("Configurar", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            }
         }
     }
+}
+
+@Composable
+private fun EditThresholdDialog(
+    threshold: FruitThreshold,
+    errorMessage: String?,
+    onDismiss: () -> Unit,
+    onSave: (minTemp: String, maxTemp: String, minHum: String, maxHum: String) -> Unit
+) {
+    var minTemp by remember(threshold) { mutableStateOf(threshold.minTempCelsius.toString()) }
+    var maxTemp by remember(threshold) { mutableStateOf(threshold.maxTempCelsius.toString()) }
+    var minHum by remember(threshold) { mutableStateOf(threshold.minHumidityPercent.toString()) }
+    var maxHum by remember(threshold) { mutableStateOf(threshold.maxHumidityPercent.toString()) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = ColorSurfaceDark,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text(
+                text = "Umbrales: ${threshold.fruitName}",
+                color = ColorTextOnDark,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Define los rangos permitidos (-5°C a 30°C y 40% a 100% RH).",
+                    color = ColorTextMuted,
+                    fontSize = 12.sp
+                )
+                errorMessage?.let { err ->
+                    Text(
+                        text = err,
+                        color = ColorDangerStrong,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ThresholdTextField(
+                        label = "Temp Mín (°C)",
+                        value = minTemp,
+                        onValueChange = { minTemp = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    ThresholdTextField(
+                        label = "Temp Máx (°C)",
+                        value = maxTemp,
+                        onValueChange = { maxTemp = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ThresholdTextField(
+                        label = "Hum Mín (%)",
+                        value = minHum,
+                        onValueChange = { minHum = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    ThresholdTextField(
+                        label = "Hum Máx (%)",
+                        value = maxHum,
+                        onValueChange = { maxHum = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(minTemp, maxTemp, minHum, maxHum) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ColorPrimary,
+                    contentColor = ColorOnPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text("Guardar Umbral", fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", color = ColorTextMuted)
+            }
+        }
+    )
+}
+
+@Composable
+private fun ThresholdTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, color = ColorTextMuted, fontSize = 11.sp) },
+        singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = ColorTextOnDark,
+            unfocusedTextColor = ColorTextOnDark,
+            focusedBorderColor = ColorPrimary,
+            unfocusedBorderColor = ColorAppbar,
+            focusedContainerColor = ColorAppbar,
+            unfocusedContainerColor = ColorAppbar
+        ),
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -128,21 +372,18 @@ fun IotAlertCard(
     alert: IotAlert,
     onDismiss: () -> Unit
 ) {
-    val containerColor = when (alert.severity) {
-        AlertSeverity.CRITICAL -> Color(0xFFFFEBEE)
-        AlertSeverity.WARNING -> Color(0xFFFFF8E1)
-        AlertSeverity.INFO -> Color(0xFFE3F2FD)
-    }
-    val contentColor = when (alert.severity) {
-        AlertSeverity.CRITICAL -> Color(0xFFC62828)
-        AlertSeverity.WARNING -> Color(0xFFF57F17)
-        AlertSeverity.INFO -> Color(0xFF1565C0)
+    val borderColor = when (alert.severity) {
+        AlertSeverity.CRITICAL -> ColorDangerStrong
+        AlertSeverity.WARNING -> ColorWarning
+        AlertSeverity.INFO -> ColorPrimary
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp)),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = ColorSurfaceDark)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -153,20 +394,20 @@ fun IotAlertCard(
                 Text(
                     text = alert.vehicleCode,
                     fontWeight = FontWeight.Bold,
-                    color = contentColor,
-                    style = MaterialTheme.typography.labelLarge
+                    color = borderColor,
+                    fontSize = 14.sp
                 )
                 Text(
                     text = alert.timestamp,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.DarkGray
+                    fontSize = 11.sp,
+                    color = ColorTextMuted
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = alert.message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black
+                fontSize = 13.sp,
+                color = ColorTextOnDark
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -174,7 +415,7 @@ fun IotAlertCard(
                     onClick = onDismiss,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text(text = "Descartar", style = MaterialTheme.typography.labelMedium)
+                    Text(text = "Resolver Incidencia", color = ColorPrimary, fontSize = 12.sp)
                 }
             }
         }
@@ -186,10 +427,22 @@ fun IotDeviceCard(
     device: IotDevice,
     onCalibrate: () -> Unit
 ) {
+    val isLowBatteryOrOffline =
+        device.connectionStatus == DeviceConnectionStatus.DISCONNECTED || device.batteryPercent < 20
+    val tempExceeded = device.lastReading.temperatureCelsius > 8.0
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (isLowBatteryOrOffline) {
+                    Modifier.border(1.dp, ColorDangerStrong, RoundedCornerShape(14.dp))
+                } else {
+                    Modifier
+                }
+            ),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = ColorSurfaceDark)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -198,15 +451,34 @@ fun IotDeviceCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = device.deviceCode,
+                            fontWeight = FontWeight.Bold,
+                            color = ColorTextOnDark,
+                            fontSize = 15.sp
+                        )
+                        if (isLowBatteryOrOffline) {
+                            Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(ColorDanger)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "ATENCIÓN INMEDIATA",
+                                    color = ColorDangerStrong,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                     Text(
-                        text = device.deviceCode,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = device.vehicleId,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline
+                        text = "${device.vehicleId} • ${device.lastSyncLabel}",
+                        fontSize = 11.sp,
+                        color = ColorTextMuted
                     )
                 }
                 StatusChip(status = device.connectionStatus)
@@ -220,18 +492,21 @@ fun IotDeviceCard(
             ) {
                 Text(
                     text = "Temp: ${device.lastReading.temperatureCelsius}°C",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (tempExceeded) ColorDangerStrong else ColorSuccess
                 )
                 Text(
                     text = "Humedad: ${device.lastReading.humidityPercent}%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ColorTextOnDark
                 )
                 Text(
-                    text = "Bat: ${device.batteryPercent}%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (device.batteryPercent < 20) Color.Red else Color.DarkGray
+                    text = "Batería: ${device.batteryPercent}%",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (device.batteryPercent < 20) ColorDangerStrong else ColorPrimary
                 )
             }
 
@@ -241,14 +516,18 @@ fun IotDeviceCard(
                 onClick = onCalibrate,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = device.connectionStatus != DeviceConnectionStatus.CALIBRATING,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ColorPrimary,
+                    contentColor = ColorOnPrimary
+                )
             ) {
                 Text(
                     text = if (device.connectionStatus == DeviceConnectionStatus.CALIBRATING)
                         stringResource(R.string.iot_device_calibrating)
                     else
-                        stringResource(R.string.iot_calibrate_action)
+                        stringResource(R.string.iot_calibrate_action),
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -258,9 +537,9 @@ fun IotDeviceCard(
 @Composable
 fun StatusChip(status: DeviceConnectionStatus) {
     val (bgColor, textColor, label) = when (status) {
-        DeviceConnectionStatus.CONNECTED -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), "Conectado")
-        DeviceConnectionStatus.CALIBRATING -> Triple(Color(0xFFFFF3E0), Color(0xFFE65100), "Calibrando")
-        DeviceConnectionStatus.DISCONNECTED -> Triple(Color(0xFFFFEBEE), Color(0xFFC62828), "Desconectado")
+        DeviceConnectionStatus.CONNECTED -> Triple(ColorSuccess.copy(alpha = 0.2f), ColorSuccess, "En línea")
+        DeviceConnectionStatus.CALIBRATING -> Triple(ColorWarning.copy(alpha = 0.2f), ColorWarning, "Calibrando")
+        DeviceConnectionStatus.DISCONNECTED -> Triple(ColorDangerStrong.copy(alpha = 0.2f), ColorDangerStrong, "Sin señal")
     }
 
     Box(
@@ -268,6 +547,6 @@ fun StatusChip(status: DeviceConnectionStatus) {
             .background(bgColor, RoundedCornerShape(16.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
-        Text(text = label, color = textColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        Text(text = label, color = textColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
