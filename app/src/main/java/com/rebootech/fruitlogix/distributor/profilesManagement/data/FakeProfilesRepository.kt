@@ -7,7 +7,7 @@ import com.rebootech.fruitlogix.distributor.profilesManagement.domain.repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
+import kotlinx.coroutines.launch
 object FakeProfilesRepository : ProfilesRepository {
 
     private val _producers = MutableStateFlow(
@@ -89,6 +89,48 @@ object FakeProfilesRepository : ProfilesRepository {
     )
     override val distributorProfile: StateFlow<DistributorProfile> = _distributorProfile.asStateFlow()
 
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
+
+    init {
+        syncProducersFromBackend()
+    }
+
+    fun syncProducersFromBackend() {
+        scope.launch {
+            runCatching {
+                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.api.getProducers()
+            }.onSuccess { remoteList ->
+                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.updateSyncStatus(
+                    com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus.ONLINE
+                )
+                if (remoteList.isNotEmpty()) {
+                    val mapped = remoteList.mapIndexed { idx, dto ->
+                        ProducerItem(
+                            id = dto.id?.toString() ?: "API-${idx + 1}",
+                            name = dto.name ?: "Productor API",
+                            farmName = dto.rucOrDni?.let { "RUC/DNI: $it" } ?: "Fundo Registrado",
+                            location = dto.location ?: "Perú",
+                            cropType = dto.specialty ?: "Fruta de Exportación",
+                            email = dto.email ?: "contacto@fruitlogix.pe",
+                            phone = dto.phone ?: "+51 987 654 321",
+                            entityType = if (dto.type.equals("Company", ignoreCase = true)) {
+                                ProducerEntityType.COMPANY
+                            } else {
+                                ProducerEntityType.INDIVIDUAL
+                            },
+                            qualityRating = dto.rating ?: 4.8
+                        )
+                    }
+                    _producers.value = mapped + _producers.value.filter { it.id.startsWith("PROD-") }
+                }
+            }.onFailure {
+                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.updateSyncStatus(
+                    com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus.OFFLINE_FALLBACK
+                )
+            }
+        }
+    }
+
     override fun registerProducer(
         name: String,
         farmName: String,
@@ -122,6 +164,21 @@ object FakeProfilesRepository : ProfilesRepository {
             isPending = false
         )
         _producers.value = listOf(newItem) + _producers.value
+        scope.launch {
+            runCatching {
+                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.api.createProducer(
+                    com.rebootech.fruitlogix.shared.core.network.ProducerDto(
+                        name = newItem.name,
+                        rucOrDni = "20600000001",
+                        type = newItem.entityType.backendValue,
+                        location = newItem.location,
+                        specialty = newItem.cropType,
+                        email = newItem.email,
+                        phone = newItem.phone
+                    )
+                )
+            }
+        }
         return Result.success(newItem)
     }
 
