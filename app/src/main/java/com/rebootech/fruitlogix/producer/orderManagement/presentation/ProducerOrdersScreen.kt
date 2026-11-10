@@ -217,6 +217,9 @@ fun ProducerOrdersScreen(
                                 },
                                 onReinspect = {
                                     onNavigate(ProducerQualityControlRoutes.inspection(order.id))
+                                },
+                                onReviewResult = {
+                                    onNavigate(ProducerQualityControlRoutes.reviewResult(order.id))
                                 }
                             )
                             Spacer(modifier = Modifier.height(12.dp))

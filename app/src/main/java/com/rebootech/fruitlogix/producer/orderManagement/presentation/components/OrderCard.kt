@@ -54,6 +54,7 @@ fun OrderCard(
     onLoadTruck: () -> Unit,
     onViewReport: () -> Unit,
     onReinspect: () -> Unit,
+    onReviewResult: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val cardVariant = when (order.status) {
@@ -121,7 +122,8 @@ fun OrderCard(
                             onPrepareOrder = onPrepareOrder,
                             onLoadTruck = onLoadTruck,
                             onViewReport = onViewReport,
-                            onReinspect = onReinspect
+                            onReinspect = onReinspect,
+                            onReviewResult = onReviewResult
                         )
                     }
 
@@ -329,7 +331,8 @@ private fun InPreparationOrderContent(
     onPrepareOrder: () -> Unit,
     onLoadTruck: () -> Unit,
     onViewReport: () -> Unit,
-    onReinspect: () -> Unit
+    onReinspect: () -> Unit,
+    onReviewResult: () -> Unit
 ) {
     val dueStr = order.dueDate.format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))
 
@@ -404,19 +407,20 @@ private fun InPreparationOrderContent(
         }
 
         QualityStatus.PENDING -> {
+            // PENDING = report submitted, in review. Show chip + "View review status" button.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatusBadge(
-                    text = stringResource(R.string.producer_orders_quality_pending),
+                    text = stringResource(R.string.producer_orders_quality_in_review),
                     type = StatusBadgeType.WARNING
                 )
 
                 SecondaryButton(
-                    text = stringResource(R.string.producer_orders_btn_update_inspection),
-                    onClick = onPrepareOrder
+                    text = stringResource(R.string.producer_orders_btn_view_review_status),
+                    onClick = onReviewResult
                 )
             }
         }
@@ -439,7 +443,7 @@ private fun InPreparationOrderContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = stringResource(R.string.producer_orders_quality_rejected),
+                            text = stringResource(R.string.producer_orders_quality_rejected_badge),
                             style = FruitLogixTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             color = FruitLogixTheme.colors.dangerStrong
@@ -487,7 +491,22 @@ private fun InPreparationOrderContent(
         }
 
         null -> {
-            // Sin estado de calidad específico
+            // null = no report submitted yet. Show neutral chip + Prepare & inspect.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusBadge(
+                    text = stringResource(R.string.producer_orders_quality_not_started),
+                    type = StatusBadgeType.NEUTRAL
+                )
+
+                SecondaryButton(
+                    text = stringResource(R.string.producer_orders_btn_prepare_inspect),
+                    onClick = onPrepareOrder
+                )
+            }
         }
     }
 }

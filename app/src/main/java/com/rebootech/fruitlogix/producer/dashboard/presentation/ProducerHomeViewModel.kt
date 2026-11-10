@@ -100,7 +100,12 @@ class ProducerHomeViewModel(
     fun onQuickActionNewInspectionClick(orders: List<Order>) {
         _uiState.update {
             it.copy(
-                inspectingOrdersList = orders.filter { o -> o.status == OrderStatus.IN_PREPARATION },
+                // Only orders in preparation with NO report yet need a new inspection.
+                // PENDING = report submitted (in review); REJECTED has its own task.
+                // #1044 (REJECTED) intentionally excluded here.
+                inspectingOrdersList = orders.filter { o ->
+                    o.status == OrderStatus.IN_PREPARATION && o.qualityStatus == null
+                },
                 showOrderPickerSheet = true
             )
         }

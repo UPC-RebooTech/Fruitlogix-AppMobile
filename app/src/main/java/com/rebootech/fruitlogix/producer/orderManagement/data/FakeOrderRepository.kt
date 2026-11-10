@@ -59,7 +59,8 @@ class FakeOrderRepository : OrderRepository {
                     ),
                     dueDate = today.plusDays(3),
                     status = OrderStatus.IN_PREPARATION,
-                    qualityStatus = QualityStatus.PENDING
+                    qualityStatus = null,
+                    distributorNote = "Wong requested export grade, minimum 23% dry matter"
                 ),
                 Order(
                     id = "#1044",
