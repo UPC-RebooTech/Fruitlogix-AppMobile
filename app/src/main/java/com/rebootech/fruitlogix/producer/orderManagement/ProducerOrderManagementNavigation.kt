@@ -22,6 +22,7 @@ import androidx.navigation.navArgument
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerChatScreen
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrderDetailScreen
+import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersScreen
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersViewModel
 import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
@@ -76,12 +77,9 @@ fun NavGraphBuilder.producerOrderManagementGraph(
         )
     }
 
-    // Historial de Pedidos
-    composable(ProducerOrderManagementRoutes.OrderHistory) {
-        ProducerPlaceholderScreen(
-            title = "Historial de Pedidos",
-            onBack = { navController.popBackStack() }
-        )
+    // Historial de Órdenes
+    composable(route = ProducerOrderManagementRoutes.OrderHistory) {
+        ProducerOrdersScreen()
     }
 }
 

@@ -12,6 +12,7 @@ import com.rebootech.fruitlogix.producer.orderManagement.domain.repository.Order
 import com.rebootech.fruitlogix.producer.paymentManagement.data.FakePaymentRepository
 import com.rebootech.fruitlogix.producer.paymentManagement.domain.model.PaymentSummary
 import com.rebootech.fruitlogix.producer.paymentManagement.domain.repository.PaymentRepository
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.data.FakeHarvestRepository
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.repository.HarvestRepository
 import com.rebootech.fruitlogix.producer.qualityControl.stock.data.FakeStockRepository
@@ -23,7 +24,7 @@ import kotlinx.coroutines.flow.combine
 class FakeDashboardRepository(
     private val orderRepository: OrderRepository = FakeOrderRepository.instance,
     private val stockRepository: StockRepository = FakeStockRepository.instance,
-    private val harvestRepository: HarvestRepository = HarvestRepository,
+    private val harvestRepository: HarvestRepository = FakeHarvestRepository.instance,
     private val paymentRepository: PaymentRepository = FakePaymentRepository.instance,
     private val buildTodayTasksUseCase: BuildTodayTasksUseCase = BuildTodayTasksUseCase()
 ) : DashboardRepository {

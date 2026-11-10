@@ -1,7 +1,7 @@
 package com.rebootech.fruitlogix.shared.ui.theme
 
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 /** App background, pale mint */
 val ColorBg = Color(0xFFE8F3E3)
 
-/** Cards, KPI tiles, bottom sheets */
+/** Dark cards, KPI tiles, bottom sheets */
 val ColorSurfaceDark = Color(0xFF1F2D23)
 
 /** Top app bar, bottom navigation */
@@ -25,14 +25,17 @@ val ColorPrimary = Color(0xFFC8E060)
 /** Text / icons on lime accent */
 val ColorOnPrimary = Color(0xFF1F2D23)
 
-/** Main text on light background */
-val ColorTextOnLight = Color(0xFF1F2D23)
+/** Main text on light background (Verde muy oscuro / carbón) */
+val ColorTextOnLight = Color(0xFF1B2A1E)
 
 /** Main text on dark background */
 val ColorTextOnDark = Color(0xFFFFFFFF)
 
 /** Secondary text on dark surfaces */
 val ColorTextMuted = Color(0xFFA9C2AE)
+
+/** Secondary text on light surfaces */
+val ColorTextMutedLight = Color(0xFF5A7260)
 
 /** Critical alert card background */
 val ColorDanger = Color(0xFF8B2A2A)
@@ -72,6 +75,7 @@ data class FruitLogixColors(
     val textOnLight: Color = ColorTextOnLight,
     val textOnDark: Color = ColorTextOnDark,
     val textMuted: Color = ColorTextMuted,
+    val textMutedLight: Color = ColorTextMutedLight,
     val danger: Color = ColorDanger,
     val dangerStrong: Color = ColorDangerStrong,
     val success: Color = ColorSuccess,
@@ -85,23 +89,23 @@ data class FruitLogixColors(
 val LocalFruitLogixColors = staticCompositionLocalOf { FruitLogixColors() }
 
 // ==========================================
-// 3. Material 3 ColorScheme Mapping
+// 3. Material 3 ColorScheme Mapping (Light Base)
 // ==========================================
 
-val FruitLogixColorScheme: ColorScheme = darkColorScheme(
+val FruitLogixColorScheme: ColorScheme = lightColorScheme(
     primary = ColorPrimary,
     onPrimary = ColorOnPrimary,
     primaryContainer = ColorAppbar,
-    onPrimaryContainer = ColorPrimary,
+    onPrimaryContainer = ColorWhite,
     secondary = ColorPrimary,
     onSecondary = ColorOnPrimary,
     background = ColorBg,
-    onBackground = ColorTextOnLight,
-    surface = ColorSurfaceDark,
-    onSurface = ColorTextOnDark,
-    surfaceVariant = ColorAppbar,
-    onSurfaceVariant = ColorTextMuted,
+    onBackground = ColorTextOnLight,        // Texto oscuro por defecto
+    surface = ColorWhite,                  // Las Cards por defecto son blancas
+    onSurface = ColorTextOnLight,          // Texto sobre Cards por defecto es OSCURO
+    surfaceVariant = ColorSurfaceTint,
+    onSurfaceVariant = ColorTextMutedLight,
     error = ColorDanger,
-    onError = ColorTextOnDark,
-    outline = ColorTextMuted
+    onError = ColorWhite,
+    outline = Color(0xFF7A9380)
 )
