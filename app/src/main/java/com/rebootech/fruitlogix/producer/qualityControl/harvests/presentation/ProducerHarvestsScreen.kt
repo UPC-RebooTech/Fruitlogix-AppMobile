@@ -19,7 +19,8 @@ import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import androidx.compose.ui.res.painterResource
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.repository.HarvestRepository
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.data.FakeHarvestRepository
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.data.RemoteHarvestRepository
 
 @Composable
 fun ProducerHarvestsScreen(
@@ -28,6 +29,7 @@ fun ProducerHarvestsScreen(
     modifier: Modifier = Modifier
 ) {
     var selectedDayTab by remember { mutableStateOf("31") }
+    val harvestList by RemoteHarvestRepository.instance.recentHarvests.collectAsState()
 
     Column(
         modifier = modifier
@@ -153,7 +155,7 @@ fun ProducerHarvestsScreen(
                 }
             }
 
-            items(HarvestRepository.recentHarvests) { harvest ->
+            items(harvestList, key = { it.id }) { harvest ->
                 RecentHarvestCard(
                     fruitName = harvest.fruitName,
                     dateTime = harvest.dateTime,
