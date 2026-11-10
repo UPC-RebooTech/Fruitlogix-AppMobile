@@ -3,7 +3,6 @@ package com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,11 +44,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.data.FakeHarvestRepository
-import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,10 +64,23 @@ fun ProducerRegisterHarvestScreen(
     var estimatedBrixInput by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
-    // Estados de error para validaciones en vivo
+    // Estados de validación
     var lotCodeError by remember { mutableStateOf<String?>(null) }
     var weightError by remember { mutableStateOf<String?>(null) }
     var brixError by remember { mutableStateOf<String?>(null) }
+
+    val darkTextColor = Color(0xFF1B2A1E)
+    val limeAccentColor = Color(0xFFC8E060)
+
+    val customTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedTextColor = darkTextColor,
+        unfocusedTextColor = darkTextColor,
+        focusedBorderColor = darkTextColor,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedLabelColor = darkTextColor,
+        unfocusedLabelColor = Color(0xFF4A5A4A),
+        cursorColor = darkTextColor
+    )
 
     fun validate(): Boolean {
         var isValid = true
@@ -119,7 +130,7 @@ fun ProducerRegisterHarvestScreen(
                     Text(
                         text = "Registrar Cosecha en Fundo",
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = darkTextColor
                     )
                 },
                 navigationIcon = {
@@ -127,7 +138,7 @@ fun ProducerRegisterHarvestScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Volver",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = darkTextColor
                         )
                     }
                 },
@@ -169,10 +180,7 @@ fun ProducerRegisterHarvestScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFD0E768),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                colors = customTextFieldColors
             )
 
             // Campo 2: Código de Lote
@@ -190,10 +198,7 @@ fun ProducerRegisterHarvestScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFD0E768),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                colors = customTextFieldColors
             )
 
             // Campo 3: Kilos Cosechados
@@ -212,10 +217,7 @@ fun ProducerRegisterHarvestScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFD0E768),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                colors = customTextFieldColors
             )
 
             // Campo 4: Calidad estimada (°Brix opcional)
@@ -234,10 +236,7 @@ fun ProducerRegisterHarvestScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFD0E768),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                colors = customTextFieldColors
             )
 
             // Campo 5: Observaciones de campo
@@ -248,10 +247,7 @@ fun ProducerRegisterHarvestScreen(
                 maxLines = 3,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFD0E768),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                colors = customTextFieldColors
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -260,11 +256,14 @@ fun ProducerRegisterHarvestScreen(
                 onClick = {
                     if (validate()) {
                         scope.launch {
+                            val formattedTime = LocalTime.now().format(
+                                DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
+                            )
                             harvestRepository.addHarvest(
                                 fruitName = fruitType.trim(),
                                 lotCode = lotCode.trim(),
                                 weightKg = weightKgInput.trim(),
-                                dateTime = "Hoy, " + java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a", java.util.Locale.getDefault())),
+                                dateTime = "Hoy, $formattedTime",
                                 sector = "Galpón 1"
                             )
                             onNavigateBack()
@@ -275,11 +274,11 @@ fun ProducerRegisterHarvestScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD0E768))
+                colors = ButtonDefaults.buttonColors(containerColor = limeAccentColor)
             ) {
                 Text(
                     text = "Registrar y Guardar Lote",
-                    color = Color(0xFF1B2A1E),
+                    color = darkTextColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
