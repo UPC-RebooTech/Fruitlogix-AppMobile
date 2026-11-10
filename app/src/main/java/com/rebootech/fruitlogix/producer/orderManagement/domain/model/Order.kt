@@ -32,6 +32,7 @@ data class Order(
     val respondBy: Instant? = null,
     val respondByHoursLeft: Int? = null,
     val rejectionReason: String? = null,
+    val distributorNote: String? = null,
     val dispatchedAtFormatted: String? = null,
     val deliveredAtFormatted: String? = null,
     val syncState: SyncState = SyncState.SYNCED

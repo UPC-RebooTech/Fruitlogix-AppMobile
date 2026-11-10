@@ -45,8 +45,10 @@ class BuildTodayTasksUseCase {
             )
         }
 
-        // 3. Inspecciones pendientes (IN_PREPARATION y qualityStatus == PENDING)
-        orders.filter { it.status == OrderStatus.IN_PREPARATION && it.qualityStatus == QualityStatus.PENDING }.forEach { order ->
+        // 3. Inspecciones pendientes (IN_PREPARATION y qualityStatus == null)
+        // Note: PENDING means "report submitted, in review" - not needing a new inspection
+        // REJECTED has its own task ("Report rejected, re-inspect")
+        orders.filter { it.status == OrderStatus.IN_PREPARATION && it.qualityStatus == null }.forEach { order ->
             tasks.add(
                 ProducerTask(
                     id = "task_inspection_${order.id}",
