@@ -6,11 +6,16 @@ import androidx.navigation.compose.composable
 import com.rebootech.fruitlogix.distributor.profilesManagement.presentation.ProducersScreen
 import com.rebootech.fruitlogix.distributor.profilesManagement.presentation.ProfileScreen
 
-fun NavGraphBuilder.profilesManagementGraph(navController: NavHostController) {
+fun NavGraphBuilder.profilesManagementGraph(
+    navController: NavHostController,
+    onSwitchRole: () -> Unit = {}
+) {
     composable(ProfilesManagementRoutes.Producers) {
         ProducersScreen()
     }
     composable(ProfilesManagementRoutes.Profile) {
-        ProfileScreen()
+        ProfileScreen(
+            onSwitchRole = onSwitchRole
+        )
     }
 }
