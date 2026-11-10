@@ -10,6 +10,13 @@ import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.Pr
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockDetailScreen
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerRegisterHarvestScreen
+import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerReportDetailScreen
+import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
+import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.ProducerInspectionScreen
+import com.rebootech.fruitlogix.producer.qualityControl.review.presentation.ProducerReviewResultScreen
+import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
+import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
+import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.ProducerScanLotScreen
 
 fun NavGraphBuilder.producerQualityControlGraph(
     navController: NavHostController
@@ -29,7 +36,16 @@ fun NavGraphBuilder.producerQualityControlGraph(
         )
     }
 
-    // 2. Pantalla de Cosechas (Pestaña Harvests)
+    // 2. Pantalla principal de Reportes de Calidad (Lista)
+    composable(route = ProducerQualityControlRoutes.Reports) {
+        ProducerQualityScreen(
+            onNavigateToDetail = { reportId ->
+                navController.navigate(ProducerQualityControlRoutes.reportDetail(reportId))
+            }
+        )
+    }
+
+    // 3. Pantalla de Cosechas (Pestaña Harvests)
     composable(route = ProducerQualityControlRoutes.Harvests) {
         ProducerHarvestsScreen(
             onNavigateBack = { navController.popBackStack() },
@@ -39,14 +55,14 @@ fun NavGraphBuilder.producerQualityControlGraph(
         )
     }
 
-    // 3. Registrar Cosecha
+    // 4. Registrar Cosecha
     composable(route = ProducerQualityControlRoutes.RegisterHarvest) {
         ProducerRegisterHarvestScreen(
             onNavigateBack = { navController.popBackStack() }
         )
     }
 
-    // 4. Detalle de Stock por Producto (Usa tu constante y argumento)
+    // 5. Detalle de Stock por Producto
     composable(
         route = ProducerQualityControlRoutes.StockDetail,
         arguments = listOf(navArgument("productId") { type = NavType.StringType })
@@ -58,15 +74,30 @@ fun NavGraphBuilder.producerQualityControlGraph(
         )
     }
 
-    // 5. Demás rutas de calidad / pedidos
+    // 6. Detalle del Reporte de Calidad
+    composable(
+        route = ProducerQualityControlRoutes.ReportDetail,
+        arguments = listOf(navArgument("reportId") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val reportId = backStackEntry.arguments?.getString("reportId") ?: ""
+        ProducerReportDetailScreen(
+            reportId = reportId,
+            onNavigateBack = { navController.popBackStack() }
+        )
+    }
+
+    // 7. Demás rutas de calidad / pedidos
     composable(
         route = ProducerQualityControlRoutes.PrepareOrder,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Preparar Pedido $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerInspectionScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onReviewReport = {
+                navController.navigate(ProducerQualityControlRoutes.reviewResult(orderId))
+            }
         )
     }
 
@@ -77,14 +108,29 @@ fun NavGraphBuilder.producerQualityControlGraph(
         )
     }
 
+    // Escaneo desde la barra de búsqueda (sin ID inicial)
+    composable(route = ProducerQualityControlRoutes.ScanLotAny) {
+        ProducerScanLotScreen(
+            orderId = null,
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToInspection = { scannedOrderId ->
+                navController.navigate(ProducerQualityControlRoutes.inspection(scannedOrderId))
+            }
+        )
+    }
+
+    // Escaneo desde un pedido específico (con orderId)
     composable(
         route = ProducerQualityControlRoutes.ScanLot,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Escanear Lote para $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerScanLotScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToInspection = { scannedOrderId ->
+                navController.navigate(ProducerQualityControlRoutes.inspection(scannedOrderId))
+            }
         )
     }
 
@@ -93,20 +139,13 @@ fun NavGraphBuilder.producerQualityControlGraph(
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Inspección de Calidad $orderId",
-            onBack = { navController.popBackStack() }
-        )
-    }
-
-    composable(
-        route = ProducerQualityControlRoutes.ReportDetail,
-        arguments = listOf(navArgument("reportId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val reportId = backStackEntry.arguments?.getString("reportId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Detalle de Reporte $reportId",
-            onBack = { navController.popBackStack() }
+        ProducerInspectionScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onReviewReport = {
+                // Navega hacia la revisión o resultado de calidad
+                navController.navigate(ProducerQualityControlRoutes.reviewResult(orderId))
+            }
         )
     }
 
@@ -115,9 +154,16 @@ fun NavGraphBuilder.producerQualityControlGraph(
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Resultado de Calidad $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerReviewResultScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onEditInspection = { navController.popBackStack() },
+            onBackToOrder = {
+                navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
+            },
+            onOpenChat = {
+                navController.navigate(ProducerOrderManagementRoutes.Inbox)
+            }
         )
     }
 }

@@ -23,8 +23,8 @@ fun DistributorShell(
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
+            onSwitchRole = onSwitchRole, // <--- Conectamos la acción hacia abajo
             modifier = Modifier.padding(innerPadding)
         )
     }
 }
-

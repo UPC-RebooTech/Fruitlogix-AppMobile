@@ -23,6 +23,7 @@ import com.rebootech.fruitlogix.shared.ui.theme.*
 
 @Composable
 fun ProfileScreen(
+    onSwitchRole: () -> Unit = {}, // <--- Añadido parámetro para cambiar de rol
     modifier: Modifier = Modifier
 ) {
     val savedProfile by FakeProfilesRepository.distributorProfile.collectAsState()
@@ -45,7 +46,6 @@ fun ProfileScreen(
             .background(ColorBg)
     ) {
         if (hasLoadError) {
-            // US23 Escenario 2: Error al cargar con opción de reintentar
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -193,7 +193,6 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (isEditing) {
-                    // MODO EDICIÓN (US22)
                     ProfileTextField(label = "Nombre Completo", value = fullName, onValueChange = { fullName = it })
                     Spacer(modifier = Modifier.height(12.dp))
                     ProfileTextField(label = "Correo Electrónico", value = email, onValueChange = { email = it })
@@ -202,7 +201,6 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     ProfileTextField(label = "RUC Empresa / Operación (11 dígitos)", value = ruc, onValueChange = { ruc = it })
                 } else {
-                    // MODO VISUALIZACIÓN (US23)
                     ProfileInfoRow(label = "Nombre", value = savedProfile.fullName)
                     ProfileInfoRow(label = "Correo", value = savedProfile.email)
                     ProfileInfoRow(label = "Teléfono", value = savedProfile.phone)
@@ -210,9 +208,9 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón de Acción (Alternar Editar / Guardar con validación US22)
+            // Botón de Acción Principal (Editar / Guardar)
             Button(
                 onClick = {
                     if (isEditing) {
@@ -265,6 +263,28 @@ fun ProfileScreen(
                     text = if (isEditing) "Guardar Cambios" else "Editar Perfil",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Botón Secundario de Cambiar de Rol (Cerrar Sesión / Elegir cuenta)
+            Button(
+                onClick = onSwitchRole,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ColorSurfaceDark,
+                    contentColor = ColorTextOnDark
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = "Cambiar de Rol (Cerrar Sesión de Distribuidor)",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColorPrimary
                 )
             }
         }

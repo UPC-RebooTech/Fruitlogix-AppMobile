@@ -13,11 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockItem
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockStatus
+import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockItemModel
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockRepository
 
 @Composable
 fun ProducerStockScreen(
@@ -26,19 +27,10 @@ fun ProducerStockScreen(
     onNavigateToHarvestsTab: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var stockItems by remember {
-        mutableStateOf(
-            listOf(
-                StockItem("lot-104", "Kent Mango", 315, 95, 100),
-                StockItem("lot-882", "Hass Avocado", 420, 130, 150),
-                StockItem("lot-094", "Blueberries", 140, 95, 150),
-                StockItem("lot-402", "Red Globe Grapes", 85, 71, 100)
-            )
-        )
-    }
+    val stockList = StockRepository.stockItems
 
-    val totalAvailable = stockItems.sumOf { it.availableKg }
-    val criticalCount = stockItems.count { it.status == StockStatus.CRITICAL }
+    val totalAvailable = stockList.sumOf { it.availableKg }
+    val criticalCount = stockList.count { it.status == "Critical" || it.availableKg < 100 }
 
     Column(
         modifier = modifier
@@ -77,7 +69,7 @@ fun ProducerStockScreen(
                 }
                 Column {
                     Text("ACTIVE SKUS", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
-                    Text("${stockItems.size} lots", style = FruitLogixTheme.typography.titleLarge, color = FruitLogixTheme.colors.white)
+                    Text("${stockList.size} lots", style = FruitLogixTheme.typography.titleLarge, color = FruitLogixTheme.colors.white)
                 }
                 Column {
                     Text("CRITICAL", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
@@ -88,7 +80,7 @@ fun ProducerStockScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Pestañas (Inventory activo aquí, Harvests navega a su ruta)
+        // Pestañas
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +90,7 @@ fun ProducerStockScreen(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             StockTabButton(
-                text = "Inventory (${stockItems.size})",
+                text = "Inventory (${stockList.size})",
                 selected = true,
                 modifier = Modifier.weight(1f)
             ) { }
@@ -112,25 +104,21 @@ fun ProducerStockScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de Inventario de Stock
+        // Lista de Inventario de Stock conectada al repositorio compartido
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(stockItems) { item ->
+            items(stockList) { stock ->
                 InventoryCardItem(
-                    item = item,
+                    item = stock,
                     onIncrement = {
-                        stockItems = stockItems.map {
-                            if (it.productId == item.productId) it.copy(availableKg = it.availableKg + 5) else it
-                        }
+                        StockRepository.updateStockKg(stock.id, stock.availableKg + 10)
                     },
                     onDecrement = {
-                        stockItems = stockItems.map {
-                            if (it.productId == item.productId) it.copy(availableKg = (it.availableKg - 5).coerceAtLeast(0)) else it
-                        }
+                        StockRepository.updateStockKg(stock.id, stock.availableKg - 10)
                     },
-                    onClick = { onNavigateToDetail(item.productId) }
+                    onClick = { onNavigateToDetail(stock.id) }
                 )
             }
         }
@@ -174,11 +162,14 @@ fun StockTabButton(text: String, selected: Boolean, modifier: Modifier = Modifie
 
 @Composable
 fun InventoryCardItem(
-    item: StockItem,
+    item: StockItemModel,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onClick: () -> Unit
 ) {
+    val fillFraction = (item.availableKg.toFloat() / item.totalCapacityKg.toFloat()).coerceIn(0f, 1f)
+    val isCritical = item.availableKg < 100
+
     FruitLogixCard(
         variant = CardVariant.Dark,
         modifier = Modifier
@@ -226,7 +217,6 @@ fun InventoryCardItem(
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            val isCritical = item.status == StockStatus.CRITICAL
             val statusText = if (isCritical) "DEFICIT -15KG" else "HEALTHY"
             val statusColor = if (isCritical) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.success
 
@@ -254,12 +244,12 @@ fun InventoryCardItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             LinearProgressIndicator(
-                progress = { item.fillFraction },
+                progress = { fillFraction },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = if (item.status == StockStatus.CRITICAL) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.success,
+                color = if (isCritical) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.success,
                 trackColor = FruitLogixTheme.colors.surfaceTint
             )
 
@@ -269,8 +259,8 @@ fun InventoryCardItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Available: ${item.freeKg} kg", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
-                Text("Reserved: ${item.reservedKg} kg", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
+                Text("Location: ${item.chamberLocation}", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
+                Text("Variety: ${item.variety}", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
             }
         }
     }
