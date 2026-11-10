@@ -16,6 +16,7 @@ import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.
 import com.rebootech.fruitlogix.producer.qualityControl.review.presentation.ProducerReviewResultScreen
 import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
+import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.ProducerScanLotScreen
 
 fun NavGraphBuilder.producerQualityControlGraph(
     navController: NavHostController
@@ -107,14 +108,29 @@ fun NavGraphBuilder.producerQualityControlGraph(
         )
     }
 
+    // Escaneo desde la barra de búsqueda (sin ID inicial)
+    composable(route = ProducerQualityControlRoutes.ScanLotAny) {
+        ProducerScanLotScreen(
+            orderId = null,
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToInspection = { scannedOrderId ->
+                navController.navigate(ProducerQualityControlRoutes.inspection(scannedOrderId))
+            }
+        )
+    }
+
+    // Escaneo desde un pedido específico (con orderId)
     composable(
         route = ProducerQualityControlRoutes.ScanLot,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-        ProducerPlaceholderScreen(
-            title = "Escanear Lote para $orderId",
-            onBack = { navController.popBackStack() }
+        ProducerScanLotScreen(
+            orderId = orderId,
+            onNavigateBack = { navController.popBackStack() },
+            onNavigateToInspection = { scannedOrderId ->
+                navController.navigate(ProducerQualityControlRoutes.inspection(scannedOrderId))
+            }
         )
     }
 
@@ -143,14 +159,10 @@ fun NavGraphBuilder.producerQualityControlGraph(
             onNavigateBack = { navController.popBackStack() },
             onEditInspection = { navController.popBackStack() },
             onBackToOrder = {
-                navController.navigate(ProducerRoute.Orders.route) {
-                    popUpTo(ProducerRoute.Home.route) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
+                navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
             },
             onOpenChat = {
-                navController.navigate(ProducerOrderManagementRoutes.chat(orderId))
+                navController.navigate(ProducerOrderManagementRoutes.Inbox)
             }
         )
     }
