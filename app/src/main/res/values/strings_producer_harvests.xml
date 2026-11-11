@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer Harvests -->
+    <string name="producer_harvests_title">Harvest control</string>
+    <string name="producer_harvests_subtitle">Field scheduling and yield</string>
+
+    <!-- Weekly forecast -->
+    <string name="producer_harvests_forecast_week">Weekly forecast · Week %1$d</string>
+    <string name="producer_harvests_export_grade">Export grade</string>
+    <string name="producer_harvests_forecast_requested">%1$s: %2$s kg requested</string>
+    <string name="producer_harvests_forecast_committed">Committed to: %1$s</string>
+    <string name="producer_harvests_forecast_fulfilled">Fulfilled so far</string>
+    <string name="producer_harvests_forecast_progress">%1$s / %2$s kg (%3$d%%)</string>
+
+    <!-- Schedule -->
+    <string name="producer_harvests_schedule_title">Harvest schedule</string>
+    <string name="producer_harvests_upcoming_title">Upcoming harvests</string>
+    <plurals name="producer_harvests_queued">
+        <item quantity="one">%1$d planned</item>
+        <item quantity="other">%1$d planned</item>
+    </plurals>
+    <string name="producer_harvests_none_scheduled">No harvests planned for this day.</string>
+    <string name="producer_harvests_status_planned">Planned</string>
+    <string name="producer_harvests_est_yield">Est. yield</string>
+    <string name="producer_harvests_zone">Zone</string>
+    <plurals name="producer_harvests_assigned_crew">
+        <item quantity="one">Assigned: %1$s (%2$d picker)</item>
+        <item quantity="other">Assigned: %1$s (%2$d pickers)</item>
+    </plurals>
+
+    <!-- Recent harvests -->
+    <string name="producer_harvests_recent_title">Recent harvests in stock</string>
+    <string name="producer_harvests_live">Live</string>
+    <string name="producer_harvests_logged_qty">Logged quantity</string>
+    <string name="producer_harvests_batch_lot">Batch lot</string>
+
+    <!-- Harvest status -->
+    <string name="producer_harvests_status_ready">Ready to harvest</string>
+    <string name="producer_harvests_status_ripening">Ripening</string>
+    <string name="producer_harvests_status_scheduled">Harvest scheduled</string>
+    <string name="producer_harvests_status_registered">Registered</string>
+</resources>

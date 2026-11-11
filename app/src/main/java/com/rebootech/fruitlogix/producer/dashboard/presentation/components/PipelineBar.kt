@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,28 +15,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.PipelineCount
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
-import com.rebootech.fruitlogix.shared.ui.theme.ColorPrimary
-import com.rebootech.fruitlogix.shared.ui.theme.ColorSuccess
-import com.rebootech.fruitlogix.shared.ui.theme.ColorWarning
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
-private val ColorInPrepSage = Color(0xFFA5C3A5)
+private data class PipelineSegment(
+    val key: String,
+    val label: String,
+    val count: Int,
+    val color: Color
+)
 
+/**
+ * Order flow card (light list card): proportional bar + 2x2 legend.
+ * Colors follow the status semantics: pending = Mango, in preparation = neutral,
+ * in transit = Glaciar, delivered = Maduro.
+ */
 @Composable
 fun PipelineBar(
     pipeline: PipelineCount,
@@ -43,146 +52,70 @@ fun PipelineBar(
     onNavigateOrdersClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+
+    val segments = listOf(
+        PipelineSegment("PENDING", stringResource(R.string.producer_orders_chip_pending), pipeline.pending, colors.attentionContent),
+        PipelineSegment("IN_PREPARATION", stringResource(R.string.producer_orders_chip_in_preparation), pipeline.inPrep, scheme.outline),
+        PipelineSegment("IN_TRANSIT", stringResource(R.string.producer_orders_chip_in_transit), pipeline.inTransit, colors.coldContent),
+        PipelineSegment("DELIVERED", stringResource(R.string.producer_orders_chip_delivered), pipeline.delivered, colors.successContent)
+    )
+
     FruitLogixCard(
         variant = CardVariant.White,
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Flujo de pedidos",
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        style = FruitLogixTheme.typography.titleMedium,
-                        color = FruitLogixTheme.colors.textOnLight
-                    )
-                    Text(
-                        text = "${pipeline.totalActive} pedidos activos",
-                        style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
-                }
+        Column(modifier = Modifier.padding(FruitLogixTheme.spacing.sm)) {
+            CardHeader(
+                title = stringResource(R.string.producer_home_pipeline_title),
+                subtitle = pluralStringResource(
+                    R.plurals.producer_home_pipeline_active,
+                    pipeline.totalActive,
+                    pipeline.totalActive
+                ),
+                actionDescription = stringResource(R.string.producer_home_cd_view_orders),
+                onAction = onNavigateOrdersClick
+            )
 
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onNavigateOrdersClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AppIcon(
-                        id = R.drawable.ic_arrow_forward,
-                        contentDescription = "Ver pedidos",
-                        tint = FruitLogixTheme.colors.textOnLight,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Proportional Segmented Bar
-            val total = (pipeline.pending + pipeline.inPrep + pipeline.inTransit + pipeline.delivered).coerceAtLeast(1)
-            val wPending = pipeline.pending.toFloat() / total
-            val wInPrep = pipeline.inPrep.toFloat() / total
-            val wInTransit = pipeline.inTransit.toFloat() / total
-            val wDelivered = pipeline.delivered.toFloat() / total
-
+            val total = segments.sumOf { it.count }.coerceAtLeast(1)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(12.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(FruitLogixTheme.colors.bg),
+                    .clip(FruitLogixTheme.shapes.Pill)
+                    .background(scheme.surfaceContainerHigh),
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                if (wPending > 0) {
+                segments.filter { it.count > 0 }.forEach { segment ->
                     Box(
                         modifier = Modifier
-                            .weight(wPending)
+                            .weight(segment.count.toFloat() / total)
                             .fillMaxHeight()
-                            .background(ColorWarning)
-                            .clickable { onSegmentClick("PENDING") }
-                    )
-                }
-                if (wInPrep > 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(wInPrep)
-                            .fillMaxHeight()
-                            .background(ColorInPrepSage)
-                            .clickable { onSegmentClick("IN_PREPARATION") }
-                    )
-                }
-                if (wInTransit > 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(wInTransit)
-                            .fillMaxHeight()
-                            .background(ColorPrimary)
-                            .clickable { onSegmentClick("IN_TRANSIT") }
-                    )
-                }
-                if (wDelivered > 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(wDelivered)
-                            .fillMaxHeight()
-                            .background(ColorSuccess)
-                            .clickable { onSegmentClick("DELIVERED") }
+                            .background(segment.color)
+                            .clickable { onSegmentClick(segment.key) }
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
 
-            // 2x2 Legend with Tint tiles
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                PipelineLegendTile(
-                    label = "Pendientes",
-                    count = pipeline.pending,
-                    dotColor = ColorWarning,
-                    onClick = { onSegmentClick("PENDING") },
-                    modifier = Modifier.weight(1f)
-                )
-                PipelineLegendTile(
-                    label = "En Preparación",
-                    count = pipeline.inPrep,
-                    dotColor = ColorInPrepSage,
-                    onClick = { onSegmentClick("IN_PREPARATION") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                PipelineLegendTile(
-                    label = "En Tránsito",
-                    count = pipeline.inTransit,
-                    dotColor = ColorPrimary,
-                    onClick = { onSegmentClick("IN_TRANSIT") },
-                    modifier = Modifier.weight(1f)
-                )
-                PipelineLegendTile(
-                    label = "Entregados",
-                    count = pipeline.delivered,
-                    dotColor = ColorSuccess,
-                    onClick = { onSegmentClick("DELIVERED") },
-                    modifier = Modifier.weight(1f)
-                )
+            segments.chunked(2).forEachIndexed { index, row ->
+                if (index > 0) Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)
+                ) {
+                    row.forEach { segment ->
+                        PipelineLegendTile(
+                            segment = segment,
+                            onClick = { onSegmentClick(segment.key) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
             }
         }
     }
@@ -190,42 +123,89 @@ fun PipelineBar(
 
 @Composable
 private fun PipelineLegendTile(
-    label: String,
-    count: Int,
-    dotColor: Color,
+    segment: PipelineSegment,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scheme = MaterialTheme.colorScheme
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(FruitLogixTheme.colors.surfaceTint)
+            .defaultMinSize(minHeight = FruitLogixTheme.sizing.minTouch)
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(scheme.surfaceContainerLow)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+            .padding(horizontal = FruitLogixTheme.spacing.inner, vertical = FruitLogixTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(dotColor)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = label,
-                style = FruitLogixTheme.typography.bodySmall,
-                color = FruitLogixTheme.colors.textOnLight,
-                fontWeight = FontWeight.Medium
-            )
-        }
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(segment.color)
+        )
+        Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
         Text(
-            text = count.toString(),
-            style = FruitLogixTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = FruitLogixTheme.colors.textOnLight
+            text = segment.label,
+            style = FruitLogixTheme.typography.labelMedium,
+            color = scheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xxs))
+        Text(
+            text = segment.count.toString(),
+            style = FruitLogixTheme.typography.titleSmall,
+            color = scheme.onSurface
         )
     }
 }
 
+/**
+ * Title + subtitle on the left, round arrow action on the right (48dp touch target).
+ * Shared by the light list cards of the Home screen.
+ */
+@Composable
+internal fun CardHeader(
+    title: String,
+    subtitle: String?,
+    actionDescription: String?,
+    onAction: (() -> Unit)?
+) {
+    val scheme = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = FruitLogixTheme.typography.titleMedium,
+                color = scheme.onSurface
+            )
+            subtitle?.let {
+                Text(
+                    text = it,
+                    style = FruitLogixTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant
+                )
+            }
+        }
+        if (onAction != null) {
+            Box(
+                modifier = Modifier
+                    .size(FruitLogixTheme.sizing.minTouch)
+                    .clip(CircleShape)
+                    .clickable(onClick = onAction),
+                contentAlignment = Alignment.Center
+            ) {
+                AppIcon(
+                    id = R.drawable.ic_arrow_forward,
+                    contentDescription = actionDescription,
+                    tint = scheme.primary,
+                    modifier = Modifier.size(FruitLogixTheme.sizing.icon)
+                )
+            }
+        }
+    }
+}

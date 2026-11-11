@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer chat -->
+    <string name="chat_subtitle">Order #%1$s · %2$s</string>
+    <string name="chat_cd_view_order">View order</string>
+    <string name="chat_input_placeholder">Write a message</string>
+    <string name="chat_cd_send">Send message</string>
+    <string name="chat_typing">%1$s is typing…</string>
+    <string name="chat_today">Today</string>
+    <string name="chat_yesterday">Yesterday</string>
+    <string name="chat_empty_title">Start the conversation</string>
+    <string name="chat_empty_message">Coordinate harvest, quality and pickup of order #%1$s with your distributor.</string>
+    <string name="chat_you">You</string>
+
+    <!-- Quick replies (sent as message text) -->
+    <string name="chat_quick_ready">The lot is ready for pickup</string>
+    <string name="chat_quick_confirm">Confirmed, thank you</string>
+    <string name="chat_quick_delay">I need a bit more time</string>
+    <string name="chat_quick_call">Can you call me?</string>
+</resources>

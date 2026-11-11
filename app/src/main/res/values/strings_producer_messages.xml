@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer messages inbox -->
+    <string name="messages_title">Messages</string>
+    <string name="messages_subtitle">Chat with your distributors, one conversation per order</string>
+    <string name="messages_order">Order #%1$s</string>
+    <string name="messages_you">You: %1$s</string>
+    <string name="messages_no_messages">No messages yet. Tap to coordinate this order.</string>
+    <string name="messages_empty_title">No conversations</string>
+    <string name="messages_empty_message">Conversations appear here when you have active orders.</string>
+    <plurals name="messages_unread">
+        <item quantity="one">%1$d unread message</item>
+        <item quantity="other">%1$d unread messages</item>
+    </plurals>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Liquidaciones del productor -->
+    <string name="payouts_title">Liquidaciones</string>
+    <string name="payouts_subtitle">Pagos de tus distribuidores por cada lote</string>
+
+    <string name="payouts_kpi_pending">Por cobrar</string>
+    <string name="payouts_kpi_overdue">%1$s vencido</string>
+    <string name="payouts_kpi_paid">Cobrado este mes</string>
+
+    <string name="payouts_filter_all">Todos (%1$d)</string>
+    <string name="payouts_filter_pending">Pendientes (%1$d)</string>
+    <string name="payouts_filter_paid">Pagados (%1$d)</string>
+    <string name="payouts_empty">No hay pagos en esta categoría.</string>
+
+    <string name="payouts_type_settlement">Liquidación de lote · %1$s</string>
+    <string name="payouts_type_settlement_lot">Liquidación de lote · %1$s #%2$s</string>
+    <string name="payouts_type_advance">Adelanto de cosecha · %1$s</string>
+
+    <string name="payouts_status_pending">Pendiente</string>
+    <string name="payouts_status_paid">Pagado</string>
+    <string name="payouts_status_overdue">Vencido</string>
+
+    <string name="payouts_issued">Emitido %1$s</string>
+    <string name="payouts_due">Vence %1$s</string>
+    <string name="payouts_was_due">Venció %1$s</string>
+</resources>

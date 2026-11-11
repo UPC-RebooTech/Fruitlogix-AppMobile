@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer Orders: texts added during the design-system migration -->
+    <string name="producer_orders_order_accepted">Order %1$s accepted</string>
+    <string name="producer_orders_error_loading">We couldn\'t load your orders.</string>
+    <string name="producer_orders_dispatched_today">today</string>
+
+    <!-- Accessibility -->
+    <string name="producer_orders_cd_close_filters">Close filters</string>
+    <string name="producer_orders_cd_chip_selected">%1$s, selected</string>
+    <string name="producer_orders_cd_chip_not_selected">%1$s, not selected</string>
+    <string name="producer_orders_cd_remove_filter">Remove filter: %1$s</string>
+    <string name="producer_orders_cd_scan_lot">Scan lot</string>
+    <string name="producer_orders_cd_filter_orders">Filter orders</string>
+    <string name="producer_orders_cd_filters_active">Filter orders, filters applied</string>
+    <string name="producer_orders_cd_load_truck">Load truck</string>
+    <plurals name="producer_orders_tile_orders">
+        <item quantity="one">%1$d order</item>
+        <item quantity="other">%1$d orders</item>
+    </plurals>
+</resources>

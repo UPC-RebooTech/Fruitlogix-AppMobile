@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
@@ -43,7 +45,7 @@ fun OrderSearchBar(
                 .weight(1f)
                 .height(48.dp)
                 .clip(FruitLogixTheme.shapes.Pill)
-                .background(FruitLogixTheme.colors.surfaceLight)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .padding(horizontal = 14.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -54,7 +56,7 @@ fun OrderSearchBar(
                 AppIcon(
                     id = R.drawable.ic_troubleshoot,
                     contentDescription = null,
-                    tint = FruitLogixTheme.colors.textMuted,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
 
@@ -65,8 +67,9 @@ fun OrderSearchBar(
                         Text(
                             text = stringResource(R.string.producer_orders_search_placeholder),
                             style = FruitLogixTheme.typography.bodyMedium,
-                            color = FruitLogixTheme.colors.textMuted,
-                            maxLines = 1
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     BasicTextField(
@@ -74,9 +77,9 @@ fun OrderSearchBar(
                         onValueChange = onQueryChange,
                         singleLine = true,
                         textStyle = FruitLogixTheme.typography.bodyMedium.copy(
-                            color = FruitLogixTheme.colors.textOnLight
+                            color = MaterialTheme.colorScheme.onSurface
                         ),
-                        cursorBrush = SolidColor(FruitLogixTheme.colors.primary),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -84,15 +87,15 @@ fun OrderSearchBar(
                 // Scanner icon button (navigates to ScanLotAny)
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .clickable(onClick = onScanClick),
                     contentAlignment = Alignment.Center
                 ) {
                     AppIcon(
                         id = R.drawable.ic_sensor_waves,
-                        contentDescription = "Scan Lot",
-                        tint = FruitLogixTheme.colors.textOnLight,
+                        contentDescription = stringResource(R.string.producer_orders_cd_scan_lot),
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -106,14 +109,14 @@ fun OrderSearchBar(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(FruitLogixTheme.colors.surfaceLight)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .clickable(onClick = onFilterClick),
             contentAlignment = Alignment.Center
         ) {
             AppIcon(
                 id = R.drawable.ic_menu,
-                contentDescription = "Filter Orders",
-                tint = FruitLogixTheme.colors.textOnLight,
+                contentDescription = stringResource(if (hasActiveFilters) R.string.producer_orders_cd_filters_active else R.string.producer_orders_cd_filter_orders),
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp)
             )
 
@@ -124,7 +127,7 @@ fun OrderSearchBar(
                         .align(Alignment.TopEnd)
                         .padding(top = 8.dp, end = 8.dp)
                         .clip(CircleShape)
-                        .background(FruitLogixTheme.colors.primary)
+                        .background(MaterialTheme.colorScheme.primary)
                 )
             }
         }

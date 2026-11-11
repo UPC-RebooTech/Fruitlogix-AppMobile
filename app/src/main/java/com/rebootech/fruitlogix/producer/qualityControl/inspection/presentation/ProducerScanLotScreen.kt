@@ -2,293 +2,305 @@ package com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.producer.qualityControl.inspection.data.InspectionOrderRepository
+import com.rebootech.fruitlogix.producer.qualityControl.inspection.data.FakeInspectionRepository
+import com.rebootech.fruitlogix.producer.qualityControl.inspection.domain.model.InspectionLot
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import com.rebootech.fruitlogix.shared.ui.components.BackHeader
+import com.rebootech.fruitlogix.shared.ui.components.CardVariant
+import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
+import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
-sealed class ScannerState {
-    object Scanning : ScannerState()
-    object MatchConfirmed : ScannerState()
-    object ManualEntry : ScannerState()
-    object PermissionDenied : ScannerState()
-    object CodeNotRecognized : ScannerState()
-}
+private enum class ScanState { SCANNING, MANUAL, MATCH, ERROR }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Scan a lot QR/barcode (camera simulated until the scanner library is added).
+ * The viewfinder is the only dark area; the result panel is a light card.
+ * Codes are resolved against open lots, so a typed code is really validated.
+ */
 @Composable
 fun ProducerScanLotScreen(
-    orderId: String? = null,
+    orderId: String?,
     onNavigateBack: () -> Unit,
     onNavigateToInspection: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var currentState by remember { mutableStateOf<ScannerState>(ScannerState.Scanning) }
-    var manualCodeInput by remember { mutableStateOf("LOT-HA-09") }
-    var isTorchOn by remember { mutableStateOf(false) }
+    val repository = FakeInspectionRepository.instance
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
 
-    val activeOrderId = orderId?.takeIf { it.isNotBlank() }?.replace("#", "") ?: "1048"
-    val orderData = remember(activeOrderId) { InspectionOrderRepository.getOrderById(activeOrderId) }
+    val expectedLot = orderId?.takeIf { it.isNotBlank() }?.let { repository.lotForOrder(it) }
+    var state by rememberSaveable { mutableStateOf(ScanState.SCANNING) }
+    var matchedOrderId by rememberSaveable { mutableStateOf<String?>(null) }
+    var manualCode by rememberSaveable { mutableStateOf("") }
+    val matchedLot = matchedOrderId?.let { repository.lotForOrder(it) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Scan Lot Qr / Barcode",
-                        style = FruitLogixTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = FruitLogixTheme.colors.textOnLight
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(painter = painterResource(id = R.drawable.ic_arrow_back), contentDescription = "Back", tint = FruitLogixTheme.colors.textOnLight)
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { isTorchOn = !isTorchOn }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_flash),
-                            contentDescription = "Torch",
-                            tint = if (isTorchOn) FruitLogixTheme.colors.primary else FruitLogixTheme.colors.textOnLight
+    fun resolve(code: String) {
+        val lot = repository.findByLotCode(code)
+        if (lot != null && (expectedLot == null || lot.orderId == expectedLot.orderId)) {
+            matchedOrderId = lot.orderId
+            state = ScanState.MATCH
+        } else {
+            state = ScanState.ERROR
+        }
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(scheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(spacing.inner)
+    ) {
+        BackHeader(
+            title = stringResource(R.string.scan_title),
+            subtitle = expectedLot?.let { stringResource(R.string.scan_order_context, it.orderId, it.clientName) }
+                ?: stringResource(R.string.scan_order_any),
+            onBack = onNavigateBack
+        )
+
+        Viewfinder(state)
+
+        FruitLogixCard(variant = CardVariant.White, modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.padding(spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(spacing.xs)
+            ) {
+                when (state) {
+                    ScanState.SCANNING -> {
+                        Text(
+                            text = stringResource(R.string.scan_subtitle),
+                            style = FruitLogixTheme.typography.bodyMedium,
+                            color = scheme.onSurfaceVariant
+                        )
+                        PrimaryButton(
+                            text = stringResource(R.string.scan_manual),
+                            onClick = { state = ScanState.MANUAL },
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = {
+                                AppIcon(id = R.drawable.ic_edit, contentDescription = null, modifier = Modifier.size(FruitLogixTheme.sizing.iconSm))
+                            }
+                        )
+                        TextActionButton(
+                            text = stringResource(R.string.scan_simulate),
+                            onClick = { resolve(expectedLot?.lotCode ?: "HA-09") },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    IconButton(onClick = { currentState = ScannerState.PermissionDenied }) {
-                        Icon(painter = painterResource(id = R.drawable.ic_person), contentDescription = "Profile", tint = FruitLogixTheme.colors.textOnLight)
+
+                    ScanState.MANUAL -> {
+                        Text(
+                            text = stringResource(R.string.scan_manual_title),
+                            style = FruitLogixTheme.typography.titleMedium,
+                            color = scheme.onSurface
+                        )
+                        OutlinedTextField(
+                            value = manualCode,
+                            onValueChange = { manualCode = it.uppercase() },
+                            label = { Text(stringResource(R.string.scan_manual_label)) },
+                            placeholder = { Text(stringResource(R.string.scan_manual_hint)) },
+                            singleLine = true,
+                            textStyle = FruitLogixTheme.extraTypography.dataMono,
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Characters,
+                                imeAction = ImeAction.Done
+                            ),
+                            shape = FruitLogixTheme.shapes.Input,
+                            colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = scheme.outline),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        PrimaryButton(
+                            text = stringResource(R.string.scan_validate),
+                            onClick = { resolve(manualCode) },
+                            enabled = manualCode.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        TextActionButton(
+                            text = stringResource(R.string.scan_back_to_camera),
+                            onClick = { state = ScanState.SCANNING },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = FruitLogixTheme.colors.bg)
-            )
-        },
-        containerColor = FruitLogixTheme.colors.bg
-    ) { paddingValues ->
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Fondo de cámara simulado
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(40.dp))
-                Box(
-                    modifier = Modifier
-                        .size(280.dp)
-                        .border(
-                            2.dp,
-                            if (currentState is ScannerState.CodeNotRecognized) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.primary,
-                            RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when (currentState) {
-                        is ScannerState.Scanning -> {
-                            Text("LOOKING FOR LOT QR OR GS1", color = FruitLogixTheme.colors.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.TopCenter).padding(8.dp))
-                        }
-                        is ScannerState.MatchConfirmed -> {
-                            Box(modifier = Modifier.size(60.dp).clip(CircleShape).background(FruitLogixTheme.colors.primary), contentAlignment = Alignment.Center) {
-                                Icon(painter = painterResource(id = R.drawable.ic_check), contentDescription = null, tint = FruitLogixTheme.colors.onPrimary)
-                            }
-                        }
-                        is ScannerState.CodeNotRecognized -> {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(painter = painterResource(id = R.drawable.ic_alert), contentDescription = null, tint = FruitLogixTheme.colors.dangerStrong, modifier = Modifier.size(36.dp))
-                                Text("UNREADABLE", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-                        }
-                        else -> {
-                            Text("SCANNER PAUSED", color = Color.White, fontWeight = FontWeight.Bold)
-                        }
+
+                    ScanState.MATCH -> matchedLot?.let { lot ->
+                        ResultBanner(
+                            iconRes = R.drawable.ic_check,
+                            title = stringResource(R.string.scan_match_title),
+                            message = stringResource(R.string.scan_match_message),
+                            ok = true
+                        )
+                        LotSummary(lot)
+                        PrimaryButton(
+                            text = stringResource(R.string.scan_continue),
+                            onClick = { onNavigateToInspection(lot.orderId) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        TextActionButton(
+                            text = stringResource(R.string.scan_again),
+                            onClick = {
+                                matchedOrderId = null
+                                state = ScanState.SCANNING
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-                }
-            }
 
-            // Panel Inferior con fondo verde oscuro (surfaceDark) para excelente contraste
-            Surface(
-                color = FruitLogixTheme.colors.surfaceDark,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Box(modifier = Modifier.width(40.dp).height(4.dp).clip(CircleShape).background(FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.5f)).align(Alignment.CenterHorizontally))
-
-                    when (currentState) {
-                        is ScannerState.Scanning -> {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(FruitLogixTheme.colors.primary))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Camera sensor active · Auto-detect", style = FruitLogixTheme.typography.bodySmall, color = Color.White)
-                                }
-                                Text("🔊 Beep on scan", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.primary)
-                            }
-
-                            // Tarjeta interna con contraste optimizado sobre el fondo verde oscuro
-                            Surface(color = FruitLogixTheme.colors.bg.copy(alpha = 0.4f), shape = RoundedCornerShape(12.dp)) {
-                                Column(modifier = Modifier.padding(14.dp)) {
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("ACTIVE LOGISTICS ORDER", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.primary, fontWeight = FontWeight.Bold)
-                                        Text("Slot 04", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.primary)
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Order #${orderData.orderId}", style = FruitLogixTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
-                                    Text("${orderData.clientName} · ${orderData.productName} ${orderData.netWeight}", style = FruitLogixTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("Expected Pallets\n3 of 8 Scanned", style = FruitLogixTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
-                                        Text("Packhouse Bay\nChamber C-North", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.primary, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-
-                            Button(
-                                onClick = { currentState = ScannerState.ManualEntry },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Enter code manually", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
-                            }
-
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(onClick = { currentState = ScannerState.MatchConfirmed }, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) {
-                                    Text("Simulate Match", fontSize = 12.sp)
-                                }
-                                OutlinedButton(onClick = { currentState = ScannerState.CodeNotRecognized }, modifier = Modifier.weight(1f).height(46.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) {
-                                    Text("Simulate Error", fontSize = 12.sp)
-                                }
-                            }
-                        }
-
-                        is ScannerState.MatchConfirmed -> {
-                            Surface(color = FruitLogixTheme.colors.primary, shape = RoundedCornerShape(10.dp)) {
-                                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(painter = painterResource(id = R.drawable.ic_check), contentDescription = null, tint = FruitLogixTheme.colors.onPrimary)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Column {
-                                        Text("Match Confirmed! 100% ID", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
-                                        Text("Tag telemetry perfectly aligned with packing manifest", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.onPrimary)
-                                    }
-                                }
-                            }
-
-                            Surface(color = FruitLogixTheme.colors.bg.copy(alpha = 0.4f), shape = RoundedCornerShape(12.dp)) {
-                                Column(modifier = Modifier.padding(14.dp)) {
-                                    Text("CONSIGNMENT", style = FruitLogixTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
-                                    Text("Order #${orderData.orderId} · ${orderData.clientName}", fontWeight = FontWeight.Bold, color = Color.White)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("${orderData.productName} • ${orderData.netWeight} (${orderData.cratesInfo})", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.primary)
-                                }
-                            }
-
-                            Button(
-                                onClick = { onNavigateToInspection(activeOrderId) },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Continue to inspection →", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
-                            }
-
-                            TextButton(onClick = { currentState = ScannerState.Scanning }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                                Text("Scan another crate / box", color = Color.White.copy(alpha = 0.8f))
-                            }
-                        }
-
-                        is ScannerState.ManualEntry -> {
-                            Text("Enter lot code manually", style = FruitLogixTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
-                            OutlinedTextField(
-                                value = manualCodeInput,
-                                onValueChange = { manualCodeInput = it },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White,
-                                    focusedBorderColor = FruitLogixTheme.colors.primary,
-                                    unfocusedBorderColor = FruitLogixTheme.colors.surfaceTint
-                                )
-                            )
-                            Button(
-                                onClick = { currentState = ScannerState.MatchConfirmed },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Validate code", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
-                            }
-                            TextButton(onClick = { currentState = ScannerState.Scanning }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                                Text("Return to camera scanner", color = Color.White.copy(alpha = 0.8f))
-                            }
-                        }
-
-                        is ScannerState.PermissionDenied -> {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Camera permission required", style = FruitLogixTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text("FruitLogix Producer needs camera access to scan lot QR tags.", style = FruitLogixTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
-                            }
-                            Button(
-                                onClick = { currentState = ScannerState.Scanning },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Open settings", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
-                            }
-                        }
-
-                        is ScannerState.CodeNotRecognized -> {
-                            Surface(color = FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.3f), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text("Code not recognized", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.dangerStrong)
-                                    Text("Scanned code is unreadable or not linked to any open order.", style = FruitLogixTheme.typography.bodySmall, color = Color.White)
-                                }
-                            }
-                            Button(
-                                onClick = { currentState = ScannerState.Scanning },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Try Again", fontWeight = FontWeight.Bold, color = FruitLogixTheme.colors.onPrimary)
-                            }
-                            OutlinedButton(
-                                onClick = { currentState = ScannerState.ManualEntry },
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                            ) {
-                                Text("Enter code manually", fontWeight = FontWeight.Bold)
-                            }
-                        }
+                    ScanState.ERROR -> {
+                        ResultBanner(
+                            iconRes = R.drawable.ic_alert,
+                            title = stringResource(R.string.scan_error_title),
+                            message = stringResource(R.string.scan_error_message),
+                            ok = false
+                        )
+                        PrimaryButton(
+                            text = stringResource(R.string.scan_try_again),
+                            onClick = { state = ScanState.SCANNING },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        SecondaryButton(
+                            text = stringResource(R.string.scan_manual),
+                            onClick = { state = ScanState.MANUAL },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+/** Simulated camera viewfinder (dark) with a Lima frame, red on error. */
+@Composable
+private fun Viewfinder(state: ScanState) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    val frameColor = when (state) {
+        ScanState.ERROR -> colors.dangerStrong
+        else -> scheme.inversePrimary
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp)
+            .clip(FruitLogixTheme.shapes.HeroCard)
+            .background(scheme.inverseSurface),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .border(3.dp, frameColor, FruitLogixTheme.shapes.Card),
+            contentAlignment = Alignment.Center
+        ) {
+            when (state) {
+                ScanState.MATCH -> Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(scheme.inversePrimary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppIcon(id = R.drawable.ic_check, contentDescription = null, tint = scheme.onPrimaryContainer, modifier = Modifier.size(32.dp))
+                }
+                ScanState.ERROR -> AppIcon(id = R.drawable.ic_alert, contentDescription = null, tint = colors.dangerStrong, modifier = Modifier.size(48.dp))
+                else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    AppIcon(id = R.drawable.ic_camera, contentDescription = null, tint = colors.onInverseSurfaceVariant, modifier = Modifier.size(40.dp))
+                    Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+                    Text(
+                        text = stringResource(R.string.scan_looking),
+                        style = FruitLogixTheme.typography.labelMedium,
+                        color = scheme.inverseOnSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultBanner(iconRes: Int, title: String, message: String, ok: Boolean) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    val bg = if (ok) colors.successContainer else scheme.errorContainer
+    val fg = if (ok) colors.onSuccessContainer else scheme.onErrorContainer
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(bg)
+            .padding(FruitLogixTheme.spacing.inner),
+        verticalAlignment = Alignment.Top
+    ) {
+        AppIcon(id = iconRes, contentDescription = null, tint = fg, modifier = Modifier.size(FruitLogixTheme.sizing.icon))
+        Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+        Column {
+            Text(text = title, style = FruitLogixTheme.typography.titleSmall, color = fg)
+            Text(text = message, style = FruitLogixTheme.typography.bodyMedium, color = fg)
+        }
+    }
+}
+
+@Composable
+private fun LotSummary(lot: InspectionLot) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(scheme.surfaceContainerLow)
+            .padding(FruitLogixTheme.spacing.inner)
+    ) {
+        Text(
+            text = stringResource(R.string.scan_order_context, lot.orderId, lot.clientName),
+            style = FruitLogixTheme.typography.titleSmall,
+            color = scheme.onSurface
+        )
+        Text(
+            text = stringResource(R.string.scan_lot_summary, lot.productName, lot.netWeightKg, lot.crates),
+            style = FruitLogixTheme.typography.bodyMedium,
+            color = scheme.onSurfaceVariant
+        )
+        Text(
+            text = stringResource(R.string.inspection_lot, lot.lotCode),
+            style = FruitLogixTheme.extraTypography.dataMonoSmall,
+            color = scheme.primary
+        )
     }
 }

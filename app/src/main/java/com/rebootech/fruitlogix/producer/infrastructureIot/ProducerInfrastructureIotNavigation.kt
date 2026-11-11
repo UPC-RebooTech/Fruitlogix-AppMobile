@@ -3,6 +3,7 @@ package com.rebootech.fruitlogix.producer.infrastructureIot
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.rebootech.fruitlogix.producer.profilesManagement.ProducerProfilesManagementRoutes
 import com.rebootech.fruitlogix.producer.infrastructureIot.presentation.ProducerNotificationsScreen
 
 fun NavGraphBuilder.producerInfrastructureIotGraph(
@@ -12,6 +13,10 @@ fun NavGraphBuilder.producerInfrastructureIotGraph(
         ProducerNotificationsScreen(
             onNavigate = { route ->
                 navController.navigate(route)
+            },
+            // Inbox -> notification preferences (profilesManagement context)
+            onOpenSettings = {
+                navController.navigate(ProducerProfilesManagementRoutes.SettingsNotifications)
             }
         )
     }

@@ -41,6 +41,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -160,6 +162,17 @@ fun BottomNavBar(
     val moreSectionRoutes = remember(moreItems) { moreItems.map { it.route }.toSet() }
     val isMoreSectionActive = currentDestination?.hierarchy?.any { it.route in moreSectionRoutes } == true
 
+    // Tab that owns the current back stack. When a tab opens a sub-screen (e.g. Stock -> Harvests),
+    // the tab stays highlighted and tapping it returns to the tab's root screen instead of
+    // restoring the saved stack (which would land on the sub-screen again).
+    val tabRoutes = remember(tabs) { tabs.map { it.route }.toSet() }
+    val currentRoute = currentDestination?.route
+    var lastTabRoute by rememberSaveable { mutableStateOf<String?>(null) }
+    val ownerTabRoute = if (currentRoute in tabRoutes) currentRoute else lastTabRoute
+    SideEffect {
+        if (currentRoute in tabRoutes) lastTabRoute = currentRoute
+    }
+
     LaunchedEffect(isMenuOpen) {
         if (isMenuOpen) {
             isPopupMounted = true
@@ -229,6 +242,8 @@ fun BottomNavBar(
                                 isMenuOpen = isMenuOpen,
                                 onItemClick = {
                                     isMenuOpen = false
+                                    // More destinations are not owned by any tab
+                                    lastTabRoute = null
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
                                             saveState = true
@@ -261,10 +276,10 @@ fun BottomNavBar(
             ) {
                 // 4 Regular Primary Tabs
                 tabs.forEach { tabItem ->
-                    val isSelected = currentDestination?.route == tabItem.route
+                    val isOwnerTab = ownerTabRoute == tabItem.route && !isMoreSectionActive
                     BottomNavItem(
                         tabItem = tabItem,
-                        isSelected = isSelected && !isMenuOpen && !isMoreSectionActive,
+                        isSelected = isOwnerTab && !isMenuOpen,
                         onClick = {
                             if (isMenuOpen) {
                                 isMenuOpen = false
@@ -274,7 +289,19 @@ fun BottomNavBar(
                                     route = Route.Home.route,
                                     inclusive = false
                                 )
-                            } else if (!isSelected) {
+                            } else if (isOwnerTab) {
+                                // Already in this tab: go back to its root screen if a sub-screen is open.
+                                if (currentRoute != tabItem.route &&
+                                    !navController.popBackStack(route = tabItem.route, inclusive = false)
+                                ) {
+                                    navController.navigate(tabItem.route) {
+                                        popUpTo(navController.graph.findStartDestination().id)
+                                        launchSingleTop = true
+                                    }
+                                }
+                            } else {
+                                // The restored stack may end on a sub-screen; it still belongs to this tab.
+                                lastTabRoute = tabItem.route
                                 navController.navigate(tabItem.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
@@ -407,16 +434,14 @@ private fun SecondaryNavItemRow(
             // Label Pill: Translucent surface-dark background with white text (Roboto 14sp)
             Surface(
                 shape = CircleShape,
-                color = Color(0xEE1F2D23),
+                color = FruitLogixTheme.colors.surfaceDark.copy(alpha = 0.94f),
                 border = BorderStroke(1.dp, FruitLogixTheme.colors.primary.copy(alpha = 0.35f)),
                 shadowElevation = 4.dp
             ) {
                 Text(
                     text = stringResource(id = item.labelRes),
                     color = FruitLogixTheme.colors.textOnDark,
-                    fontFamily = RobotoFontFamily,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = FruitLogixTheme.typography.labelLarge,
                     maxLines = 1,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                 )
@@ -505,7 +530,7 @@ private fun BottomNavItem(
                 id = tabItem.iconRes,
                 contentDescription = stringResource(id = tabItem.labelRes),
                 tint = iconTintColor,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(FruitLogixTheme.sizing.icon)
             )
         }
 
@@ -514,9 +539,8 @@ private fun BottomNavItem(
         Text(
             text = stringResource(id = tabItem.labelRes),
             color = labelTextColor,
-            fontFamily = RobotoFontFamily,
-            fontSize = 12.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            style = FruitLogixTheme.typography.labelMedium,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             maxLines = 1,
             softWrap = false
         )

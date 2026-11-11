@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer Stock -->
+    <string name="producer_stock_title">Farm stock</string>
+    <string name="producer_stock_subtitle">Field inventory and local cold rooms</string>
+
+    <string name="producer_stock_kpi_available">Available</string>
+    <string name="producer_stock_kpi_active_lots">Active lots</string>
+    <string name="producer_stock_kpi_critical">Critical</string>
+
+    <string name="producer_stock_tab_inventory">Inventory (%1$d)</string>
+    <string name="producer_stock_tab_harvests">Harvests (%1$d)</string>
+
+    <string name="producer_stock_status_healthy">Healthy</string>
+    <string name="producer_stock_status_critical">Critical</string>
+    <string name="producer_stock_capacity">of %1$s kg capacity</string>
+    <string name="producer_stock_location">Location: %1$s</string>
+    <string name="producer_stock_variety">Variety: %1$s</string>
+    <string name="producer_stock_cd_decrease">Remove 10 kg from %1$s</string>
+    <string name="producer_stock_cd_increase">Add 10 kg to %1$s</string>
+
+    <string name="producer_stock_register_harvest">Register harvest</string>
+</resources>

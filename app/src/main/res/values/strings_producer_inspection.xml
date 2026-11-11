@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Scan lot -->
+    <string name="scan_title">Scan lot</string>
+    <string name="scan_subtitle">Point the camera at the QR or barcode on the crate</string>
+    <string name="scan_looking">Looking for a lot code…</string>
+    <string name="scan_order_context">Order #%1$s · %2$s</string>
+    <string name="scan_order_any">Any open order</string>
+    <string name="scan_simulate">Simulate scan (demo)</string>
+    <string name="scan_manual">Enter code manually</string>
+    <string name="scan_manual_title">Enter the lot code</string>
+    <string name="scan_manual_label">Lot code</string>
+    <string name="scan_manual_hint">Example: HA-09</string>
+    <string name="scan_validate">Validate code</string>
+    <string name="scan_back_to_camera">Back to camera</string>
+    <string name="scan_match_title">Lot found</string>
+    <string name="scan_match_message">The code matches an open order.</string>
+    <string name="scan_lot_summary">%1$s · %2$s kg · %3$d crates</string>
+    <string name="scan_continue">Continue to inspection</string>
+    <string name="scan_again">Scan another code</string>
+    <string name="scan_error_title">Code not recognized</string>
+    <string name="scan_error_message">The code is unreadable or not linked to any open order. Try again or type it.</string>
+    <string name="scan_try_again">Try again</string>
+
+    <!-- Inspection -->
+    <string name="inspection_title">Quality inspection</string>
+    <string name="inspection_step_prepare">Prepare</string>
+    <string name="inspection_step_inspect">Inspect</string>
+    <string name="inspection_step_report">Report</string>
+    <string name="inspection_reinspection">Re-inspection required</string>
+    <string name="inspection_lot">Lot %1$s</string>
+    <string name="inspection_crates">%1$d crates × %2$d kg</string>
+
+    <string name="inspection_section_visual">Visual quality and size</string>
+    <string name="inspection_visual_score">Visual score</string>
+    <string name="inspection_score_value">%1$d / 5</string>
+    <string name="inspection_cd_score">Score %1$d of 5</string>
+    <string name="inspection_grade_a">Grade A · export condition</string>
+    <string name="inspection_grade_b">Grade B · standard condition, needs review</string>
+    <string name="inspection_calibers">Sizes found in the lot</string>
+    <string name="inspection_caliber">Size %1$d · ~%2$d g</string>
+    <string name="inspection_calibers_required">Select at least one size</string>
+
+    <string name="inspection_section_measurements">Measurements</string>
+    <string name="inspection_core_temp">Pulp core temperature</string>
+    <string name="inspection_moisture">Pulp moisture</string>
+    <string name="inspection_defects">Defects and shrink</string>
+    <string name="inspection_range">Accepted %1$s–%2$s %3$s</string>
+    <string name="inspection_max">Accepted up to %1$s %2$s</string>
+    <string name="inspection_out_of_range">Out of the accepted range</string>
+    <plurals name="inspection_issues">
+        <item quantity="one">%1$d issue to fix</item>
+        <item quantity="other">%1$d issues to fix</item>
+    </plurals>
+
+    <string name="inspection_section_notes">Inspection notes</string>
+    <string name="inspection_notes_hint">Firmness, skin, damaged boxes…</string>
+    <string name="inspection_notes_count">%1$d / %2$d</string>
+
+    <string name="inspection_fix_before_submit">Fix the marked fields to continue</string>
+    <string name="inspection_save_offline">Save on phone</string>
+    <string name="inspection_saved_offline">Saved on this phone. It will sync when you are online.</string>
+    <string name="inspection_review">Review report</string>
+</resources>

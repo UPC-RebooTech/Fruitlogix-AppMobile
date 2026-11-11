@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Acciones compartidas -->
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_retry">Reintentar</string>
+    <string name="common_error_title">Ocurrió un error</string>
+    <string name="common_kg_value">%1$d kg</string>
+    <string name="common_amount_pen">S/ %1$s</string>
+
+    <!-- Fechas -->
+    <string name="common_today_at">Hoy, %1$s</string>
+    <string name="common_yesterday_at">Ayer, %1$s</string>
+    <string name="common_tomorrow_at">Mañana, %1$s</string>
+    <string name="common_date_at">%1$s, %2$s</string>
+    <string name="common_just_now">Ahora</string>
+    <plurals name="common_minutes_ago">
+        <item quantity="one">Hace %1$d min</item>
+        <item quantity="many">Hace %1$d min</item>
+        <item quantity="other">Hace %1$d min</item>
+    </plurals>
+    <plurals name="common_hours_ago">
+        <item quantity="one">Hace %1$d h</item>
+        <item quantity="many">Hace %1$d h</item>
+        <item quantity="other">Hace %1$d h</item>
+    </plurals>
+
+    <!-- Barra superior -->
+    <string name="topbar_cd_messages">Mensajes</string>
+    <string name="topbar_cd_notifications">Notificaciones</string>
+    <string name="topbar_cd_profile">Perfil</string>
+    <string name="topbar_cd_change_language">Cambiar idioma. Actual: %1$s</string>
+
+    <!-- Estado de sincronización -->
+    <string name="sync_synced">Sincronizado</string>
+    <string name="sync_syncing">Sincronizando…</string>
+    <string name="sync_conflict">Conflicto de sincronización. Toca para revisar</string>
+    <string name="sync_offline">Sin conexión. Los cambios se sincronizarán al reconectar.</string>
+    <plurals name="sync_pending_changes">
+        <item quantity="one">%1$d cambio pendiente de sincronizar</item>
+        <item quantity="many">%1$d cambios pendientes de sincronizar</item>
+        <item quantity="other">%1$d cambios pendientes de sincronizar</item>
+    </plurals>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer Quality Reports -->
+    <string name="producer_reports_title">Quality reports</string>
+    <string name="producer_reports_subtitle">Inspection history by order · %1$s</string>
+
+    <!-- KPIs -->
+    <string name="producer_reports_kpi_pass_rate">Inspection pass rate</string>
+    <string name="producer_reports_kpi_weekly_delta">%1$s this week</string>
+    <string name="producer_reports_kpi_sampled_today">Sampled today</string>
+    <plurals name="producer_reports_kpi_crates">
+        <item quantity="one">%1$d crate inspected</item>
+        <item quantity="other">%1$d crates inspected</item>
+    </plurals>
+
+    <!-- Search and filters -->
+    <string name="producer_reports_search_placeholder">Search order, product or client</string>
+    <string name="producer_reports_filter_all">All (%1$d)</string>
+    <string name="producer_reports_filter_approved">Approved (%1$d)</string>
+    <string name="producer_reports_filter_pending">In review (%1$d)</string>
+    <string name="producer_reports_filter_rejected">Rejected (%1$d)</string>
+    <string name="producer_reports_empty">No reports match your search.</string>
+
+    <!-- Status -->
+    <string name="producer_reports_status_approved">Approved</string>
+    <string name="producer_reports_status_pending">In review</string>
+    <string name="producer_reports_status_rejected">Rejected</string>
+
+    <!-- Card -->
+    <string name="producer_reports_lot">Lot %1$s</string>
+    <string name="producer_reports_quarantine_alert">Defects at %1$s%%, above the %2$s%% limit. Lot quarantined for re-grading.</string>
+    <string name="producer_reports_metric_visual">Visual</string>
+    <string name="producer_reports_metric_defects">Defects</string>
+    <string name="producer_reports_metric_core_temp">Core temp</string>
+    <string name="producer_reports_metric_humidity">Humidity</string>
+    <string name="producer_reports_inspector">Inspector: %1$s</string>
+    <string name="producer_reports_action_certificate">View certificate</string>
+    <string name="producer_reports_action_review">Review</string>
+    <string name="producer_reports_action_audit">Audit details</string>
+</resources>

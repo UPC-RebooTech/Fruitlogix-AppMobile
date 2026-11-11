@@ -15,10 +15,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,10 +60,8 @@ fun OrderCard(
     modifier: Modifier = Modifier
 ) {
     val cardVariant = when (order.status) {
-        OrderStatus.IN_TRANSIT -> CardVariant.White
-        OrderStatus.DELIVERED -> CardVariant.Tint
-        OrderStatus.REJECTED, OrderStatus.CANCELLED -> CardVariant.Dark
-        else -> CardVariant.Dark
+        OrderStatus.REJECTED, OrderStatus.CANCELLED -> CardVariant.Light
+        else -> CardVariant.White
     }
 
     val isRejectedQuality = order.status == OrderStatus.IN_PREPARATION && order.qualityStatus == QualityStatus.REJECTED
@@ -78,7 +78,7 @@ fun OrderCard(
                 Box(
                     modifier = Modifier
                         .width(5.dp)
-                        .background(FruitLogixTheme.colors.dangerStrong)
+                        .background(MaterialTheme.colorScheme.error)
                 )
             }
 
@@ -97,7 +97,7 @@ fun OrderCard(
                 Text(
                     text = itemsSummary,
                     style = FruitLogixTheme.typography.bodyMedium,
-                    color = FruitLogixTheme.colors.textMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -149,45 +149,29 @@ fun OrderCard(
 
 @Composable
 private fun OrderHeaderRow(order: Order) {
-    val isLightCard = order.status == OrderStatus.IN_TRANSIT
+    val isLightCard = true
     val titleColor = when {
-        order.status == OrderStatus.PENDING -> FruitLogixTheme.colors.primary
-        isLightCard -> FruitLogixTheme.colors.textOnLight
-        else -> FruitLogixTheme.colors.textOnDark
+        order.status == OrderStatus.PENDING -> MaterialTheme.colorScheme.primary
+        isLightCard -> MaterialTheme.colorScheme.onSurface
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
+    // Order ID + status chip on the first line; client name on its own line so it never
+    // competes with the chip for width.
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.weight(1f),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = order.id,
-                fontFamily = PoppinsFontFamily,
-                fontWeight = FontWeight.Bold,
-                style = FruitLogixTheme.typography.titleMedium,
-                color = titleColor
-            )
-            Text(
-                text = " • ",
-                style = FruitLogixTheme.typography.titleMedium,
-                color = FruitLogixTheme.colors.textMuted
-            )
-            Text(
-                text = order.clientName,
-                fontFamily = PoppinsFontFamily,
-                fontWeight = FontWeight.Bold,
-                style = FruitLogixTheme.typography.titleMedium,
-                color = if (isLightCard) FruitLogixTheme.colors.textOnLight else FruitLogixTheme.colors.textOnDark,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-        }
+        Text(
+            text = order.id,
+            fontFamily = PoppinsFontFamily,
+            fontWeight = FontWeight.Bold,
+            style = FruitLogixTheme.typography.titleMedium,
+            color = titleColor,
+            maxLines = 1,
+            modifier = Modifier.weight(1f, fill = false)
+        )
 
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -219,6 +203,18 @@ private fun OrderHeaderRow(order: Order) {
             )
         }
     }
+
+    Spacer(modifier = Modifier.height(2.dp))
+
+    Text(
+        text = order.clientName,
+        fontFamily = PoppinsFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        style = FruitLogixTheme.typography.titleMedium,
+        color = if (isLightCard) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 @Composable
@@ -229,7 +225,7 @@ private fun PendingOrderContent(
     onRespondOrder: () -> Unit,
     onReviewOrder: () -> Unit
 ) {
-    val dueStr = order.dueDate.format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))
+    val dueStr = order.dueDate.format(DateTimeFormatter.ofPattern("EEE, MMM d", LocalConfiguration.current.locales[0]))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -240,14 +236,14 @@ private fun PendingOrderContent(
             AppIcon(
                 id = R.drawable.ic_schedule,
                 contentDescription = null,
-                tint = FruitLogixTheme.colors.textMuted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.producer_orders_due_date, dueStr),
                 style = FruitLogixTheme.typography.bodySmall,
-                color = FruitLogixTheme.colors.textMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -256,7 +252,7 @@ private fun PendingOrderContent(
             AppIcon(
                 id = R.drawable.ic_logistics_clock,
                 contentDescription = null,
-                tint = if (hoursLeft > 0) FruitLogixTheme.colors.warning else FruitLogixTheme.colors.dangerStrong,
+                tint = if (hoursLeft > 0) FruitLogixTheme.colors.attentionContent else MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
@@ -267,7 +263,7 @@ private fun PendingOrderContent(
                     stringResource(R.string.producer_orders_overdue)
                 },
                 style = FruitLogixTheme.typography.bodySmall,
-                color = if (hoursLeft > 0) FruitLogixTheme.colors.warning else FruitLogixTheme.colors.dangerStrong,
+                color = if (hoursLeft > 0) FruitLogixTheme.colors.attentionContent else MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -280,14 +276,14 @@ private fun PendingOrderContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(FruitLogixTheme.colors.warning.copy(alpha = 0.14f))
+                .background(FruitLogixTheme.colors.attentionContainer)
                 .padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AppIcon(
                     id = R.drawable.ic_warning,
                     contentDescription = null,
-                    tint = FruitLogixTheme.colors.warning,
+                    tint = FruitLogixTheme.colors.attentionContent,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -297,9 +293,8 @@ private fun PendingOrderContent(
                         stockShortage.shortKg,
                         stockShortage.productName
                     ),
-                    style = FruitLogixTheme.typography.bodySmall,
-                    color = FruitLogixTheme.colors.warning,
-                    fontWeight = FontWeight.Medium
+                    style = FruitLogixTheme.typography.labelMedium,
+                    color = FruitLogixTheme.colors.onAttentionContainer
                 )
             }
         }
@@ -334,20 +329,20 @@ private fun InPreparationOrderContent(
     onReinspect: () -> Unit,
     onReviewResult: () -> Unit
 ) {
-    val dueStr = order.dueDate.format(DateTimeFormatter.ofPattern("EEE, MMM d", Locale.getDefault()))
+    val dueStr = order.dueDate.format(DateTimeFormatter.ofPattern("EEE, MMM d", LocalConfiguration.current.locales[0]))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         AppIcon(
             id = R.drawable.ic_schedule,
             contentDescription = null,
-            tint = FruitLogixTheme.colors.textMuted,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = stringResource(R.string.producer_orders_due_date, dueStr),
             style = FruitLogixTheme.typography.bodySmall,
-            color = FruitLogixTheme.colors.textMuted
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 
@@ -386,20 +381,20 @@ private fun InPreparationOrderContent(
                         AppIcon(
                             id = R.drawable.ic_truck_pin,
                             contentDescription = null,
-                            tint = FruitLogixTheme.colors.textMuted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = stringResource(R.string.producer_orders_truck_assigned, truck.plate),
                             style = FruitLogixTheme.typography.bodySmall,
-                            color = FruitLogixTheme.colors.textMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     AppIcon(
                         id = R.drawable.ic_arrow_forward,
-                        contentDescription = "Load Truck",
-                        tint = FruitLogixTheme.colors.primary,
+                        contentDescription = stringResource(R.string.producer_orders_cd_load_truck),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -407,22 +402,17 @@ private fun InPreparationOrderContent(
         }
 
         QualityStatus.PENDING -> {
-            // PENDING = report submitted, in review. Show chip + "View review status" button.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusBadge(
-                    text = stringResource(R.string.producer_orders_quality_in_review),
-                    type = StatusBadgeType.WARNING
-                )
-
-                SecondaryButton(
-                    text = stringResource(R.string.producer_orders_btn_view_review_status),
-                    onClick = onReviewResult
-                )
-            }
+            // PENDING = report submitted, in review. Chip, then full-width action below it.
+            StatusBadge(
+                text = stringResource(R.string.producer_orders_quality_in_review),
+                type = StatusBadgeType.WARNING
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = stringResource(R.string.producer_orders_btn_view_review_status),
+                onClick = onReviewResult,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         QualityStatus.REJECTED -> {
@@ -430,14 +420,14 @@ private fun InPreparationOrderContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.12f))
+                    .background(MaterialTheme.colorScheme.errorContainer)
                     .padding(12.dp)
             ) {
                 Row(verticalAlignment = Alignment.Top) {
                     AppIcon(
                         id = R.drawable.ic_warning,
                         contentDescription = null,
-                        tint = FruitLogixTheme.colors.dangerStrong,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -446,14 +436,14 @@ private fun InPreparationOrderContent(
                             text = stringResource(R.string.producer_orders_quality_rejected_badge),
                             style = FruitLogixTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.dangerStrong
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                         val reason = order.qualityRejectionReason ?: order.rejectionReason ?: ""
                         if (reason.isNotEmpty()) {
                             Text(
                                 text = reason,
                                 style = FruitLogixTheme.typography.bodySmall,
-                                color = FruitLogixTheme.colors.dangerStrong
+                                color = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
                     }
@@ -462,51 +452,43 @@ private fun InPreparationOrderContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            // Re-inspect is the main action here (red pill); the report is a secondary action.
+            Button(
+                onClick = onReinspect,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+                shape = FruitLogixTheme.shapes.Pill,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(FruitLogixTheme.sizing.buttonHeight)
             ) {
-                SecondaryButton(
-                    text = stringResource(R.string.producer_orders_btn_view_report),
-                    onClick = onViewReport,
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = stringResource(R.string.producer_orders_btn_reinspect),
+                    style = FruitLogixTheme.typography.labelLarge
                 )
-
-                Button(
-                    onClick = onReinspect,
-                    colors = ButtonDefaults.buttonColors(containerColor = FruitLogixTheme.colors.dangerStrong),
-                    shape = FruitLogixTheme.shapes.Pill,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.producer_orders_btn_reinspect),
-                        color = FruitLogixTheme.colors.textOnDark,
-                        fontWeight = FontWeight.Bold,
-                        style = FruitLogixTheme.typography.labelMedium
-                    )
-                }
             }
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+            SecondaryButton(
+                text = stringResource(R.string.producer_orders_btn_view_report),
+                onClick = onViewReport,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         null -> {
-            // null = no report submitted yet. Show neutral chip + Prepare & inspect.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                StatusBadge(
-                    text = stringResource(R.string.producer_orders_quality_not_started),
-                    type = StatusBadgeType.NEUTRAL
-                )
-
-                SecondaryButton(
-                    text = stringResource(R.string.producer_orders_btn_prepare_inspect),
-                    onClick = onPrepareOrder
-                )
-            }
+            // null = no report submitted yet. Chip, then full-width "Prepare & inspect" below it.
+            StatusBadge(
+                text = stringResource(R.string.producer_orders_quality_not_started),
+                type = StatusBadgeType.NEUTRAL
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = stringResource(R.string.producer_orders_btn_prepare_inspect),
+                onClick = onPrepareOrder,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
@@ -518,19 +500,19 @@ private fun InTransitOrderContent(order: Order) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val dispatchedText = order.dispatchedAtFormatted ?: "today · 08:30 AM"
+        val dispatchedText = order.dispatchedAtFormatted ?: stringResource(R.string.producer_orders_dispatched_today)
         Row(verticalAlignment = Alignment.CenterVertically) {
             AppIcon(
                 id = R.drawable.ic_schedule,
                 contentDescription = null,
-                tint = FruitLogixTheme.colors.textMuted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.producer_orders_dispatched_at, dispatchedText),
                 style = FruitLogixTheme.typography.bodySmall,
-                color = FruitLogixTheme.colors.textMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -538,7 +520,7 @@ private fun InTransitOrderContent(order: Order) {
             Text(
                 text = stringResource(R.string.producer_orders_eta, eta),
                 style = FruitLogixTheme.typography.bodySmall,
-                color = FruitLogixTheme.colors.textOnLight,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -550,21 +532,21 @@ private fun InTransitOrderContent(order: Order) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(FruitLogixTheme.colors.surfaceLight)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AppIcon(
                 id = R.drawable.ic_truck_pin,
                 contentDescription = null,
-                tint = FruitLogixTheme.colors.textMuted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "${truck.plate} · ${truck.driverName}",
                 style = FruitLogixTheme.typography.bodySmall,
-                color = FruitLogixTheme.colors.textOnLight,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -576,7 +558,7 @@ private fun DeliveredOrderContent(
     order: Order,
     onViewDetails: () -> Unit
 ) {
-    val dateText = order.deliveredAtFormatted ?: order.dueDate.format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
+    val dateText = order.deliveredAtFormatted ?: order.dueDate.format(DateTimeFormatter.ofPattern("MMM d", LocalConfiguration.current.locales[0]))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -587,21 +569,21 @@ private fun DeliveredOrderContent(
             AppIcon(
                 id = R.drawable.ic_task_check,
                 contentDescription = null,
-                tint = FruitLogixTheme.colors.success,
+                tint = FruitLogixTheme.colors.successContent,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = stringResource(R.string.producer_orders_delivered_at, dateText),
                 style = FruitLogixTheme.typography.bodySmall,
-                color = FruitLogixTheme.colors.textMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         Text(
             text = stringResource(R.string.producer_orders_btn_view_details),
             style = FruitLogixTheme.typography.bodySmall,
-            color = FruitLogixTheme.colors.textOnLight,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
             textDecoration = TextDecoration.Underline,
             modifier = Modifier

@@ -27,7 +27,18 @@ object FruitLogixTheme {
 
     val shapes: FruitLogixShapeTokens
         get() = FruitLogixShapeTokens
+
+    val sizing: Sizing
+        get() = Sizing
+
+    val extraTypography: FruitLogixExtraTypography
+        get() = FruitLogixExtraTypography
 }
+
+/**
+ * FruitLogix theme. Light only for now ("Cosecha" design system).
+ * System bars use Bosque profundo with light icons, like the landing page header.
+ */
 
 @Composable
 fun FruitLogixTheme(

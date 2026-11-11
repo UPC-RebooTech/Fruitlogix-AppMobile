@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer order detail -->
+    <string name="order_detail_title">Order #%1$s</string>
+    <string name="order_detail_cd_chat">Message the distributor</string>
+    <string name="order_detail_not_found">We couldn\'t find this order.</string>
+
+    <string name="order_detail_total">Total requested</string>
+    <string name="order_detail_delivery_on">Delivery %1$s</string>
+    <plurals name="order_detail_products_count">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+
+    <string name="order_detail_section_products">Requested products</string>
+    <string name="order_detail_section_dispatch">Dispatch conditions</string>
+    <string name="order_detail_section_quality">Quality</string>
+    <string name="order_detail_section_truck">Assigned truck</string>
+
+    <string name="order_detail_mode">Mode</string>
+    <string name="order_detail_mode_pickup">Pickup at the farm gate by the distributor</string>
+    <string name="order_detail_mode_delivery">Delivery to the distributor\'s warehouse</string>
+    <string name="order_detail_date">Agreed date</string>
+    <string name="order_detail_window">Time window</string>
+    <string name="order_detail_window_value">%1$s – %2$s</string>
+    <string name="order_detail_cold_chain">Cold chain</string>
+    <string name="order_detail_cold_chain_value">Keep between %1$s °C and %2$s °C</string>
+    <string name="order_detail_distributor">Distributor contact</string>
+    <string name="order_detail_note">Distributor note</string>
+
+    <string name="order_detail_truck_plate">Plate</string>
+    <string name="order_detail_truck_vehicle">Vehicle</string>
+    <string name="order_detail_truck_driver">Driver</string>
+    <string name="order_detail_truck_eta">ETA</string>
+
+    <string name="order_detail_message">Message the distributor</string>
+</resources>

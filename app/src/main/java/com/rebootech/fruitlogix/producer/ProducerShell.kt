@@ -1,51 +1,38 @@
 package com.rebootech.fruitlogix.producer
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.ui.res.stringResource
-import com.rebootech.fruitlogix.R
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.rememberNavController
+import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.app.navigation.BottomNavBar
 import com.rebootech.fruitlogix.producer.infrastructureIot.ProducerInfrastructureIotRoutes
+import com.rebootech.fruitlogix.producer.infrastructureIot.data.FakeIotAlertRepository
 import com.rebootech.fruitlogix.producer.navigation.ProducerNavHost
-import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
 import com.rebootech.fruitlogix.producer.navigation.producerMoreItems
 import com.rebootech.fruitlogix.producer.navigation.producerNavTabs
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
+import com.rebootech.fruitlogix.producer.orderManagement.messaging.data.FakeChatRepository
 import com.rebootech.fruitlogix.producer.profilesManagement.ProducerProfilesManagementRoutes
-import com.rebootech.fruitlogix.shared.ui.components.AppLanguage
+import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
+import com.rebootech.fruitlogix.shared.ui.format.initialsOf
+import com.rebootech.fruitlogix.shared.core.locale.AppLocale
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixTopBar
-import com.rebootech.fruitlogix.shared.ui.components.SyncChip
 import com.rebootech.fruitlogix.shared.ui.components.SyncState
+import com.rebootech.fruitlogix.shared.ui.components.SyncStatusStrip
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-
-private val primaryTabRoutes = setOf(
-    ProducerRoute.Home.route,
-    ProducerRoute.Orders.route,
-    ProducerRoute.Stock.route,
-    ProducerRoute.Reports.route
-)
 
 @Composable
 fun ProducerShell(
@@ -53,11 +40,18 @@ fun ProducerShell(
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
-    var selectedLanguage by remember { mutableStateOf(AppLanguage.ES) }
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    // Read once per composition of the activity; changing the language recreates the activity.
+    val selectedLanguage = remember { AppLocale.current(context) }
+    val profile by FakeProfileRepository.instance.profile.collectAsState()
+    val alerts by FakeIotAlertRepository.instance.alerts.collectAsState()
+    val unreadByOrder by FakeChatRepository.instance.unreadByOrder.collectAsState()
 
-    val isPrimaryTab = currentDestination?.hierarchy?.any { it.route in primaryTabRoutes } == true
+    // TODO(producer): connect to the real sync/connectivity source. The strip only appears
+    // when the state is not SYNCED (offline, pending changes, syncing or conflict).
+    val syncState = SyncState.SYNCED
+    val pendingChanges = 0
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -72,29 +66,29 @@ fun ProducerShell(
                     title = stringResource(R.string.topbar_title),
                     subtitle = stringResource(R.string.producer_topbar_subtitle),
                     selectedLanguage = selectedLanguage,
-                    onLanguageSelected = { selectedLanguage = it },
+                    onLanguageSelected = { language ->
+                        activity?.let { AppLocale.apply(it, language) }
+                    },
                     onNotificationClick = {
                         navController.navigate(ProducerInfrastructureIotRoutes.Notifications)
                     },
                     onProfileClick = {
                         navController.navigate(ProducerProfilesManagementRoutes.Profile)
                     },
-                    showLanguageToggle = false,
-                    unreadMessages = 3, // TODO(producer): vincular con conteo reactivo de mensajes no leídos
+                    hasUnreadNotifications = alerts.any { !it.isRead },
+                    showLanguageToggle = true,
+                    compactLanguageToggle = true,
+                    unreadMessages = unreadByOrder.values.sum(),
                     onMessagesClick = {
                         navController.navigate(ProducerOrderManagementRoutes.Inbox)
                     },
-                    userInitials = "AJ"
+                    userInitials = initialsOf(profile.fullName)
                 )
 
-                if (isPrimaryTab) {
-                    ProducerStatusRow(
-                        syncState = SyncState.SYNCED,
-                        onSyncClick = {
-                            // TODO(producer): Navegar a sync_center cuando exista
-                        }
-                    )
-                }
+                SyncStatusStrip(
+                    state = syncState,
+                    pendingChanges = pendingChanges
+                )
             }
         },
         bottomBar = {
@@ -110,41 +104,5 @@ fun ProducerShell(
             onSignOut = onSignOut,
             modifier = Modifier.padding(innerPadding)
         )
-    }
-}
-
-@Composable
-fun ProducerStatusRow(
-    syncState: SyncState,
-    onSyncClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(FruitLogixTheme.colors.surfaceDark)
-            .padding(horizontal = FruitLogixTheme.spacing.sm, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        SyncChip(
-            state = syncState,
-            onClick = onSyncClick
-        )
-
-        Box(
-            modifier = Modifier
-                .clip(FruitLogixTheme.shapes.Pill)
-                .background(FruitLogixTheme.colors.appbar)
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "ROLE: PRODUCER",
-                style = FruitLogixTheme.typography.labelSmall,
-                color = FruitLogixTheme.colors.primary,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }

@@ -1,6 +1,7 @@
 package com.rebootech.fruitlogix.shared.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,7 +64,8 @@ fun FruitLogixTopBar(
     userInitials: String = "FL",
     showLanguageToggle: Boolean = true,
     unreadMessages: Int = 0,
-    onMessagesClick: (() -> Unit)? = null
+    onMessagesClick: (() -> Unit)? = null,
+    compactLanguageToggle: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -114,26 +119,33 @@ fun FruitLogixTopBar(
         // Controls Section
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xxs)
         ) {
             if (showLanguageToggle) {
-                LanguageTogglePill(
-                    selectedLanguage = selectedLanguage,
-                    onLanguageSelected = onLanguageSelected
-                )
+                if (compactLanguageToggle) {
+                    CompactLanguageToggle(
+                        selectedLanguage = selectedLanguage,
+                        onLanguageSelected = onLanguageSelected
+                    )
+                } else {
+                    LanguageTogglePill(
+                        selectedLanguage = selectedLanguage,
+                        onLanguageSelected = onLanguageSelected
+                    )
+                }
             }
 
             if (onMessagesClick != null) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(FruitLogixTheme.sizing.minTouch)
                         .clip(CircleShape)
                         .clickable(onClick = onMessagesClick),
                     contentAlignment = Alignment.Center
                 ) {
                     AppIcon(
                         id = R.drawable.ic_contact_driver,
-                        contentDescription = "Messages",
+                        contentDescription = stringResource(R.string.topbar_cd_messages),
                         tint = FruitLogixTheme.colors.textOnDark,
                         modifier = Modifier.size(24.dp)
                     )
@@ -151,14 +163,14 @@ fun FruitLogixTopBar(
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(FruitLogixTheme.sizing.minTouch)
                     .clip(CircleShape)
                     .clickable(onClick = onNotificationClick),
                 contentAlignment = Alignment.Center
             ) {
                 AppIcon(
                     id = R.drawable.ic_notifications,
-                    contentDescription = "Notifications",
+                    contentDescription = stringResource(R.string.topbar_cd_notifications),
                     tint = FruitLogixTheme.colors.textOnDark,
                     modifier = Modifier.size(24.dp)
                 )
@@ -175,7 +187,7 @@ fun FruitLogixTopBar(
 
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(FruitLogixTheme.colors.surfaceDark)
                     .clickable(onClick = onProfileClick),
@@ -228,7 +240,7 @@ fun LanguageOptionItem(
             .clip(FruitLogixTheme.shapes.Pill)
             .background(if (isSelected) FruitLogixTheme.colors.primary else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -252,5 +264,42 @@ private fun FruitLogixTopBarPreview() {
             onNotificationClick = {},
             onProfileClick = {}
         )
+    }
+}
+
+/**
+ * Single-button language switch for crowded top bars: shows the current language
+ * ("ES" / "EN") and switches to the other one on tap. 48dp touch target.
+ */
+@Composable
+fun CompactLanguageToggle(
+    selectedLanguage: AppLanguage,
+    onLanguageSelected: (AppLanguage) -> Unit
+) {
+    val next = if (selectedLanguage == AppLanguage.ES) AppLanguage.EN else AppLanguage.ES
+    val description = stringResource(R.string.topbar_cd_change_language, selectedLanguage.name)
+    Box(
+        modifier = Modifier
+            .size(FruitLogixTheme.sizing.minTouch)
+            .clip(CircleShape)
+            .clickable { onLanguageSelected(next) }
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(FruitLogixTheme.shapes.Pill)
+                .background(FruitLogixTheme.colors.surfaceDark)
+                .border(1.dp, FruitLogixTheme.colors.primary.copy(alpha = 0.6f), FruitLogixTheme.shapes.Pill)
+                .padding(horizontal = 10.dp, vertical = 5.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = selectedLanguage.name,
+                style = FruitLogixTheme.typography.labelMedium,
+                color = FruitLogixTheme.colors.primary,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }

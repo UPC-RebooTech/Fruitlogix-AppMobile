@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer notification inbox (IoT and field alerts) -->
+    <string name="iot_inbox_title">Notifications</string>
+    <string name="iot_inbox_subtitle">Sensor alerts and field events</string>
+    <string name="iot_inbox_mark_all_read">Mark all as read</string>
+    <string name="iot_inbox_cd_settings">Notification settings</string>
+    <plurals name="iot_inbox_unread">
+        <item quantity="one">%1$d unread</item>
+        <item quantity="other">%1$d unread</item>
+    </plurals>
+
+    <!-- Filters -->
+    <string name="iot_filter_all">All (%1$d)</string>
+    <string name="iot_filter_critical">Critical (%1$d)</string>
+    <string name="iot_filter_cold_chain">Cold chain (%1$d)</string>
+
+    <!-- Empty -->
+    <string name="iot_empty_title">No notifications</string>
+    <string name="iot_empty_message">You have no alerts in this category right now.</string>
+
+    <!-- Severity -->
+    <string name="iot_severity_critical">Critical</string>
+    <string name="iot_severity_warning">Warning</string>
+    <string name="iot_severity_info">Info</string>
+
+    <!-- Assets -->
+    <string name="iot_asset_cold_room">Cold room %1$s</string>
+    <string name="iot_asset_warehouse">Warehouse %1$s</string>
+    <string name="iot_asset_truck">Truck %1$s</string>
+    <string name="iot_asset_gateway">Gateway %1$s</string>
+
+    <!-- Alert titles and descriptions -->
+    <string name="iot_title_temperature">Temperature · %1$s</string>
+    <string name="iot_desc_temperature">Temperature at %1$s °C, above the %2$s °C limit. The pallets are at risk.</string>
+    <string name="iot_title_humidity">Humidity · %1$s</string>
+    <string name="iot_desc_humidity">Relative humidity dropped to %1$s%% (minimum %2$s%%). Turn on the misters.</string>
+    <string name="iot_title_vibration">Transit telemetry · %1$s</string>
+    <string name="iot_desc_vibration">Excessive vibration while loading at dock %1$s. G-force sensor triggered.</string>
+    <string name="iot_title_traceability">Traceability synced</string>
+    <string name="iot_desc_traceability">%1$s kg of %2$s registered with a verified SENASA/HACCP traceability hash.</string>
+
+    <!-- Card -->
+    <string name="iot_sensor">Sensor %1$s</string>
+    <string name="iot_view_order">View order #%1$s</string>
+    <string name="iot_cd_dismiss">Dismiss notification</string>
+    <string name="iot_cd_unread">Unread</string>
+</resources>

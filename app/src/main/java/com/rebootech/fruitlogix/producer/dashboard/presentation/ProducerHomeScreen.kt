@@ -1,10 +1,10 @@
 package com.rebootech.fruitlogix.producer.dashboard.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -28,22 +27,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.producer.dashboard.domain.model.DashboardSummary
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.HeroActionCard
-import com.rebootech.fruitlogix.producer.dashboard.presentation.components.OrderPickerSheet
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.PipelineBar
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.QuickActionButton
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.StockHealthSection
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.TaskRow
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.UpcomingHarvestCard
+import com.rebootech.fruitlogix.producer.dashboard.domain.model.ProducerTask
 import com.rebootech.fruitlogix.producer.infrastructureIot.ProducerInfrastructureIotRoutes
-import com.rebootech.fruitlogix.producer.logisticsMonitoring.ProducerLogisticsMonitoringRoutes
 import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
-import com.rebootech.fruitlogix.producer.paymentManagement.ProducerPaymentManagementRoutes
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
@@ -54,9 +55,20 @@ import com.rebootech.fruitlogix.shared.ui.components.KpiCard
 import com.rebootech.fruitlogix.shared.ui.components.OfflineBanner
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
+import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
+/**
+ * Producer Home.
+ *
+ * Card rule: highlighted next action and KPIs use the Dark variant (inverseSurface);
+ * tasks, order flow, inventory and harvest are light list cards (surfaceContainer*).
+ * All text comes from string resources (values = English, values-es = Spanish).
+ */
 @Composable
 fun ProducerHomeScreen(
     onNavigate: (String) -> Unit = {},
@@ -65,380 +77,401 @@ fun ProducerHomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val scheme = MaterialTheme.colorScheme
 
     LaunchedEffect(uiState.snackbarMessage) {
-        uiState.snackbarMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
+        uiState.snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message.asString(context))
             viewModel.onSnackbarDismissed()
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(FruitLogixTheme.colors.bg),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = FruitLogixTheme.colors.primary)
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(scheme.background)
+    ) {
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(
+                    color = scheme.primary,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
-        } else if (uiState.errorMessage != null) {
-            ErrorState(
-                message = uiState.errorMessage ?: "",
-                onRetry = { viewModel.loadDashboard() },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(FruitLogixTheme.colors.bg)
+
+            uiState.errorMessage != null -> {
+                ErrorState(
+                    message = uiState.errorMessage?.asString().orEmpty(),
+                    onRetry = { viewModel.loadDashboard() },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            else -> HomeContent(
+                uiState = uiState,
+                onNavigate = onNavigate,
+                onAcceptOrder = { viewModel.onAcceptOrderClick(it) }
             )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(FruitLogixTheme.colors.bg)
-                    .padding(horizontal = FruitLogixTheme.spacing.sm)
-            ) {
-                // Banner offline
-                item {
-                    OfflineBanner(isOffline = uiState.isOffline)
-                }
-
-                // 1. Saludo y Finca (con corrección de colisión: chip fecha en fila independiente)
-                item {
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = uiState.greeting,
-                            fontFamily = PoppinsFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            style = FruitLogixTheme.typography.displayLarge,
-                            color = FruitLogixTheme.colors.textOnLight,
-                            maxLines = 2
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                AppIcon(
-                                    id = R.drawable.ic_truck_pin,
-                                    contentDescription = null,
-                                    tint = FruitLogixTheme.colors.textMuted,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = uiState.farmName,
-                                    style = FruitLogixTheme.typography.bodyMedium,
-                                    color = FruitLogixTheme.colors.textMuted,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-
-                            // Chip fecha en píldora clara
-                            Box(
-                                modifier = Modifier
-                                    .clip(FruitLogixTheme.shapes.Pill)
-                                    .background(FruitLogixTheme.colors.surfaceTint)
-                                    .padding(horizontal = 10.dp, vertical = 4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    AppIcon(
-                                        id = R.drawable.ic_schedule,
-                                        contentDescription = null,
-                                        tint = FruitLogixTheme.colors.textOnLight,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = uiState.currentDateFormatted,
-                                        style = FruitLogixTheme.typography.labelSmall,
-                                        color = FruitLogixTheme.colors.textOnLight,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // 2. Hero "Next action" (White card)
-                item {
-                    HeroActionCard(
-                        order = uiState.heroOrder,
-                        shortageWarning = uiState.heroStockShortage,
-                        onAcceptClick = { order -> viewModel.onAcceptOrderClick(order) },
-                        onReviewDetailsClick = { order ->
-                            onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                // 3. Acciones rápidas (4 columnas con weight 1f y texto centrado en 2 líneas máx)
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        QuickActionButton(
-                            iconRes = R.drawable.ic_radar,
-                            label = "Escanear lote",
-                            onClick = { onNavigate(ProducerQualityControlRoutes.ScanLotAny) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickActionButton(
-                            iconRes = R.drawable.ic_task_check,
-                            label = "Nueva inspección",
-                            onClick = {
-                                onNavigate(ProducerRoute.Orders.route)
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickActionButton(
-                            iconRes = R.drawable.ic_inventory,
-                            label = "Actualizar stock",
-                            onClick = { onNavigate(ProducerRoute.Stock.route) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickActionButton(
-                            iconRes = R.drawable.ic_fleet_truck,
-                            label = "Registrar cosecha",
-                            onClick = { onNavigate(ProducerQualityControlRoutes.RegisterHarvest) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                // 4. To do today (Dark card)
-                item {
-                    FruitLogixCard(
-                        variant = CardVariant.Dark,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Tareas de hoy",
-                                    fontFamily = PoppinsFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    style = FruitLogixTheme.typography.titleMedium,
-                                    color = FruitLogixTheme.colors.textOnDark
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(FruitLogixTheme.colors.primary),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = uiState.tasks.size.toString(),
-                                        style = FruitLogixTheme.typography.labelSmall,
-                                        color = FruitLogixTheme.colors.onPrimary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            uiState.tasks.take(5).forEachIndexed { index, task ->
-                                TaskRow(
-                                    task = task,
-                                    onClick = { onNavigate(task.destinationRoute) }
-                                )
-                                if (index < uiState.tasks.take(5).lastIndex) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { onNavigate(ProducerInfrastructureIotRoutes.Notifications) }
-                                    .padding(vertical = 8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Ver todas las notificaciones →",
-                                    style = FruitLogixTheme.typography.bodySmall,
-                                    color = FruitLogixTheme.colors.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                // 5. KPIs 2x2 (KpiCard dark)
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            KpiCard(
-                                caption = "PEDIDOS PENDIENTES",
-                                value = uiState.summary.pendingOrdersCount.toString(),
-                                icon = {
-                                    AppIcon(
-                                        id = R.drawable.ic_orders,
-                                        contentDescription = null,
-                                        tint = FruitLogixTheme.colors.primary
-                                    )
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                            KpiCard(
-                                caption = "LOTES DESPACHADOS",
-                                value = uiState.summary.lotsDispatchedThisMonth.toString(),
-                                icon = {
-                                    AppIcon(
-                                        id = R.drawable.ic_dispatch_truck,
-                                        contentDescription = null,
-                                        tint = FruitLogixTheme.colors.primary
-                                    )
-                                },
-                                footer = {
-                                    Text(
-                                        text = "este mes",
-                                        style = FruitLogixTheme.typography.bodySmall,
-                                        color = FruitLogixTheme.colors.textMuted
-                                    )
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            KpiCard(
-                                caption = "APROBACIÓN DE CALIDAD",
-                                value = "${uiState.summary.qualityApprovalPct}%",
-                                icon = {
-                                    AppIcon(
-                                        id = R.drawable.ic_shield_check,
-                                        contentDescription = null,
-                                        tint = FruitLogixTheme.colors.primary
-                                    )
-                                },
-                                deltaPill = {
-                                    StatusBadge(
-                                        text = "Óptimo",
-                                        type = StatusBadgeType.SUCCESS,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                            KpiCard(
-                                caption = "PAGOS PENDIENTES",
-                                value = "S/ ${"%,.0f".format(uiState.summary.pendingPaymentsAmount)}",
-                                icon = {
-                                    AppIcon(
-                                        id = R.drawable.ic_invoices,
-                                        contentDescription = null,
-                                        tint = FruitLogixTheme.colors.primary
-                                    )
-                                },
-                                footer = {
-                                    Text(
-                                        text = "Cobrado S/ ${"%,.0f".format(uiState.summary.paidPaymentsAmount)}",
-                                        style = FruitLogixTheme.typography.bodySmall,
-                                        color = FruitLogixTheme.colors.textMuted
-                                    )
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                // 6. Order pipeline (White card)
-                item {
-                    PipelineBar(
-                        pipeline = uiState.pipeline,
-                        onSegmentClick = { onNavigate(ProducerRoute.Orders.route) },
-                        onNavigateOrdersClick = { onNavigate(ProducerRoute.Orders.route) }
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                // 7. Stock health (White card)
-                item {
-                    StockHealthSection(
-                        stockItems = uiState.stockItems,
-                        onItemClick = { item ->
-                            onNavigate(ProducerQualityControlRoutes.stockDetail(item.productId))
-                        },
-                        onNavigateStockClick = { onNavigate(ProducerRoute.Stock.route) }
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                }
-
-                // 8. Upcoming harvest (Tint card)
-                item {
-                    UpcomingHarvestCard(
-                        harvest = uiState.upcomingHarvest,
-                        onClick = { onNavigate(ProducerQualityControlRoutes.Harvests) }
-                    )
-                    // Spacing.lg + 80.dp para que no lo tape la BottomNavBar
-                    Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.lg + 80.dp))
-                }
-            }
         }
 
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 90.dp)
+                .padding(bottom = FruitLogixTheme.spacing.md)
         )
     }
 
-    // Modal Bottom Sheet para "Nueva inspección"
+    // "New inspection" picker is currently disabled; the quick action goes to Orders.
+    // OrderPickerSheet is ready (localized) for when it is re-enabled.
 
-//    if (uiState.showOrderPickerSheet) {
-//        OrderPickerSheet(
-//            orders = uiState.inspectingOrdersList,
-//            onOrderSelected = { order ->
-//                viewModel.onDismissOrderPicker()
-//                onNavigate(ProducerQualityControlRoutes.inspection(order.id))
-//            },
-//            onDismiss = { viewModel.onDismissOrderPicker() }
-//        )
-//    }
-
-    // Dialogo de confirmación para Aceptar Pedido
-    if (uiState.showAcceptConfirmDialog && uiState.pendingAcceptOrder != null) {
-        val order = uiState.pendingAcceptOrder!!
+    val pendingOrder = uiState.pendingAcceptOrder
+    if (uiState.showAcceptConfirmDialog && pendingOrder != null) {
         ConfirmDialog(
-            title = "¿Aceptar Pedido ${order.id}?",
-            message = "Al aceptar el pedido de ${order.clientName}, los productos pasarán a estado 'En preparación'.",
-            confirmText = "Aceptar",
+            title = stringResource(R.string.producer_home_accept_title, pendingOrder.id),
+            message = stringResource(R.string.producer_home_accept_message, pendingOrder.clientName),
+            confirmText = stringResource(R.string.producer_home_accept_confirm),
             onConfirm = { viewModel.onConfirmAcceptOrder() },
             onDismiss = { viewModel.onDismissAcceptDialog() }
         )
     }
 }
+
+@Composable
+private fun HomeContent(
+    uiState: ProducerHomeUiState,
+    onNavigate: (String) -> Unit,
+    onAcceptOrder: (com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order) -> Unit
+) {
+    val spacing = FruitLogixTheme.spacing
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = spacing.sm,
+            end = spacing.sm,
+            top = spacing.sm,
+            bottom = spacing.xl
+        ),
+        verticalArrangement = Arrangement.spacedBy(spacing.md)
+    ) {
+        if (uiState.isOffline) {
+            item { OfflineBanner(isOffline = true, modifier = Modifier.clip(FruitLogixTheme.shapes.Button)) }
+        }
+
+        // 1. Greeting, farm and date
+        item {
+            GreetingHeader(
+                dayPart = uiState.dayPart,
+                userName = uiState.userName,
+                farmName = uiState.farmName,
+                today = uiState.today
+            )
+        }
+
+        // 2. Highlighted next action (dark)
+        item {
+            HeroActionCard(
+                order = uiState.heroOrder,
+                shortage = uiState.heroStockShortage,
+                onAcceptClick = onAcceptOrder,
+                onReviewDetailsClick = { order ->
+                    onNavigate(ProducerOrderManagementRoutes.orderDetail(order.id))
+                }
+            )
+        }
+
+        // 3. Quick actions
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+            ) {
+                QuickActionButton(
+                    iconRes = R.drawable.ic_radar,
+                    label = stringResource(R.string.producer_home_qa_scan_lot),
+                    onClick = { onNavigate(ProducerQualityControlRoutes.ScanLotAny) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    iconRes = R.drawable.ic_task_check,
+                    label = stringResource(R.string.producer_home_qa_new_inspection),
+                    onClick = { onNavigate(ProducerRoute.Orders.route) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    iconRes = R.drawable.ic_inventory,
+                    label = stringResource(R.string.producer_home_qa_update_stock),
+                    onClick = { onNavigate(ProducerRoute.Stock.route) },
+                    modifier = Modifier.weight(1f)
+                )
+                QuickActionButton(
+                    iconRes = R.drawable.ic_leaf,
+                    label = stringResource(R.string.producer_home_qa_log_harvest),
+                    onClick = { onNavigate(ProducerQualityControlRoutes.RegisterHarvest) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        // 4. Today's tasks (light list)
+        item {
+            TasksCard(
+                tasks = uiState.tasks,
+                onTaskClick = { onNavigate(it.destinationRoute) },
+                onViewAll = { onNavigate(ProducerInfrastructureIotRoutes.Notifications) }
+            )
+        }
+
+        // 5. KPIs 2x2 (dark)
+        item { KpiGrid(summary = uiState.summary) }
+
+        // 6. Order flow (light)
+        item {
+            PipelineBar(
+                pipeline = uiState.pipeline,
+                onSegmentClick = { onNavigate(ProducerRoute.Orders.route) },
+                onNavigateOrdersClick = { onNavigate(ProducerRoute.Orders.route) }
+            )
+        }
+
+        // 7. Inventory health (light)
+        item {
+            StockHealthSection(
+                stockItems = uiState.stockItems,
+                onItemClick = { item ->
+                    onNavigate(ProducerQualityControlRoutes.stockDetail(item.productId))
+                },
+                onNavigateStockClick = { onNavigate(ProducerRoute.Stock.route) }
+            )
+        }
+
+        // 8. Next harvest (light)
+        item {
+            UpcomingHarvestCard(
+                harvest = uiState.upcomingHarvest,
+                onClick = { onNavigate(ProducerQualityControlRoutes.Harvests) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun GreetingHeader(
+    dayPart: DayPart,
+    userName: String,
+    farmName: String,
+    today: LocalDate
+) {
+    val scheme = MaterialTheme.colorScheme
+    val locale = currentLocale()
+    val greetingRes = when (dayPart) {
+        DayPart.MORNING -> R.string.producer_home_greeting_morning
+        DayPart.AFTERNOON -> R.string.producer_home_greeting_afternoon
+        DayPart.EVENING -> R.string.producer_home_greeting_evening
+    }
+    val datePattern = stringResource(R.string.producer_home_date_pattern)
+    val dateText = remember(today, locale, datePattern) {
+        today.format(DateTimeFormatter.ofPattern(datePattern, locale))
+            .replaceFirstChar { it.titlecase(locale) }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(greetingRes, userName),
+            style = FruitLogixTheme.typography.headlineMedium,
+            color = scheme.onBackground
+        )
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppIcon(
+                id = R.drawable.ic_leaf,
+                contentDescription = null,
+                tint = scheme.onSurfaceVariant,
+                modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+            )
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xxs))
+            Text(
+                text = farmName,
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+            Row(
+                modifier = Modifier
+                    .clip(FruitLogixTheme.shapes.Tag)
+                    .background(scheme.secondaryContainer)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppIcon(
+                    id = R.drawable.ic_schedule,
+                    contentDescription = null,
+                    tint = scheme.onSecondaryContainer,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xxs))
+                Text(
+                    text = dateText,
+                    style = FruitLogixTheme.typography.labelMedium,
+                    color = scheme.onSecondaryContainer,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TasksCard(
+    tasks: List<ProducerTask>,
+    onTaskClick: (ProducerTask) -> Unit,
+    onViewAll: () -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val visibleTasks = tasks.take(5)
+
+    FruitLogixCard(
+        variant = CardVariant.White,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(FruitLogixTheme.spacing.sm)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.producer_home_tasks_title),
+                    style = FruitLogixTheme.typography.titleMedium,
+                    color = scheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                StatusBadge(
+                    text = tasks.size.toString(),
+                    type = StatusBadgeType.HIGHLIGHT,
+                    showDot = false
+                )
+            }
+
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+
+            if (visibleTasks.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.producer_home_tasks_empty),
+                    style = FruitLogixTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                    visibleTasks.forEach { task ->
+                        TaskRow(task = task, onClick = { onTaskClick(task) })
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+
+            TextActionButton(
+                text = stringResource(R.string.producer_home_tasks_view_all),
+                onClick = onViewAll,
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    AppIcon(
+                        id = R.drawable.ic_arrow_forward,
+                        contentDescription = null,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun KpiGrid(summary: DashboardSummary) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    val locale = currentLocale()
+    val amountFormat = remember(locale) {
+        NumberFormat.getNumberInstance(locale).apply { maximumFractionDigits = 0 }
+    }
+    val spacing = FruitLogixTheme.spacing
+
+    fun kpiIcon(id: Int): @Composable () -> Unit = {
+        AppIcon(
+            id = id,
+            contentDescription = null,
+            tint = scheme.inversePrimary,
+            modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+            KpiCard(
+                caption = stringResource(R.string.producer_home_kpi_pending_orders),
+                value = summary.pendingOrdersCount.toString(),
+                icon = kpiIcon(R.drawable.ic_orders),
+                modifier = Modifier.weight(1f)
+            )
+            KpiCard(
+                caption = stringResource(R.string.producer_home_kpi_lots_dispatched),
+                value = summary.lotsDispatchedThisMonth.toString(),
+                icon = kpiIcon(R.drawable.ic_dispatch_truck),
+                footer = {
+                    Text(
+                        text = stringResource(R.string.producer_home_kpi_this_month),
+                        style = FruitLogixTheme.typography.bodySmall,
+                        color = colors.onInverseSurfaceVariant
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+            KpiCard(
+                caption = stringResource(R.string.producer_home_kpi_quality_approval),
+                value = "${summary.qualityApprovalPct}%",
+                icon = kpiIcon(R.drawable.ic_shield_check),
+                deltaPill = {
+                    StatusBadge(
+                        text = stringResource(R.string.producer_home_kpi_optimal),
+                        type = StatusBadgeType.SUCCESS,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            )
+            KpiCard(
+                caption = stringResource(R.string.producer_home_kpi_pending_payments),
+                value = stringResource(
+                    R.string.common_amount_pen,
+                    amountFormat.format(summary.pendingPaymentsAmount)
+                ),
+                icon = kpiIcon(R.drawable.ic_invoices),
+                footer = {
+                    Text(
+                        text = stringResource(
+                            R.string.producer_home_kpi_collected,
+                            stringResource(
+                                R.string.common_amount_pen,
+                                amountFormat.format(summary.paidPaymentsAmount)
+                            )
+                        ),
+                        style = FruitLogixTheme.typography.bodySmall,
+                        color = colors.onInverseSurfaceVariant
+                    )
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun currentLocale(): Locale = LocalConfiguration.current.locales.get(0)

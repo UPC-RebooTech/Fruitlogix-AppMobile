@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -58,13 +59,13 @@ fun NoOrdersFoundCard(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(FruitLogixTheme.colors.surfaceTint),
+                        .background(MaterialTheme.colorScheme.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     AppIcon(
                         id = R.drawable.ic_diagnostic,
                         contentDescription = null,
-                        tint = FruitLogixTheme.colors.textOnLight,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -76,7 +77,7 @@ fun NoOrdersFoundCard(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleLarge,
-                    color = FruitLogixTheme.colors.textOnLight,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
@@ -85,7 +86,7 @@ fun NoOrdersFoundCard(
                 Text(
                     text = stringResource(R.string.producer_orders_no_results_desc),
                     style = FruitLogixTheme.typography.bodyMedium,
-                    color = FruitLogixTheme.colors.textMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
@@ -108,14 +109,14 @@ fun NoOrdersFoundCard(
                     AppIcon(
                         id = R.drawable.ic_link,
                         contentDescription = null,
-                        tint = FruitLogixTheme.colors.textMuted,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = stringResource(R.string.producer_orders_filter_tip),
                         style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -127,7 +128,7 @@ fun NoOrdersFoundCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(FruitLogixTheme.shapes.Card)
-                .background(FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.45f))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
                 .padding(16.dp)
         ) {
             Text(
@@ -135,7 +136,7 @@ fun NoOrdersFoundCard(
                 fontFamily = PoppinsFontFamily,
                 fontWeight = FontWeight.Bold,
                 style = FruitLogixTheme.typography.titleSmall,
-                color = FruitLogixTheme.colors.textOnLight
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -173,7 +174,7 @@ private fun SuggestedViewChip(
         modifier = modifier
             .height(48.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(FruitLogixTheme.colors.white)
+            .background(MaterialTheme.colorScheme.surfaceContainerLowest)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
@@ -184,7 +185,7 @@ private fun SuggestedViewChip(
             AppIcon(
                 id = iconRes,
                 contentDescription = null,
-                tint = FruitLogixTheme.colors.textOnLight,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -192,7 +193,7 @@ private fun SuggestedViewChip(
                 text = label,
                 style = FruitLogixTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = FruitLogixTheme.colors.textOnLight,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
         }
