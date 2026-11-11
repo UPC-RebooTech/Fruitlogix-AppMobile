@@ -49,7 +49,7 @@ private val primaryTabRoutes = setOf(
 
 @Composable
 fun ProducerShell(
-    onSwitchRole: () -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -107,7 +107,7 @@ fun ProducerShell(
     ) { innerPadding ->
         ProducerNavHost(
             navController = navController,
-            onSwitchRole = onSwitchRole,
+            onSignOut = onSignOut,
             modifier = Modifier.padding(innerPadding)
         )
     }

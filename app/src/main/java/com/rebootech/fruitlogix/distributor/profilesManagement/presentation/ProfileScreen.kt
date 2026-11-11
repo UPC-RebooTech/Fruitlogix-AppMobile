@@ -20,15 +20,20 @@ import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.distributor.profilesManagement.data.FakeProfilesRepository
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.DistributorProfile
 import com.rebootech.fruitlogix.shared.ui.theme.*
+import com.rebootech.fruitlogix.shared.ui.components.ConfirmDialog
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ProfileScreen(
-    onSwitchRole: () -> Unit = {}, // <--- Añadido parámetro para cambiar de rol
+    onSignOut: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val savedProfile by FakeProfilesRepository.distributorProfile.collectAsState()
 
     var isEditing by remember { mutableStateOf(false) }
+    var showSignOutConfirmDialog by remember { mutableStateOf(false) }
     var hasLoadError by remember { mutableStateOf(false) }
     var statusMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -269,22 +274,32 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Botón Secundario de Cambiar de Rol (Cerrar Sesión / Elegir cuenta)
-            Button(
-                onClick = onSwitchRole,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ColorSurfaceDark,
-                    contentColor = ColorTextOnDark
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Cambiar de Rol (Cerrar Sesión de Distribuidor)",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColorPrimary
+                        SecondaryButton(
+                text = stringResource(R.string.auth_logout_button),
+                onClick = { showSignOutConfirmDialog = true },
+                leadingIcon = {
+                    AppIcon(
+                        id = R.drawable.ic_logout,
+                        contentDescription = stringResource(R.string.auth_logout_button),
+                        tint = FruitLogixTheme.colors.textOnDark,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (showSignOutConfirmDialog) {
+                ConfirmDialog(
+                    title = stringResource(R.string.auth_logout_dialog_title),
+                    message = stringResource(R.string.auth_logout_dialog_message),
+                    confirmText = stringResource(R.string.auth_logout_dialog_confirm),
+                    dismissText = stringResource(R.string.auth_logout_dialog_cancel),
+                    destructive = true,
+                    onConfirm = {
+                        showSignOutConfirmDialog = false
+                        onSignOut()
+                    },
+                    onDismiss = { showSignOutConfirmDialog = false }
                 )
             }
         }

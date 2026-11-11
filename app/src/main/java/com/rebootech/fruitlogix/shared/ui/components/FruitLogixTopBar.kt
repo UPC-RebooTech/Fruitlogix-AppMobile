@@ -193,7 +193,7 @@ fun FruitLogixTopBar(
 }
 
 @Composable
-private fun LanguageTogglePill(
+fun LanguageTogglePill(
     selectedLanguage: AppLanguage,
     onLanguageSelected: (AppLanguage) -> Unit
 ) {
@@ -218,7 +218,7 @@ private fun LanguageTogglePill(
 }
 
 @Composable
-private fun LanguageOptionItem(
+fun LanguageOptionItem(
     languageText: String,
     isSelected: Boolean,
     onClick: () -> Unit

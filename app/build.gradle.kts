@@ -32,6 +32,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -60,4 +61,6 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.appcompat)
 }

@@ -20,7 +20,7 @@ import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.Produ
 @Composable
 fun ProducerNavHost(
     navController: NavHostController,
-    onSwitchRole: () -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = ProducerRoute.Home.route
 ) {
@@ -31,7 +31,7 @@ fun ProducerNavHost(
     ) {
         composable(ProducerRoute.Home.route) {
             ProducerHomeScreen(
-                onSwitchRole = onSwitchRole,
+                
                 onNavigate = { route -> navController.navigate(route) }
             )
         }
@@ -65,6 +65,6 @@ fun ProducerNavHost(
         producerLogisticsMonitoringGraph(navController)
         producerInfrastructureIotGraph(navController)
         producerPaymentManagementGraph(navController)
-        producerProfilesManagementGraph(navController, onSwitchRole = onSwitchRole)
+        producerProfilesManagementGraph(navController, onSignOut = onSignOut)
     }
 }

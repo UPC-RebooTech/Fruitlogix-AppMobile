@@ -59,7 +59,6 @@ import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
 fun ProducerHomeScreen(
-    onSwitchRole: () -> Unit,
     onNavigate: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ProducerHomeViewModel = viewModel()
