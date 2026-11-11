@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Chat del productor -->
+    <string name="chat_subtitle">Pedido #%1$s · %2$s</string>
+    <string name="chat_cd_view_order">Ver pedido</string>
+    <string name="chat_input_placeholder">Escribe un mensaje</string>
+    <string name="chat_cd_send">Enviar mensaje</string>
+    <string name="chat_typing">%1$s está escribiendo…</string>
+    <string name="chat_today">Hoy</string>
+    <string name="chat_yesterday">Ayer</string>
+    <string name="chat_empty_title">Inicia la conversación</string>
+    <string name="chat_empty_message">Coordina cosecha, calidad y recojo del pedido #%1$s con tu distribuidor.</string>
+    <string name="chat_you">Tú</string>
+
+    <!-- Respuestas rápidas (se envían como mensaje) -->
+    <string name="chat_quick_ready">El lote está listo para el recojo</string>
+    <string name="chat_quick_confirm">Confirmado, gracias</string>
+    <string name="chat_quick_delay">Necesito un poco más de tiempo</string>
+    <string name="chat_quick_call">¿Me pueden llamar?</string>
+</resources>

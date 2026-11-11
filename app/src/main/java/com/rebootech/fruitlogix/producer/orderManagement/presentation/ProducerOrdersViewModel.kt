@@ -1,5 +1,7 @@
 package com.rebootech.fruitlogix.producer.orderManagement.presentation
 
+import com.rebootech.fruitlogix.shared.core.model.UiText
+import com.rebootech.fruitlogix.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.producer.orderManagement.data.FakeOrderRepository
@@ -98,7 +100,7 @@ class ProducerOrdersViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = ex.message ?: "Error al cargar pedidos"
+                            errorMessage = UiText.StringResource(R.string.producer_orders_error_loading)
                         )
                     }
                 }
@@ -179,12 +181,12 @@ class ProducerOrdersViewModel(
             _uiState.update { it.copy(showAcceptConfirmDialog = false, pendingAcceptOrder = null) }
             val success = orderRepository.acceptOrder(order.id)
             if (success) {
-                val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+                val nowTime = LocalTime.now()
                 _uiState.update {
                     it.copy(
                         snackbarMessage = order.id,
                         lastAcceptedOrder = order,
-                        lastAcceptedTimeFormatted = nowTime
+                        lastAcceptedTime = nowTime
                     )
                 }
             }
@@ -223,12 +225,12 @@ class ProducerOrdersViewModel(
             val idToAccept = targetOrder?.id ?: cleanId
             val success = orderRepository.acceptOrder(idToAccept)
             if (success && targetOrder != null) {
-                val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault()))
+                val nowTime = LocalTime.now()
                 _uiState.update {
                     it.copy(
                         snackbarMessage = targetOrder.id,
                         lastAcceptedOrder = targetOrder,
-                        lastAcceptedTimeFormatted = nowTime
+                        lastAcceptedTime = nowTime
                     )
                 }
             }

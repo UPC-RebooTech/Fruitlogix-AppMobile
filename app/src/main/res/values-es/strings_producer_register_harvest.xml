@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Registrar cosecha -->
+    <string name="register_harvest_title">Registrar cosecha</string>
+    <string name="register_harvest_subtitle">Registro %1$s · aparecerá en tu stock</string>
+
+    <string name="register_harvest_section_product">¿Qué cosechaste?</string>
+    <string name="register_harvest_product">Producto o variedad</string>
+    <string name="register_harvest_lot">Código de lote</string>
+    <string name="register_harvest_lot_hint">Ejemplo: L-KEN-1111</string>
+    <string name="register_harvest_lot_suggest">Sugerir código</string>
+
+    <string name="register_harvest_section_amount">¿Cuánto y dónde?</string>
+    <string name="register_harvest_weight">Peso total</string>
+    <string name="register_harvest_kg_suffix">kg</string>
+    <string name="register_harvest_sector">Almacenado en</string>
+
+    <string name="register_harvest_section_quality">Calidad (opcional)</string>
+    <string name="register_harvest_brix">Brix estimado</string>
+    <string name="register_harvest_brix_suffix">°Bx</string>
+    <string name="register_harvest_notes">Notas</string>
+    <string name="register_harvest_notes_hint">Estado de la fruta, cuadrilla, clima…</string>
+
+    <string name="register_harvest_save">Registrar cosecha</string>
+    <string name="register_harvest_saved">Cosecha registrada</string>
+
+    <string name="register_harvest_error_required">Este campo es obligatorio</string>
+    <string name="register_harvest_error_lot">Usa al menos %1$d caracteres</string>
+    <string name="register_harvest_error_weight">Ingresa un peso entre 0 y %1$s kg</string>
+    <string name="register_harvest_error_brix">El Brix debe estar entre 0 y %1$s °Bx</string>
+</resources>

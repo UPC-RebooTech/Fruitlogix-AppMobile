@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.producer.qualityControl
 
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -51,6 +52,17 @@ fun NavGraphBuilder.producerQualityControlGraph(
             onNavigateBack = { navController.popBackStack() },
             onNavigateToRegisterHarvest = {
                 navController.navigate(ProducerQualityControlRoutes.RegisterHarvest)
+            },
+            onNavigateToInventory = {
+                // Opened from Stock: go back to it. Opened from the More menu: switch to the Stock tab.
+                if (!navController.popBackStack(ProducerRoute.Stock.route, inclusive = false)) {
+                    navController.navigate(ProducerRoute.Stock.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
             }
         )
     }
@@ -98,13 +110,6 @@ fun NavGraphBuilder.producerQualityControlGraph(
             onReviewReport = {
                 navController.navigate(ProducerQualityControlRoutes.reviewResult(orderId))
             }
-        )
-    }
-
-    composable(route = ProducerQualityControlRoutes.ScanLotAny) {
-        ProducerPlaceholderScreen(
-            title = "Escanear Lote",
-            onBack = { navController.popBackStack() }
         )
     }
 
@@ -159,10 +164,15 @@ fun NavGraphBuilder.producerQualityControlGraph(
             onNavigateBack = { navController.popBackStack() },
             onEditInspection = { navController.popBackStack() },
             onBackToOrder = {
-                navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
+                // Return to this order's detail if it is in the back stack; otherwise open it
+                if (!navController.popBackStack(ProducerOrderManagementRoutes.OrderDetail, inclusive = false)) {
+                    navController.navigate(ProducerOrderManagementRoutes.orderDetail(orderId)) {
+                        popUpTo(ProducerQualityControlRoutes.ReviewResult) { inclusive = true }
+                    }
+                }
             },
             onOpenChat = {
-                navController.navigate(ProducerOrderManagementRoutes.Inbox)
+                navController.navigate(ProducerOrderManagementRoutes.chat(orderId))
             }
         )
     }

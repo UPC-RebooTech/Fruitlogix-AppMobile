@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Account -->
+    <string name="profile_account_title">My account</string>
+    <string name="profile_role_producer">Producer</string>
+    <string name="profile_username">\@%1$s</string>
+    <string name="profile_edit">Edit profile</string>
+    <string name="profile_section_settings">Settings</string>
+    <string name="profile_section_support">Support</string>
+    <string name="profile_version">Version %1$s</string>
+    <string name="common_back">Back</string>
+
+    <!-- Settings rows -->
+    <string name="settings_notifications">Notifications</string>
+    <plurals name="settings_notifications_summary">
+        <item quantity="one">%1$d of %2$d alerts on</item>
+        <item quantity="other">%1$d of %2$d alerts on</item>
+    </plurals>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_es">Español</string>
+    <string name="settings_sync">Data and sync</string>
+    <string name="settings_sync_summary">Last sync: %1$s</string>
+    <string name="settings_sync_never">Not synced yet</string>
+    <string name="settings_help">Help and support</string>
+    <string name="settings_help_summary">Frequent questions and contact</string>
+
+    <!-- Edit profile -->
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_section_personal">Personal data</string>
+    <string name="profile_section_farm">Farm and legal data</string>
+    <string name="profile_field_full_name">Full name</string>
+    <string name="profile_field_email">Email</string>
+    <string name="profile_field_phone">Phone</string>
+    <string name="profile_field_farm_name">Farm name</string>
+    <string name="profile_field_legal_name">Legal name</string>
+    <string name="profile_field_ruc">RUC</string>
+    <string name="profile_field_location">Location</string>
+    <string name="profile_certification">GlobalGAP certification</string>
+    <string name="profile_certification_valid">Valid until %1$s</string>
+    <string name="profile_certification_missing">No certification on file</string>
+    <string name="profile_save">Save changes</string>
+    <string name="profile_saved">Profile updated</string>
+    <string name="profile_error_required">This field is required</string>
+    <string name="profile_error_email">Enter a valid email</string>
+    <string name="profile_error_phone">Enter a valid phone number</string>
+    <string name="profile_error_ruc">The RUC must have 11 digits</string>
+
+    <!-- Notification settings -->
+    <string name="settings_notifications_intro">Choose which alerts you want to receive on this phone.</string>
+    <string name="settings_notif_new_orders">New orders</string>
+    <string name="settings_notif_new_orders_desc">When a distributor sends you an order</string>
+    <string name="settings_notif_quality">Quality results</string>
+    <string name="settings_notif_quality_desc">Approved or rejected inspection reports</string>
+    <string name="settings_notif_cold_chain">Cold chain alerts</string>
+    <string name="settings_notif_cold_chain_desc">Temperature or humidity out of range in your cold rooms</string>
+    <string name="settings_notif_payments">Payments</string>
+    <string name="settings_notif_payments_desc">Payouts made and pending invoices</string>
+    <string name="settings_notif_messages">Messages</string>
+    <string name="settings_notif_messages_desc">New chat messages from distributors</string>
+    <string name="settings_notif_quiet">Quiet hours</string>
+    <string name="settings_notif_quiet_desc">Silence alerts from 10 PM to 6 AM, except cold chain alerts</string>
+
+    <!-- Language settings -->
+    <string name="settings_language_intro">The whole app will switch to the language you choose.</string>
+
+    <!-- Sync settings -->
+    <string name="settings_sync_intro">FruitLogix works without signal. Your changes are saved on the phone and sent when you are back online.</string>
+    <string name="settings_sync_status">Sync status</string>
+    <string name="settings_sync_up_to_date">Everything is up to date</string>
+    <plurals name="settings_sync_pending">
+        <item quantity="one">%1$d change waiting to sync</item>
+        <item quantity="other">%1$d changes waiting to sync</item>
+    </plurals>
+    <string name="settings_sync_now">Sync now</string>
+    <string name="settings_sync_in_progress">Syncing…</string>
+    <string name="settings_sync_auto">Sync automatically</string>
+    <string name="settings_sync_auto_desc">Send changes as soon as there is a connection</string>
+    <string name="settings_sync_wifi">Sync only on Wi-Fi</string>
+    <string name="settings_sync_wifi_desc">Saves mobile data in the field</string>
+
+    <!-- Help -->
+    <string name="help_intro">Answers to the most common questions.</string>
+    <string name="help_faq_offline_q">Can I use the app without signal?</string>
+    <string name="help_faq_offline_a">Yes. Inspections, harvests and stock updates are saved on the phone and sync automatically when you are back online.</string>
+    <string name="help_faq_reject_q">What do I do if a lot is rejected?</string>
+    <string name="help_faq_reject_a">Open the report from Orders or Reports, check the reason and use Re-inspect after re-grading the lot.</string>
+    <string name="help_faq_payments_q">When do I get paid?</string>
+    <string name="help_faq_payments_a">Payouts are listed in Payouts with their due date. You will get a notification when a payment is made.</string>
+    <string name="help_faq_language_q">How do I change the language?</string>
+    <string name="help_faq_language_a">Tap EN or ES in the top bar, or go to My account → Language.</string>
+    <string name="help_contact_title">Contact support</string>
+    <string name="help_contact_desc">Write to your distributor from Messages or contact the FruitLogix team.</string>
+    <string name="help_contact_messages">Open Messages</string>
+    <string name="help_cd_expand">Show answer</string>
+    <string name="help_cd_collapse">Hide answer</string>
+</resources>

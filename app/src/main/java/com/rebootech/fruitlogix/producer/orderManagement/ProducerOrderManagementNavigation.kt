@@ -19,7 +19,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.rebootech.fruitlogix.producer.logisticsMonitoring.ProducerLogisticsMonitoringRoutes
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerChatScreen
+import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.presentation.ProducerMessagingScreen
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrderDetailScreen
 import com.rebootech.fruitlogix.producer.orderManagement.presentation.ProducerOrdersScreen
@@ -31,27 +33,27 @@ import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 fun NavGraphBuilder.producerOrderManagementGraph(
     navController: NavHostController
 ) {
-    composable(ProducerOrderManagementRoutes.Inbox) {
-        ProducerMessagingScreen()
-    }
-
     // Detalle de Pedido
     composable(
         route = ProducerOrderManagementRoutes.OrderDetail,
         arguments = listOf(navArgument("orderId") { type = NavType.StringType })
     ) { backStackEntry ->
         val orderId = backStackEntry.arguments?.getString("orderId")?.removePrefix("#").orEmpty()
-        val ordersViewModel: ProducerOrdersViewModel = viewModel()
 
         ProducerOrderDetailScreen(
             orderId = orderId,
             onNavigateBack = { navController.popBackStack() },
-            onAcceptOrder = {
-                ordersViewModel.onAcceptOrderById(orderId)
-                navController.popBackStack()
-            },
+            // The detail ViewModel accepts the order in the repository; stay on the detail so the
+            // producer sees the new status and the next action (Prepare & inspect).
+            onAccepted = {},
             onOpenChat = { targetOrderId ->
                 navController.navigate(ProducerOrderManagementRoutes.chat(targetOrderId))
+            },
+            onInspect = { id ->
+                navController.navigate(ProducerQualityControlRoutes.inspection(id))
+            },
+            onLoadTruck = { id ->
+                navController.navigate(ProducerLogisticsMonitoringRoutes.loadTruck(id))
             }
         )
     }
@@ -64,7 +66,10 @@ fun NavGraphBuilder.producerOrderManagementGraph(
         val orderId = backStackEntry.arguments?.getString("orderId")?.removePrefix("#").orEmpty()
         ProducerChatScreen(
             orderId = orderId,
-            onNavigateBack = { navController.popBackStack() }
+            onNavigateBack = { navController.popBackStack() },
+            onOpenOrder = { id ->
+                navController.navigate(ProducerOrderManagementRoutes.orderDetail(id))
+            }
         )
     }
 

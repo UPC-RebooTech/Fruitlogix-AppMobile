@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared actions -->
+    <string name="common_cancel">Cancel</string>
+    <string name="common_retry">Try again</string>
+    <string name="common_error_title">Something went wrong</string>
+    <string name="common_kg_value">%1$d kg</string>
+    <string name="common_amount_pen">S/ %1$s</string>
+
+    <!-- Dates -->
+    <string name="common_today_at">Today, %1$s</string>
+    <string name="common_yesterday_at">Yesterday, %1$s</string>
+    <string name="common_tomorrow_at">Tomorrow, %1$s</string>
+    <string name="common_date_at">%1$s, %2$s</string>
+    <string name="common_just_now">Just now</string>
+    <plurals name="common_minutes_ago">
+        <item quantity="one">%1$d min ago</item>
+        <item quantity="other">%1$d min ago</item>
+    </plurals>
+    <plurals name="common_hours_ago">
+        <item quantity="one">%1$d h ago</item>
+        <item quantity="other">%1$d h ago</item>
+    </plurals>
+
+    <!-- Top bar -->
+    <string name="topbar_cd_messages">Messages</string>
+    <string name="topbar_cd_notifications">Notifications</string>
+    <string name="topbar_cd_profile">Profile</string>
+    <string name="topbar_cd_change_language">Change language. Current: %1$s</string>
+
+    <!-- Sync status -->
+    <string name="sync_synced">Synced</string>
+    <string name="sync_syncing">Syncing…</string>
+    <string name="sync_conflict">Sync conflict. Tap to review</string>
+    <string name="sync_offline">You\'re offline. Changes will sync when you reconnect.</string>
+    <plurals name="sync_pending_changes">
+        <item quantity="one">%1$d change waiting to sync</item>
+        <item quantity="other">%1$d changes waiting to sync</item>
+    </plurals>
+</resources>

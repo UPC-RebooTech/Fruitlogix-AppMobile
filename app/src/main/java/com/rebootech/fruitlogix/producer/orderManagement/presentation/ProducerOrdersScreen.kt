@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -23,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,11 +55,13 @@ fun ProducerOrdersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val acceptedMessage = uiState.snackbarMessage?.let { orderId ->
+        stringResource(R.string.producer_orders_order_accepted, orderId)
+    }
 
     LaunchedEffect(uiState.snackbarMessage) {
-        uiState.snackbarMessage?.let { orderId ->
-            snackbarHostState.showSnackbar("Pedido #$orderId aceptado con éxito")
+        acceptedMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
             viewModel.onSnackbarDismissed()
         }
     }
@@ -67,7 +69,7 @@ fun ProducerOrdersScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(FruitLogixTheme.colors.bg)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         when {
             uiState.isLoading -> {
@@ -75,7 +77,7 @@ fun ProducerOrdersScreen(
             }
             uiState.errorMessage != null -> {
                 ErrorState(
-                    message = uiState.errorMessage ?: "",
+                    message = uiState.errorMessage?.asString().orEmpty(),
                     onRetry = { viewModel.loadOrders() },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -156,7 +158,7 @@ fun ProducerOrdersScreen(
                                     distributorName = uiState.distributorName,
                                     inShedCount = uiState.inShedCount,
                                     lastAcceptedOrder = uiState.lastAcceptedOrder,
-                                    lastAcceptedTime = uiState.lastAcceptedTimeFormatted,
+                                    lastAcceptedTime = uiState.lastAcceptedTime,
                                     onViewInPrep = { viewModel.onApplySuggestedInPrep() },
                                     onCheckStock = { onNavigate(ProducerRoute.Stock.route) }
                                 )
@@ -236,10 +238,10 @@ fun ProducerOrdersScreen(
                             Text(
                                 text = stringResource(R.string.producer_orders_footer_loaded),
                                 style = FruitLogixTheme.typography.bodySmall,
-                                color = FruitLogixTheme.colors.textMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.lg + 80.dp))
+                        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xl))
                     }
                 }
             }
@@ -276,7 +278,7 @@ fun ProducerOrdersScreen(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 88.dp)
+                .padding(bottom = FruitLogixTheme.spacing.md)
         )
     }
 }
@@ -296,7 +298,7 @@ private fun OrdersSkeletonLoading() {
                 .fillMaxWidth()
                 .height(48.dp)
                 .clip(FruitLogixTheme.shapes.Pill)
-                .background(FruitLogixTheme.colors.surfaceLight)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
         )
         // Summary tiles skeleton
         Box(
@@ -304,7 +306,7 @@ private fun OrdersSkeletonLoading() {
                 .fillMaxWidth()
                 .height(72.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.5f))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
         )
         // Chips skeleton
         Box(
@@ -312,7 +314,7 @@ private fun OrdersSkeletonLoading() {
                 .fillMaxWidth()
                 .height(38.dp)
                 .clip(FruitLogixTheme.shapes.Pill)
-                .background(FruitLogixTheme.colors.surfaceLight)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
         )
         // Card skeletons
         repeat(3) {
@@ -321,7 +323,7 @@ private fun OrdersSkeletonLoading() {
                     .fillMaxWidth()
                     .height(140.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(FruitLogixTheme.colors.surfaceDark.copy(alpha = 0.2f))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             )
         }
     }

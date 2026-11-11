@@ -16,7 +16,7 @@
     <string name="producer_nav_payouts">Liquidaciones</string>
     <string name="producer_nav_messaging">Mensajes</string>
     <string name="producer_nav_notifications">Notificaciones</string>
-    <string name="producer_nav_profile">Mi Fundo</string>
+    <string name="producer_nav_profile">Mi cuenta</string>
 
     <!-- Top Bar -->
     <string name="topbar_title">FruitLogix</string>
@@ -325,7 +325,7 @@
     <string name="invoice_detail_not_found_message">No se pudo encontrar la factura %1$s. Es posible que ya no esté disponible.</string>
     <string name="invoice_detail_back_to_invoices">Volver a facturas</string>
     <!-- Producer Orders Screen -->
-    <string name="producer_orders_search_placeholder">Buscar ID de pedido o cliente...</string>
+    <string name="producer_orders_search_placeholder">Buscar pedido o cliente</string>
     <string name="producer_orders_tile_awaiting_action">Acción requerida</string>
     <string name="producer_orders_tile_in_shed">En planta</string>
     <string name="producer_orders_tile_active_vol">Volumen activo</string>
@@ -344,7 +344,7 @@
     <string name="producer_orders_respond_within">Responder en %1$d h</string>
     <string name="producer_orders_overdue">Vencido</string>
     <string name="producer_orders_btn_review">Revisar</string>
-    <string name="producer_orders_btn_accept">Aceptar Pedido</string>
+    <string name="producer_orders_btn_accept">Aceptar pedido</string>
     <string name="producer_orders_btn_review_respond">Revisar y responder</string>
     <string name="producer_orders_btn_prepare_inspect">Preparar e inspeccionar</string>
     <string name="producer_orders_btn_view_review_status">Ver estado de revisión</string>

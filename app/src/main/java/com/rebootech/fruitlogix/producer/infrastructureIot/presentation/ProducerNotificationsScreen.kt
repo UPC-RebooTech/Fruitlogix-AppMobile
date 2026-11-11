@@ -2,344 +2,396 @@ package com.rebootech.fruitlogix.producer.infrastructureIot.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.producer.infrastructureIot.data.FakeIotAlertRepository
+import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.AlertKind
+import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.AlertSeverity
+import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.AssetType
+import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.IotAlert
+import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.MonitoredAsset
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.EmptyState
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
+import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
+import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
+import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
+import com.rebootech.fruitlogix.shared.ui.format.formatTimeAgo
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
-enum class NotificationSeverity {
-    CRITICAL, WARNING, INFO
-}
+private enum class AlertFilter { ALL, CRITICAL, COLD_CHAIN }
 
-data class IotNotificationItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val sensorId: String,
-    val location: String,
-    val timestamp: String,
-    val severity: NotificationSeverity,
-    val relatedOrderId: String? = null,
-    val isRead: Boolean = false
-)
-
+/**
+ * Notification inbox: what happened in the field (sensor alerts, telemetry, traceability).
+ * Notification *preferences* live in My account → Notifications (gear button here).
+ * Card rule: alerts are light list cards; critical ones get an error-tinted icon and badge.
+ */
 @Composable
 fun ProducerNotificationsScreen(
     onNavigate: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenSettings: () -> Unit = {}
 ) {
-    var selectedFilter by remember { mutableStateOf("Todas") }
+    val repository = FakeIotAlertRepository.instance
+    val alerts by repository.alerts.collectAsState()
+    var filter by rememberSaveable { mutableStateOf(AlertFilter.ALL) }
 
-    // Lista mutable reactiva para poder descartar (borrar) o marcar como leídas
-    var notificationsList by remember {
-        mutableStateOf(
-            listOf(
-                IotNotificationItem(
-                    id = "1",
-                    title = "Sensor Temperatura — Cámara #1",
-                    description = "Temperatura crítica en cámara de frío: 9.4°C detectados (Límite max: 8.0°C). Riesgo de descalibrado en palets.",
-                    sensorId = "TEMP-BAY-01",
-                    location = "Pre-Cool Tunnel B",
-                    timestamp = "Hace 5 min",
-                    severity = NotificationSeverity.CRITICAL,
-                    relatedOrderId = "1044",
-                    isRead = false
-                ),
-                IotNotificationItem(
-                    id = "2",
-                    title = "Sensor Humedad — Almacén Palets Hass",
-                    description = "Humedad relativa cayó al 65.2% en zona de empaque. Recomendado activar nebulizadores.",
-                    sensorId = "HUM-ZONE-04",
-                    location = "Packhouse Bay 3",
-                    timestamp = "Hace 22 min",
-                    severity = NotificationSeverity.WARNING,
-                    relatedOrderId = "1048",
-                    isRead = false
-                ),
-                IotNotificationItem(
-                    id = "3",
-                    title = "Telemetría de Tránsito — Camión #3",
-                    description = "Registro de vibración excesiva durante carga en muelle 2. Sensor G-Force activado.",
-                    sensorId = "IOT-TRK-09",
-                    location = "En Tránsito a Muelle",
-                    timestamp = "Hace 1h 10m",
-                    severity = NotificationSeverity.WARNING,
-                    relatedOrderId = "1048",
-                    isRead = true
-                ),
-                IotNotificationItem(
-                    id = "4",
-                    title = "Sincronización Ledgers IoT",
-                    description = "300 kg de Hass Avocado registrados con hash de trazabilidad SENASA/HACCP verificado.",
-                    sensorId = "GATEWAY-CORE-01",
-                    location = "Fundo Santa Rosa",
-                    timestamp = "Hace 2h",
-                    severity = NotificationSeverity.INFO,
-                    isRead = true
-                )
-            )
-        )
-    }
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
 
-    val filteredNotifications = when (selectedFilter) {
-        "Críticas" -> notificationsList.filter { it.severity == NotificationSeverity.CRITICAL }
-        "Cámara Fría" -> notificationsList.filter { it.sensorId.contains("TEMP") || it.location.contains("Cool") }
-        else -> notificationsList
+    val visible = alerts.filter {
+        when (filter) {
+            AlertFilter.ALL -> true
+            AlertFilter.CRITICAL -> it.severity == AlertSeverity.CRITICAL
+            AlertFilter.COLD_CHAIN -> it.isColdChain
+        }
     }
+    val unread = alerts.count { !it.isRead }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(FruitLogixTheme.colors.bg)
-            .padding(horizontal = FruitLogixTheme.spacing.sm)
+            .background(scheme.background),
+        contentPadding = PaddingValues(start = spacing.sm, end = spacing.sm, top = spacing.sm, bottom = spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(spacing.inner)
     ) {
+        // Header: title, unread count, settings
         item {
-            Spacer(modifier = Modifier.height(14.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
+            Row(verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Notificaciones IoT",
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        style = FruitLogixTheme.typography.displayLarge,
-                        color = FruitLogixTheme.colors.textOnLight
+                        text = stringResource(R.string.iot_inbox_title),
+                        style = FruitLogixTheme.typography.headlineMedium,
+                        color = scheme.onBackground
                     )
                     Text(
-                        text = "ALERTAS DE SENSORES Y EVENTOS DE CAMPO",
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted,
-                        fontWeight = FontWeight.Bold
+                        text = stringResource(R.string.iot_inbox_subtitle),
+                        style = FruitLogixTheme.typography.bodyMedium,
+                        color = scheme.onSurfaceVariant
                     )
                 }
-
-                if (notificationsList.any { !it.isRead }) {
-                    TextButton(
-                        onClick = {
-                            notificationsList = notificationsList.map { it.copy(isRead = true) }
-                        }
-                    ) {
-                        Text(
-                            "Marcar leídas",
-                            style = FruitLogixTheme.typography.labelSmall,
-                            color = FruitLogixTheme.colors.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(14.dp))
-        }
-
-        // Filtros rápidos (Chips)
-        item {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                val filters = listOf("Todas", "Críticas", "Cámara Fría")
-                items(filters) { filter ->
-                    val isSelected = filter == selectedFilter
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { selectedFilter = filter },
-                        label = {
-                            Text(
-                                filter,
-                                color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnLight,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = FruitLogixTheme.colors.surfaceLight,
-                            selectedContainerColor = FruitLogixTheme.colors.primary
-                        ),
-                        shape = RoundedCornerShape(20.dp)
+                val settingsDescription = stringResource(R.string.iot_inbox_cd_settings)
+                Box(
+                    modifier = Modifier
+                        .size(FruitLogixTheme.sizing.minTouch)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onOpenSettings)
+                        .semantics { contentDescription = settingsDescription },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppIcon(
+                        id = R.drawable.ic_limits,
+                        contentDescription = null,
+                        tint = scheme.onSurfaceVariant,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.icon)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(14.dp))
         }
 
-        // Estado Vacío si no hay notificaciones
-        if (filteredNotifications.isEmpty()) {
+        if (unread > 0) {
             item {
-                Spacer(modifier = Modifier.height(30.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    StatusBadge(
+                        text = pluralStringResource(R.plurals.iot_inbox_unread, unread, unread),
+                        type = StatusBadgeType.HIGHLIGHT,
+                        maxLines = 1,
+                        softWrap = false
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextActionButton(
+                        text = stringResource(R.string.iot_inbox_mark_all_read),
+                        onClick = repository::markAllRead
+                    )
+                }
+            }
+        }
+
+        // Filters
+        item {
+            val counts = mapOf(
+                AlertFilter.ALL to alerts.size,
+                AlertFilter.CRITICAL to alerts.count { it.severity == AlertSeverity.CRITICAL },
+                AlertFilter.COLD_CHAIN to alerts.count { it.isColdChain }
+            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                items(AlertFilter.entries) { option ->
+                    val labelRes = when (option) {
+                        AlertFilter.ALL -> R.string.iot_filter_all
+                        AlertFilter.CRITICAL -> R.string.iot_filter_critical
+                        AlertFilter.COLD_CHAIN -> R.string.iot_filter_cold_chain
+                    }
+                    FilterChipItem(
+                        label = stringResource(labelRes, counts[option] ?: 0),
+                        selected = filter == option,
+                        onClick = { filter = option }
+                    )
+                }
+            }
+        }
+
+        if (visible.isEmpty()) {
+            item {
                 EmptyState(
-                    title = "Sin notificaciones",
-                    message = "No tienes alertas activas en esta categoría por el momento."
+                    title = stringResource(R.string.iot_empty_title),
+                    message = stringResource(R.string.iot_empty_message)
                 )
             }
         } else {
-            // Lista de Notificaciones
-            items(filteredNotifications, key = { it.id }) { item ->
-                IotNotificationCard(
-                    notification = item,
-                    onCardClick = {
-                        // Marca como leída al tocar la tarjeta
-                        notificationsList = notificationsList.map {
-                            if (it.id == item.id) it.copy(isRead = true) else it
-                        }
-                    },
-                    onDismiss = {
-                        // Elimina/descarta la notificación
-                        notificationsList = notificationsList.filter { it.id != item.id }
-                    },
+            items(visible, key = { it.id }) { alert ->
+                AlertCard(
+                    alert = alert,
+                    onClick = { repository.markRead(alert.id) },
+                    onDismiss = { repository.dismiss(alert.id) },
                     onOrderClick = { orderId ->
-                        // Redirige al detalle del pedido dinámicamente
+                        repository.markRead(alert.id)
                         onNavigate(ProducerOrderManagementRoutes.orderDetail(orderId))
                     }
                 )
-                Spacer(modifier = Modifier.height(12.dp))
             }
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.lg + 80.dp))
         }
     }
 }
 
 @Composable
-private fun IotNotificationCard(
-    notification: IotNotificationItem,
-    onCardClick: () -> Unit,
+private fun FilterChipItem(label: String, selected: Boolean, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        modifier = Modifier
+            .defaultMinSize(minHeight = FruitLogixTheme.sizing.minTouch)
+            .clip(FruitLogixTheme.shapes.Pill)
+            .background(if (selected) scheme.secondary else scheme.surfaceContainerHigh)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = FruitLogixTheme.typography.labelMedium,
+            color = if (selected) scheme.onSecondary else scheme.onSurface,
+            maxLines = 1,
+            softWrap = false
+        )
+    }
+}
+
+@Composable
+private fun assetLabel(asset: MonitoredAsset): String = stringResource(
+    when (asset.type) {
+        AssetType.COLD_ROOM -> R.string.iot_asset_cold_room
+        AssetType.WAREHOUSE -> R.string.iot_asset_warehouse
+        AssetType.TRUCK -> R.string.iot_asset_truck
+        AssetType.GATEWAY -> R.string.iot_asset_gateway
+    },
+    asset.code
+)
+
+/** Localized title + description built from the alert data. */
+@Composable
+private fun alertTexts(alert: IotAlert): Pair<String, String> {
+    val asset = assetLabel(alert.asset)
+    return when (val kind = alert.kind) {
+        is AlertKind.TemperatureHigh -> stringResource(R.string.iot_title_temperature, asset) to
+            stringResource(R.string.iot_desc_temperature, formatDecimal(kind.valueC), formatDecimal(kind.limitC))
+        is AlertKind.HumidityLow -> stringResource(R.string.iot_title_humidity, asset) to
+            stringResource(R.string.iot_desc_humidity, formatDecimal(kind.valuePct), formatDecimal(kind.minimumPct))
+        is AlertKind.Vibration -> stringResource(R.string.iot_title_vibration, asset) to
+            stringResource(R.string.iot_desc_vibration, kind.dock)
+        is AlertKind.TraceabilitySynced -> stringResource(R.string.iot_title_traceability) to
+            stringResource(R.string.iot_desc_traceability, kind.kg, kind.productName)
+    }
+}
+
+/** Alert (light list card). Unread alerts show a dot and a bolder border. */
+@Composable
+private fun AlertCard(
+    alert: IotAlert,
+    onClick: () -> Unit,
     onDismiss: () -> Unit,
     onOrderClick: (String) -> Unit
 ) {
-    val (badgeBg, badgeText, badgeColor) = when (notification.severity) {
-        NotificationSeverity.CRITICAL -> Triple(FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.15f), "CRÍTICO", FruitLogixTheme.colors.dangerStrong)
-        NotificationSeverity.WARNING -> Triple(Color(0xFFE88A1A).copy(alpha = 0.15f), "ADVERTENCIA", Color(0xFFE88A1A))
-        NotificationSeverity.INFO -> Triple(FruitLogixTheme.colors.primary.copy(alpha = 0.15f), "INFO", FruitLogixTheme.colors.primary)
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    val (title, description) = alertTexts(alert)
+
+    val (severityRes, badgeType) = when (alert.severity) {
+        AlertSeverity.CRITICAL -> R.string.iot_severity_critical to StatusBadgeType.DANGER
+        AlertSeverity.WARNING -> R.string.iot_severity_warning to StatusBadgeType.WARNING
+        AlertSeverity.INFO -> R.string.iot_severity_info to StatusBadgeType.INFO
     }
+    val (iconBg, iconTint) = when (alert.severity) {
+        AlertSeverity.CRITICAL -> scheme.errorContainer to scheme.error
+        AlertSeverity.WARNING -> colors.attentionContainer to colors.attentionContent
+        AlertSeverity.INFO -> colors.coldContainer to colors.coldContent
+    }
+    val iconRes = when (alert.kind) {
+        is AlertKind.TemperatureHigh -> R.drawable.ic_thermostat
+        is AlertKind.HumidityLow -> R.drawable.ic_humidity
+        is AlertKind.Vibration -> R.drawable.ic_fleet_truck
+        is AlertKind.TraceabilitySynced -> R.drawable.ic_verified
+    }
+    val unreadDescription = stringResource(R.string.iot_cd_unread)
 
     FruitLogixCard(
         variant = CardVariant.White,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCardClick() }
+        onClick = onClick,
+        border = if (!alert.isRead) androidx.compose.foundation.BorderStroke(2.dp, scheme.primary) else null,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (!notification.isRead) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(FruitLogixTheme.colors.primary)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                    }
-
-                    Surface(color = badgeBg, shape = RoundedCornerShape(6.dp)) {
-                        Text(
-                            text = badgeText,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            style = FruitLogixTheme.typography.labelSmall,
-                            color = badgeColor,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = notification.timestamp,
-                        style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted
+        Column(modifier = Modifier.padding(start = FruitLogixTheme.spacing.sm, top = FruitLogixTheme.spacing.inner, bottom = FruitLogixTheme.spacing.sm)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (!alert.isRead) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(scheme.primary)
+                            .semantics { contentDescription = unreadDescription }
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Botón X para borrar/descartar notificación
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_close),
-                            contentDescription = "Descartar",
-                            tint = FruitLogixTheme.colors.textMuted,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                }
+                StatusBadge(
+                    text = stringResource(severityRes),
+                    type = badgeType,
+                    maxLines = 1,
+                    softWrap = false
+                )
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                Text(
+                    text = formatTimeAgo(alert.occurredAt),
+                    style = FruitLogixTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                val dismissDescription = stringResource(R.string.iot_cd_dismiss)
+                Box(
+                    modifier = Modifier
+                        .size(FruitLogixTheme.sizing.minTouch)
+                        .clip(CircleShape)
+                        .clickable(role = Role.Button, onClick = onDismiss)
+                        .semantics { contentDescription = dismissDescription },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppIcon(
+                        id = R.drawable.ic_close,
+                        contentDescription = null,
+                        tint = scheme.onSurfaceVariant,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = notification.title,
-                fontFamily = PoppinsFontFamily,
-                fontWeight = FontWeight.Bold,
-                style = FruitLogixTheme.typography.titleMedium,
-                color = FruitLogixTheme.colors.textOnLight
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = notification.description,
-                style = FruitLogixTheme.typography.bodyMedium,
-                color = FruitLogixTheme.colors.textMuted
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Surface(
-                color = FruitLogixTheme.colors.bg.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.padding(end = FruitLogixTheme.spacing.sm),
+                verticalAlignment = Alignment.Top
             ) {
-                Row(
+                Box(
                     modifier = Modifier
-                        .padding(horizontal = 10.dp, vertical = 8.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .size(FruitLogixTheme.sizing.iconBox)
+                        .clip(FruitLogixTheme.shapes.IconBox)
+                        .background(iconBg),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Sensor: ${notification.sensorId} • ${notification.location}",
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted,
-                        fontSize = 11.sp
+                    AppIcon(
+                        id = iconRes,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
                     )
+                }
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.inner))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = FruitLogixTheme.typography.titleMedium,
+                        color = scheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = description,
+                        style = FruitLogixTheme.typography.bodyMedium,
+                        color = scheme.onSurfaceVariant
+                    )
+                }
+            }
 
-                    if (notification.relatedOrderId != null) {
-                        Text(
-                            text = "Ver pedido #${notification.relatedOrderId} →",
-                            style = FruitLogixTheme.typography.labelSmall,
-                            color = FruitLogixTheme.colors.primary,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { onOrderClick(notification.relatedOrderId) }
-                        )
-                    }
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+
+            // Sensor + location, and link to the related order
+            Row(
+                modifier = Modifier
+                    .padding(end = FruitLogixTheme.spacing.sm)
+                    .fillMaxWidth()
+                    .clip(FruitLogixTheme.shapes.Button)
+                    .background(scheme.surfaceContainerLow)
+                    .padding(horizontal = FruitLogixTheme.spacing.inner, vertical = FruitLogixTheme.spacing.xs),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.iot_sensor, alert.sensorId),
+                        style = FruitLogixTheme.extraTypography.dataMonoSmall,
+                        color = scheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = alert.location,
+                        style = FruitLogixTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                alert.relatedOrderId?.let { orderId ->
+                    TextActionButton(
+                        text = stringResource(R.string.iot_view_order, orderId),
+                        onClick = { onOrderClick(orderId) },
+                        trailingIcon = {
+                            AppIcon(
+                                id = R.drawable.ic_chevron_right,
+                                contentDescription = null,
+                                modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                            )
+                        }
+                    )
                 }
             }
         }

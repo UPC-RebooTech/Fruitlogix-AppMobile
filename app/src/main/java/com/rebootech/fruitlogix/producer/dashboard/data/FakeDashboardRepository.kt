@@ -18,6 +18,7 @@ import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.reposito
 import com.rebootech.fruitlogix.producer.qualityControl.stock.data.FakeStockRepository
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockItem
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockRepository
+import com.rebootech.fruitlogix.producer.orderManagement.domain.model.StockShortage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -43,7 +44,7 @@ class FakeDashboardRepository(
 
             val heroOrder = pendingOrders.firstOrNull()
 
-            var shortageText: String? = null
+            var shortage: StockShortage? = null
             if (heroOrder != null) {
                 for (item in heroOrder.items) {
                     val currentStock = stock.find { it.productId == item.productId || it.productName.equals(item.productName, ignoreCase = true) }
@@ -51,7 +52,7 @@ class FakeDashboardRepository(
                     if (available < item.kg) {
                         val diff = item.kg - available // <-- Corregido el operador de resta (-)
 
-                        shortageText = "Short by $diff kg of ${item.productName}"
+                        shortage = StockShortage(productName = item.productName, shortKg = diff)
                         break
                     }
                 }
@@ -78,7 +79,7 @@ class FakeDashboardRepository(
 
             ProducerDashboardData(
                 heroOrder = heroOrder,
-                heroStockShortage = shortageText,
+                heroStockShortage = shortage,
                 tasks = tasks,
                 summary = summary,
                 pipeline = pipeline,

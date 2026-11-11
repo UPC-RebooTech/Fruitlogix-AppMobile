@@ -1,7 +1,6 @@
 package com.rebootech.fruitlogix.producer.dashboard.domain.usecase
 
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.ProducerTask
-import com.rebootech.fruitlogix.producer.dashboard.domain.model.TaskPriority
 import com.rebootech.fruitlogix.producer.logisticsMonitoring.ProducerLogisticsMonitoringRoutes
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
@@ -10,8 +9,11 @@ import com.rebootech.fruitlogix.producer.orderManagement.domain.model.QualitySta
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockItem
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockStatus
-import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 
+/**
+ * Builds today's task list from orders and stock. Returns data only; the UI turns each
+ * task into localized text.
+ */
 class BuildTodayTasksUseCase {
     operator fun invoke(
         orders: List<Order>,
@@ -19,76 +21,64 @@ class BuildTodayTasksUseCase {
     ): List<ProducerTask> {
         val tasks = mutableListOf<ProducerTask>()
 
-        // 1. Pedidos nuevos pendientes (PENDING)
+        // 1. New orders waiting to be accepted (PENDING)
         orders.filter { it.status == OrderStatus.PENDING }.forEach { order ->
-            tasks.add(
-                ProducerTask(
-                    id = "task_pending_${order.id}",
-                    title = "New order to accept",
-                    detail = "${order.id} ${order.clientName} • ${order.items.joinToString { "${it.productName} ${it.kg} kg" }}",
-                    priority = TaskPriority.MEDIUM,
-                    destinationRoute = ProducerOrderManagementRoutes.orderDetail(order.id)
-                )
+            tasks += ProducerTask.NewOrder(
+                id = "task_pending_${order.id}",
+                destinationRoute = ProducerOrderManagementRoutes.orderDetail(order.id),
+                orderId = order.id,
+                clientName = order.clientName,
+                itemsSummary = order.itemsSummary()
             )
         }
 
-        // 2. Reportes rechazados (qualityStatus == REJECTED)
+        // 2. Rejected quality reports
         orders.filter { it.qualityStatus == QualityStatus.REJECTED }.forEach { order ->
-            tasks.add(
-                ProducerTask(
-                    id = "task_rejected_${order.id}",
-                    title = "Report rejected, re-inspect",
-                    detail = "${order.id} • ${order.rejectionReason ?: "Check rejection details"}",
-                    priority = TaskPriority.HIGH,
-                    destinationRoute = ProducerQualityControlRoutes.reviewResult(order.id)
-                )
+            tasks += ProducerTask.QualityRejected(
+                id = "task_rejected_${order.id}",
+                destinationRoute = ProducerQualityControlRoutes.reviewResult(order.id),
+                orderId = order.id,
+                reason = order.rejectionReason
             )
         }
 
-        // 3. Inspecciones pendientes (IN_PREPARATION y qualityStatus == null)
-        // Note: PENDING means "report submitted, in review" - not needing a new inspection
-        // REJECTED has its own task ("Report rejected, re-inspect")
+        // 3. Pending inspections (IN_PREPARATION without a report).
+        // PENDING quality means "report submitted, in review"; REJECTED has its own task.
         orders.filter { it.status == OrderStatus.IN_PREPARATION && it.qualityStatus == null }.forEach { order ->
-            tasks.add(
-                ProducerTask(
-                    id = "task_inspection_${order.id}",
-                    title = "Inspection pending",
-                    detail = "${order.id} ${order.clientName} • ${order.items.joinToString { "${it.productName} ${it.kg} kg" }}",
-                    priority = TaskPriority.MEDIUM,
-                    destinationRoute = ProducerQualityControlRoutes.inspection(order.id)
-                )
+            tasks += ProducerTask.InspectionPending(
+                id = "task_inspection_${order.id}",
+                destinationRoute = ProducerQualityControlRoutes.inspection(order.id),
+                orderId = order.id,
+                clientName = order.clientName,
+                itemsSummary = order.itemsSummary()
             )
         }
 
-        // 4. Camiones asignados ("Ready to load")
+        // 4. Trucks assigned and ready to load
         orders.filter { it.isReadyToLoad }.forEach { order ->
-            tasks.add(
-                ProducerTask(
-                    id = "task_truck_${order.id}",
-                    title = "Truck ${order.assignedTruck?.plate ?: ""} assigned",
-                    detail = "${order.id} Ready to load • ETA ${order.assignedTruck?.etaFormatted ?: "14:30"}",
-                    priority = TaskPriority.LOW,
-                    destinationRoute = ProducerLogisticsMonitoringRoutes.loadTruck(order.id),
-                    badgeText = "Ready to load",
-                    badgeType = StatusBadgeType.HIGHLIGHT
-                )
+            tasks += ProducerTask.TruckAssigned(
+                id = "task_truck_${order.id}",
+                destinationRoute = ProducerLogisticsMonitoringRoutes.loadTruck(order.id),
+                orderId = order.id,
+                truckPlate = order.assignedTruck?.plate.orEmpty(),
+                eta = order.assignedTruck?.etaFormatted ?: "14:30"
             )
         }
 
-        // 5. Stock crítico (CRITICAL)
+        // 5. Critical stock
         stock.filter { it.status == StockStatus.CRITICAL }.forEach { item ->
-            tasks.add(
-                ProducerTask(
-                    id = "task_stock_${item.productId}",
-                    title = "Critical stock",
-                    detail = "${item.productName} ${item.availableKg} kg (below ${item.minThresholdKg} kg threshold)",
-                    priority = TaskPriority.HIGH,
-                    destinationRoute = ProducerQualityControlRoutes.stockDetail(item.productId)
-                )
+            tasks += ProducerTask.CriticalStock(
+                id = "task_stock_${item.productId}",
+                destinationRoute = ProducerQualityControlRoutes.stockDetail(item.productId),
+                productName = item.productName,
+                availableKg = item.availableKg,
+                minThresholdKg = item.minThresholdKg
             )
         }
 
         return tasks
     }
-}
 
+    private fun Order.itemsSummary(): String =
+        items.joinToString(", ") { "${it.productName} ${it.kg} kg" }
+}

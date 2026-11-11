@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Greeting -->
+    <string name="producer_home_greeting_morning">Good morning, %1$s</string>
+    <string name="producer_home_greeting_afternoon">Good afternoon, %1$s</string>
+    <string name="producer_home_greeting_evening">Good evening, %1$s</string>
+    <string name="producer_home_date_pattern">EEE, MMM d</string>
+    <string name="producer_home_error_loading">We couldn\'t load your dashboard.</string>
+
+    <!-- Next action (highlighted) -->
+    <string name="producer_home_next_action">Next action</string>
+    <string name="producer_home_all_caught_up_title">All caught up</string>
+    <string name="producer_home_all_caught_up_body">You have no orders waiting for a reply.</string>
+    <string name="producer_home_hours_left">%1$d h left</string>
+    <string name="producer_home_order_title">Order %1$s</string>
+    <string name="producer_home_reply_within">Reply within %1$d h</string>
+
+    <!-- Quick actions -->
+    <string name="producer_home_qa_scan_lot">Scan lot</string>
+    <string name="producer_home_qa_new_inspection">New inspection</string>
+    <string name="producer_home_qa_update_stock">Update stock</string>
+    <string name="producer_home_qa_log_harvest">Log harvest</string>
+
+    <!-- Today's tasks -->
+    <string name="producer_home_tasks_title">Today\'s tasks</string>
+    <string name="producer_home_tasks_view_all">View all notifications</string>
+    <string name="producer_home_tasks_empty">Nothing pending for today.</string>
+    <string name="producer_home_task_new_order">New order to accept</string>
+    <string name="producer_home_task_rejected">Report rejected, re-inspect</string>
+    <string name="producer_home_task_rejected_fallback">Check the rejection details</string>
+    <string name="producer_home_task_inspection">Inspection pending</string>
+    <string name="producer_home_task_truck">Truck %1$s assigned</string>
+    <string name="producer_home_task_truck_detail">%1$s · ETA %2$s</string>
+    <string name="producer_home_task_critical_stock">Critical stock</string>
+    <string name="producer_home_task_critical_stock_detail">%1$s: %2$d kg (minimum %3$d kg)</string>
+    <string name="producer_home_task_urgent">Urgent</string>
+
+    <!-- KPIs -->
+    <string name="producer_home_kpi_pending_orders">Pending orders</string>
+    <string name="producer_home_kpi_lots_dispatched">Lots dispatched</string>
+    <string name="producer_home_kpi_this_month">this month</string>
+    <string name="producer_home_kpi_quality_approval">Quality approval</string>
+    <string name="producer_home_kpi_optimal">Optimal</string>
+    <string name="producer_home_kpi_pending_payments">Pending payments</string>
+    <string name="producer_home_kpi_collected">Collected %1$s</string>
+
+    <!-- Order flow -->
+    <string name="producer_home_pipeline_title">Order flow</string>
+    <plurals name="producer_home_pipeline_active">
+        <item quantity="one">%1$d active order</item>
+        <item quantity="other">%1$d active orders</item>
+    </plurals>
+    <string name="producer_home_cd_view_orders">View orders</string>
+
+    <!-- Inventory health -->
+    <string name="producer_home_stock_title">Inventory health</string>
+    <string name="producer_home_stock_subtitle">Current stock vs. minimum threshold</string>
+    <string name="producer_home_stock_low">Low</string>
+    <string name="producer_home_stock_critical">Critical</string>
+    <string name="producer_home_stock_min">min %1$d</string>
+    <string name="producer_home_cd_view_stock">View stock</string>
+
+    <!-- Next harvest -->
+    <string name="producer_home_next_harvest">Next harvest</string>
+    <string name="producer_home_harvest_expected">~%1$s kg</string>
+
+    <!-- Accept order dialog -->
+    <string name="producer_home_accept_title">Accept order %1$s?</string>
+    <string name="producer_home_accept_message">The products in %1$s\'s order will move to \"In preparation\".</string>
+    <string name="producer_home_accept_confirm">Accept</string>
+    <string name="producer_home_order_accepted">Order %1$s accepted</string>
+
+    <!-- New inspection sheet -->
+    <string name="producer_home_picker_subtitle">Choose the order in preparation you want to inspect.</string>
+</resources>

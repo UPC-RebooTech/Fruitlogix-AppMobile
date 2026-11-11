@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.shared.core.model
 
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -21,6 +22,12 @@ sealed class UiText {
             result = 31 * result + args.contentHashCode()
             return result
         }
+    }
+
+    /** Resolves the text outside composition (e.g. for a snackbar inside LaunchedEffect). */
+    fun asString(context: Context): String = when (this) {
+        is Plain -> value
+        is StringResource -> context.getString(id, *args)
     }
 
     @Composable

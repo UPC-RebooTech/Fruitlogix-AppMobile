@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,23 +19,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
+/**
+ * Card rule:
+ * - [Dark] (inverseSurface): only KPI tiles and highlighted blocks (e.g. the next action).
+ * - [White] (surfaceContainerLowest) / [Light] (surfaceContainerLow): lists and regular content.
+ * - [Tint] (secondaryContainer): soft secondary highlights.
+ * All variants use theme roles, so a future dark theme needs no screen changes.
+ */
 enum class CardVariant {
+    /** inverseSurface. KPI tiles and highlighted blocks only. */
     Dark,
+
+    /** surfaceContainerLow. Grouped content. */
     Light,
+
+    /** surfaceContainerLowest with hairline border. Default for lists and detail blocks. */
     White,
+
+    /** secondaryContainer. Soft secondary highlights. */
     Tint
 }
 
 /**
- * Universal Card component for FruitLogix Design System supporting Dark, Light, White and Tint surface variants.
+ * Universal card for the FruitLogix design system.
+ * Flat by default: hierarchy comes from surface tone, not shadows.
  *
- * @param modifier Modifier to apply to the card container
  * @param variant Visual variant (Dark, Light, White, Tint)
- * @param shape Card shape (defaults to FruitLogixTheme.shapes.Card 24dp)
- * @param border Optional border stroke
- * @param elevation Card elevation specification
- * @param onClick Optional click handler
- * @param content Inner composable content slot with ColumnScope
+ * @param shape Card shape (defaults to 18dp; use FruitLogixTheme.shapes.HeroCard for hero blocks)
  */
 @Composable
 fun FruitLogixCard(
@@ -46,27 +57,16 @@ fun FruitLogixCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
     val (containerColor, contentColor) = when (variant) {
-        CardVariant.Dark -> Pair(
-            FruitLogixTheme.colors.surfaceDark,
-            FruitLogixTheme.colors.textOnDark
-        )
-        CardVariant.Light -> Pair(
-            FruitLogixTheme.colors.surfaceLight,
-            FruitLogixTheme.colors.textOnLight
-        )
-        CardVariant.White -> Pair(
-            FruitLogixTheme.colors.white,
-            FruitLogixTheme.colors.textOnLight
-        )
-        CardVariant.Tint -> Pair(
-            FruitLogixTheme.colors.surfaceTint,
-            FruitLogixTheme.colors.textOnLight
-        )
+        CardVariant.Dark -> scheme.inverseSurface to scheme.inverseOnSurface
+        CardVariant.Light -> scheme.surfaceContainerLow to scheme.onSurface
+        CardVariant.White -> scheme.surfaceContainerLowest to scheme.onSurface
+        CardVariant.Tint -> scheme.secondaryContainer to scheme.onSecondaryContainer
     }
 
-    val resolvedBorder = border ?: if (variant == CardVariant.Tint) {
-        BorderStroke(1.dp, FruitLogixTheme.colors.primary.copy(alpha = 0.35f))
+    val resolvedBorder = border ?: if (variant == CardVariant.White) {
+        BorderStroke(1.dp, scheme.outlineVariant)
     } else {
         null
     }
@@ -89,39 +89,20 @@ fun FruitLogixCard(
     }
 }
 
-@Preview
+@Preview(showBackground = true, backgroundColor = 0xFFF7FAF6)
 @Composable
 private fun FruitLogixCardPreview() {
     FruitLogixTheme {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            FruitLogixCard(
-                variant = CardVariant.Dark,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-            ) {
-                Text("Dark Card", modifier = Modifier.padding(16.dp))
-            }
-
-            FruitLogixCard(
-                variant = CardVariant.Light,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-            ) {
-                Text("Light Card", modifier = Modifier.padding(16.dp))
-            }
-
-            FruitLogixCard(
-                variant = CardVariant.White,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-            ) {
-                Text("White Card", modifier = Modifier.padding(16.dp))
-            }
-
-            FruitLogixCard(
-                variant = CardVariant.Tint,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Tint Card", modifier = Modifier.padding(16.dp))
+        Column(modifier = Modifier.padding(16.dp)) {
+            CardVariant.entries.forEach { variant ->
+                FruitLogixCard(
+                    variant = variant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Text("${variant.name} card", modifier = Modifier.padding(16.dp))
+                }
             }
         }
     }
