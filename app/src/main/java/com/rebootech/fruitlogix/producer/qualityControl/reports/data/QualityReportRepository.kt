@@ -1,13 +1,19 @@
 package com.rebootech.fruitlogix.producer.qualityControl.reports.data
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityReportItem
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityStatus
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 object QualityReportRepository {
     val reports = mutableStateListOf(
         QualityReportItem(
-            id = "1048", // Cambiado para coincidir con el orderNumber
+            id = "1048",
             orderNumber = "#1048",
             clientName = "Supermercados Wong",
             timestamp = "Today, 10:48 AM",
@@ -24,7 +30,7 @@ object QualityReportRepository {
             inspectorName = "Carlos Melgar"
         ),
         QualityReportItem(
-            id = "1041", // Cambiado para coincidir con el orderNumber
+            id = "1041",
             orderNumber = "#1041",
             clientName = "Supermercados Wong",
             timestamp = "Today, 09:15 AM",
@@ -41,7 +47,7 @@ object QualityReportRepository {
             inspectorName = "Elena Quispe"
         ),
         QualityReportItem(
-            id = "1044", // Cambiado a "1044" para que coincida perfectamente con la orden
+            id = "1044",
             orderNumber = "#1044",
             clientName = "Mercado Central S.A.",
             timestamp = "Yesterday, 16:30 PM",
@@ -59,7 +65,7 @@ object QualityReportRepository {
             alertMessage = "Quality Alert: Bruising 5.4%. Exceeded standard 3.5% threshold. Lot quarantined for re-grading."
         ),
         QualityReportItem(
-            id = "1030", // Cambiado para coincidir con el orderNumber
+            id = "1030",
             orderNumber = "#1030",
             clientName = "Cencosud Retail",
             timestamp = "Oct 29, 14:10 PM",
@@ -76,4 +82,26 @@ object QualityReportRepository {
             inspectorName = "Elena Quispe"
         )
     )
+
+    // NUEVO: Sincronización en segundo plano con el backend al cargar los reportes
+    init {
+        fetchReportsFromBackend()
+    }
+
+    private fun fetchReportsFromBackend() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Intenta sincronizar con el servicio de calidad de la API en Render
+                val remoteInspections = RetrofitClient.api.getQualityInspections()
+                if (remoteInspections.isNotEmpty()) {
+                    Log.d("FruitLogix-API", "Reportes de calidad sincronizados desde la nube.")
+                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                }
+            } catch (e: Exception) {
+                // Si el servidor está durmiendo, se protege usando los reportes locales intactos
+                Log.e("FruitLogix-API", "Backend inactivo para reportes. Usando respaldo local: ${e.message}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+            }
+        }
+    }
 }

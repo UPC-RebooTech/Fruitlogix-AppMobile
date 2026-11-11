@@ -1,5 +1,11 @@
 package com.rebootech.fruitlogix.producer.qualityControl.inspection.data
 
+import android.util.Log
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 data class InspectionOrderDetails(
     val orderId: String,
     val lotCode: String,
@@ -18,6 +24,28 @@ data class InspectionOrderDetails(
 )
 
 object InspectionOrderRepository {
+
+    // Bloque opcional: Inicializa una llamada en segundo plano a Retrofit para sincronizar
+    init {
+        fetchInspectionsFromBackend()
+    }
+
+    private fun fetchInspectionsFromBackend() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Intenta traer las inspecciones reales desde tu backend en Render
+                val remoteInspections = RetrofitClient.api.getQualityInspections()
+                if (remoteInspections.isNotEmpty()) {
+                    Log.d("FruitLogix-API", "Inspecciones de calidad sincronizadas desde la nube: ${remoteInspections.size}")
+                    // Aquí podrías guardar o mezclar en una lista local si lo deseas
+                }
+            } catch (e: Exception) {
+                // Si el servidor de Render está dormido, usa los datos locales de abajo sin que la app falle
+                Log.e("FruitLogix-API", "Backend inactivo para inspecciones. Usando modo local: ${e.message}")
+            }
+        }
+    }
+
     fun getOrderById(orderId: String): InspectionOrderDetails {
         val cleanId = orderId.removePrefix("#").removePrefix("ORD-").trim()
 

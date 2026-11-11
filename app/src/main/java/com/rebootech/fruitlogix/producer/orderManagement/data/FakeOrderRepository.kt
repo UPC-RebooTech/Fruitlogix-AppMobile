@@ -1,19 +1,30 @@
 package com.rebootech.fruitlogix.producer.orderManagement.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.AssignedTruck
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderItem
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.QualityStatus
 import com.rebootech.fruitlogix.producer.orderManagement.domain.repository.OrderRepository
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class FakeOrderRepository : OrderRepository {
     private val _orders = MutableStateFlow(createInitialOrders())
+
+    // NUEVO: Apenas se abre la app, intentamos buscar los pedidos reales en internet en segundo plano
+    init {
+        fetchOrdersFromBackend()
+    }
 
     override fun observeOrders(): Flow<List<Order>> = _orders.asStateFlow()
 
@@ -30,6 +41,49 @@ class FakeOrderRepository : OrderRepository {
             }
         }
         return found
+    }
+
+    // NUEVO: La función que va a internet a pedir los datos a tu backend en Render usando Retrofit
+    private fun fetchOrdersFromBackend() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Aquí usa Retrofit para llamar al servidor
+                val remoteOrders = RetrofitClient.api.getOrders()
+
+                if (remoteOrders.isNotEmpty()) {
+                    // Convertimos lo que viene de internet al diseño de tus pedidos locales
+                    val mappedRemote = remoteOrders.map { dto ->
+                        Order(
+                            id = "#${dto.id ?: 1000}",
+                            clientName = dto.clientName ?: "Cliente General",
+                            distributorName = "Carlos Mendoza",
+                            items = listOf(
+                                OrderItem(
+                                    productId = "prod",
+                                    productName = dto.productName ?: "Fruta",
+                                    kg = dto.quantityKg?.toInt() ?: 100
+                                )
+                            ),
+                            dueDate = LocalDate.now().plusDays(2),
+                            status = OrderStatus.PENDING,
+                            respondByHoursLeft = 2
+                        )
+                    }
+
+                    // Juntamos los de internet con tus pedidos de prueba sin que se repitan
+                    _orders.update { localList ->
+                        (mappedRemote + localList).distinctBy { it.id }
+                    }
+
+                    // Avisamos que estamos conectados en línea
+                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                }
+            } catch (e: Exception) {
+                // Si Render está "dormido" o no hay internet, la app no se rompe y usa tus datos locales
+                Log.e("FruitLogix-API", "Usando modo local (Backend inactivo): ${e.message}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+            }
+        }
     }
 
     companion object {

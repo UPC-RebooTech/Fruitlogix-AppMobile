@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,13 +19,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProducerProfileRepository
 import com.rebootech.fruitlogix.shared.ui.theme.*
 
 @Composable
 fun ProducerProfileScreen(
     onSwitchRole: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    repository: FakeProducerProfileRepository = FakeProducerProfileRepository.instance
 ) {
+    // Observamos los datos de forma reactiva desde el repositorio local/híbrido
+    val profileState by repository.profile.collectAsState()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -52,7 +59,7 @@ fun ProducerProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Header: Avatar e Información del Fundo (Estilo similar a Distribuidores)
+            // Header: Avatar e Información del Fundo
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -81,19 +88,19 @@ fun ProducerProfileScreen(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Fundo Agrícola Los Laureles S.A.C.",
+                        text = profileState.name,
                         color = ColorTextOnDark,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Productor Agrícola / Admin",
+                        text = profileState.roleTitle,
                         color = ColorPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "Ica, Valle Hermoso",
+                        text = profileState.location,
                         color = ColorTextMuted,
                         fontSize = 12.sp
                     )
@@ -121,9 +128,9 @@ fun ProducerProfileScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                ProfileInfoRow(label = "RUC Operativo", value = "20491823901")
-                ProfileInfoRow(label = "Ubicación", value = "Ica, Valle Hermoso")
-                ProfileInfoRow(label = "Certificación GlobalGAP", value = "Válida hasta Octubre 2027")
+                ProfileInfoRow(label = "RUC Operativo", value = profileState.ruc)
+                ProfileInfoRow(label = "Ubicación", value = profileState.location)
+                ProfileInfoRow(label = "Certificación GlobalGAP", value = profileState.certification)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
