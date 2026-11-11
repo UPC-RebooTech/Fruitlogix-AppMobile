@@ -7,10 +7,10 @@ import com.rebootech.fruitlogix.producer.profilesManagement.presentation.Produce
 
 fun NavGraphBuilder.producerProfilesManagementGraph(
     navController: NavHostController,
-    onSwitchRole: () -> Unit
+    onSignOut: () -> Unit
 ) {
     composable(ProducerProfilesManagementRoutes.Profile) {
-        ProducerProfileScreen(onSwitchRole = onSwitchRole)
+        ProducerProfileScreen(onSignOut = onSignOut)
     }
 }
 

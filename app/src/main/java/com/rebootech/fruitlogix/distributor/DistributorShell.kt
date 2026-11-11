@@ -11,7 +11,7 @@ import com.rebootech.fruitlogix.app.navigation.BottomNavBar
 
 @Composable
 fun DistributorShell(
-    onSwitchRole: () -> Unit = {},
+    onSignOut: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -23,7 +23,7 @@ fun DistributorShell(
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
-            onSwitchRole = onSwitchRole, // <--- Conectamos la acción hacia abajo
+            onSignOut = onSignOut, // <--- Conectamos la acción hacia abajo
             modifier = Modifier.padding(innerPadding)
         )
     }

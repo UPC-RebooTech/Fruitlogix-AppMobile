@@ -410,4 +410,16 @@
     <string name="producer_orders_filter_apply_format">Aplicar filtros (%1$d)</string>
     <string name="producer_orders_filter_date_pill">Fecha: %1$s</string>
     <string name="producer_orders_filter_close">Cerrar filtros</string>
+    <!-- Auth & Session -->
+    <string name="auth_login_title">Iniciar sesión</string>
+    <string name="auth_login_subtitle">Bienvenido a FruitLogix</string>
+    <string name="auth_sign_up_button">Crear cuenta</string>
+    <string name="auth_signup_title">Crear cuenta</string>
+    <string name="auth_signup_subtitle">Registro de nuevo usuario</string>
+    <string name="auth_back_to_login">Volver a Iniciar sesión</string>
+    <string name="auth_logout_button">Cerrar sesión</string>
+    <string name="auth_logout_dialog_title">¿Cerrar sesión?</string>
+    <string name="auth_logout_dialog_message">Tendrás que volver a iniciar sesión para entrar.</string>
+    <string name="auth_logout_dialog_confirm">Cerrar sesión</string>
+    <string name="auth_logout_dialog_cancel">Cancelar</string>
 </resources>

@@ -18,12 +18,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.shared.ui.theme.*
+import com.rebootech.fruitlogix.shared.ui.components.ConfirmDialog
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun ProducerProfileScreen(
-    onSwitchRole: () -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showSignOutConfirmDialog by remember { mutableStateOf(false) }
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -129,21 +138,32 @@ fun ProducerProfileScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Botón para cambiar de rol / volver al inicio
-            Button(
-                onClick = onSwitchRole,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ColorPrimary,
-                    contentColor = ColorOnPrimary
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Cambiar de Rol (Cerrar Sesión de Productor)",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                        SecondaryButton(
+                text = stringResource(R.string.auth_logout_button),
+                onClick = { showSignOutConfirmDialog = true },
+                leadingIcon = {
+                    AppIcon(
+                        id = R.drawable.ic_logout,
+                        contentDescription = stringResource(R.string.auth_logout_button),
+                        tint = FruitLogixTheme.colors.textOnDark,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (showSignOutConfirmDialog) {
+                ConfirmDialog(
+                    title = stringResource(R.string.auth_logout_dialog_title),
+                    message = stringResource(R.string.auth_logout_dialog_message),
+                    confirmText = stringResource(R.string.auth_logout_dialog_confirm),
+                    dismissText = stringResource(R.string.auth_logout_dialog_cancel),
+                    destructive = true,
+                    onConfirm = {
+                        showSignOutConfirmDialog = false
+                        onSignOut()
+                    },
+                    onDismiss = { showSignOutConfirmDialog = false }
                 )
             }
         }

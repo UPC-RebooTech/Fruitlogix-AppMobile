@@ -25,7 +25,7 @@ import com.rebootech.fruitlogix.distributor.qualityControl.qualityControlGraph
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    onSwitchRole: () -> Unit = {},
+    onSignOut: () -> Unit = {},
     startDestination: String = Route.Home.route
 ) {
     NavHost(
@@ -117,7 +117,7 @@ fun AppNavHost(
         // Bounded context nav graphs
         infrastructureIotGraph(navController)
         qualityControlGraph(navController)
-        profilesManagementGraph(navController, onSwitchRole = onSwitchRole)
+        profilesManagementGraph(navController, onSignOut = onSignOut)
         fleetManagementGraph(navController)
         orderManagementGraph(navController)
         logisticsMonitoringGraph(navController)

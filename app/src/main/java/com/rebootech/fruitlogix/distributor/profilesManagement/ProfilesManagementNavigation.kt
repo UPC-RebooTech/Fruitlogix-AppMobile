@@ -1,4 +1,4 @@
-﻿package com.rebootech.fruitlogix.distributor.profilesManagement
+package com.rebootech.fruitlogix.distributor.profilesManagement
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -8,14 +8,14 @@ import com.rebootech.fruitlogix.distributor.profilesManagement.presentation.Prof
 
 fun NavGraphBuilder.profilesManagementGraph(
     navController: NavHostController,
-    onSwitchRole: () -> Unit = {}
+    onSignOut: () -> Unit = {}
 ) {
     composable(ProfilesManagementRoutes.Producers) {
         ProducersScreen()
     }
     composable(ProfilesManagementRoutes.Profile) {
         ProfileScreen(
-            onSwitchRole = onSwitchRole
+            onSignOut = onSignOut
         )
     }
 }
