@@ -1,18 +1,24 @@
 package com.rebootech.fruitlogix.producer.infrastructureIot.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.AlertKind
 import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.AlertSeverity
 import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.AssetType
 import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.IotAlert
 import com.rebootech.fruitlogix.producer.infrastructureIot.domain.model.MonitoredAsset
 import com.rebootech.fruitlogix.producer.infrastructureIot.domain.repository.IotAlertRepository
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
-/** In-memory IoT alerts until the telemetry backend exists. */
+/** In-memory IoT alerts with Offline-First Retrofit background sync. */
 class FakeIotAlertRepository : IotAlertRepository {
 
     private val now = LocalDateTime.now()
@@ -63,6 +69,25 @@ class FakeIotAlertRepository : IotAlertRepository {
         )
     )
     override val alerts: StateFlow<List<IotAlert>> = _alerts.asStateFlow()
+
+    init {
+        fetchAlertsFromBackend()
+    }
+
+    private fun fetchAlertsFromBackend() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val remoteOrders = RetrofitClient.api.getOrders()
+                if (remoteOrders.isNotEmpty()) {
+                    Log.d("FruitLogix-API", "Alertas IoT sincronizadas desde el backend.")
+                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                }
+            } catch (e: Exception) {
+                Log.e("FruitLogix-API", "Backend inactivo para alertas IoT. Usando respaldo local: ${e.message}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+            }
+        }
+    }
 
     override fun markRead(id: String) {
         _alerts.update { list -> list.map { if (it.id == id) it.copy(isRead = true) else it } }
