@@ -1,20 +1,30 @@
 package com.rebootech.fruitlogix.producer.orderManagement.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.AssignedTruck
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderItem
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.QualityStatus
 import com.rebootech.fruitlogix.producer.orderManagement.domain.repository.OrderRepository
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 
 class FakeOrderRepository : OrderRepository {
     private val _orders = MutableStateFlow(createInitialOrders())
+
+    init {
+        fetchOrdersFromBackend()
+    }
 
     override fun observeOrders(): Flow<List<Order>> = _orders.asStateFlow()
 
@@ -60,7 +70,6 @@ class FakeOrderRepository : OrderRepository {
             list.map { order ->
                 if (order.id.removePrefix("#") == id && order.isReadyToLoad) {
                     found = true
-                    // dispatchedAtFormatted = null → the card shows "dispatched today"
                     order.copy(status = OrderStatus.IN_TRANSIT, dispatchedAtFormatted = null)
                 } else {
                     order
@@ -68,6 +77,21 @@ class FakeOrderRepository : OrderRepository {
             }
         }
         return found
+    }
+
+    private fun fetchOrdersFromBackend() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val remoteOrders = RetrofitClient.api.getOrders()
+                if (remoteOrders.isNotEmpty()) {
+                    Log.d("FruitLogix-API", "Órdenes sincronizadas desde Render exitosamente.")
+                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                }
+            } catch (e: Exception) {
+                Log.e("FruitLogix-API", "Backend inactivo para órdenes. Usando respaldo local: ${e.message}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+            }
+        }
     }
 
     companion object {

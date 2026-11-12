@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.producer.dashboard.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.DashboardSummary
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.PipelineCount
 import com.rebootech.fruitlogix.producer.dashboard.domain.repository.DashboardRepository
@@ -37,6 +38,9 @@ class FakeDashboardRepository(
             harvestRepository.observeUpcomingHarvest(),
             paymentRepository.observePaymentSummary()
         ) { orders: List<Order>, stock: List<StockItem>, harvest: PlannedHarvest?, payment: PaymentSummary ->
+
+            Log.d("FruitLogix-Dashboard", "Actualizando panel principal con ${orders.size} órdenes y ${stock.size} items de stock.")
+
             val pendingOrders = orders.filter { it.status == OrderStatus.PENDING }
             val inPrepOrders = orders.filter { it.status == OrderStatus.IN_PREPARATION }
             val inTransitOrders = orders.filter { it.status == OrderStatus.IN_TRANSIT }
@@ -50,8 +54,7 @@ class FakeDashboardRepository(
                     val currentStock = stock.find { it.productId == item.productId || it.productName.equals(item.productName, ignoreCase = true) }
                     val available = currentStock?.availableKg ?: 0
                     if (available < item.kg) {
-                        val diff = item.kg - available // <-- Corregido el operador de resta (-)
-
+                        val diff = item.kg - available
                         shortage = StockShortage(productName = item.productName, shortKg = diff)
                         break
                     }
