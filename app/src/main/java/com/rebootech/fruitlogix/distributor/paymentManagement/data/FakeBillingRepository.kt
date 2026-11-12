@@ -1,70 +1,167 @@
 ﻿package com.rebootech.fruitlogix.distributor.paymentManagement.data
 
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.CreditReason
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceType
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.PricePoint
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.ProposedCreditNote
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.PurchaseSummary
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.SummaryPeriod
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository.BillingRepository
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.InvoiceDto
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+import java.time.YearMonth
 
-class FakeBillingRepository : BillingRepository {
+/**
+ * Sample invoices with the same clients and producers as Orders and Fleet. When the Render
+ * backend answers (/api/v1/invoices), its invoices are merged in; new invoices are also sent
+ * there. Without connection the sample data keeps the screen usable.
+ */
+class FakeBillingRepository private constructor() : BillingRepository {
 
-    override fun getInvoices(): List<Invoice> {
-        return invoices
-    }
-    override fun getInvoiceById(invoiceId: String): Invoice? {
-        return invoices.find { invoice ->
-            invoice.id == invoiceId
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var nextNumber = 1050
+
+    private val _invoices = MutableStateFlow(initialInvoices())
+    override val invoices: StateFlow<List<Invoice>> = _invoices.asStateFlow()
+
+    private val _creditNotes = MutableStateFlow(initialCreditNotes())
+    override val creditNotes: StateFlow<List<ProposedCreditNote>> = _creditNotes.asStateFlow()
+
+    override fun getInvoiceById(invoiceId: String): Invoice? =
+        _invoices.value.firstOrNull { it.id.equals(invoiceId, ignoreCase = true) }
+
+    override suspend fun addInvoice(invoice: Invoice) {
+        _invoices.update { listOf(invoice) + it }
+        // Best effort: the invoice stays locally even if the server does not answer
+        scope.launch {
+            runCatching {
+                RetrofitClient.api.createInvoice(
+                    InvoiceDto(
+                        invoiceNumber = invoice.id,
+                        clientName = invoice.counterpartyName,
+                        amount = invoice.amount,
+                        issueDate = invoice.issuedOn.toString(),
+                        dueDate = invoice.dueOn.toString(),
+                        type = invoice.type.name,
+                        status = invoice.status.name
+                    )
+                )
+            }
         }
     }
-    companion object {
 
-        private val invoices = listOf(
-            Invoice(
-                id = "INV-1042",
-                counterpartyName = "Supermercados Lima Norte",
-                amount = 8450.00,
-                dateLabel = "24 Oct 2026",
-                type = InvoiceType.RECEIVABLE,
-                status = InvoiceStatus.PENDING
+    override suspend fun approveCreditNote(noteId: String, amount: Double) {
+        _creditNotes.update { list -> list.map { if (it.id == noteId) it.copy(approvedAmount = amount) else it } }
+    }
+
+    override fun priceClients(): List<String> = PRICE_HISTORY.keys.map { it.second }.distinct()
+    override fun priceProducts(): List<String> = PRICE_HISTORY.keys.map { it.first }.distinct()
+
+    override fun priceHistory(productName: String, clientName: String): List<PricePoint> {
+        val prices = PRICE_HISTORY[productName to clientName] ?: return emptyList()
+        val last = YearMonth.now()
+        return prices.mapIndexed { i, price -> PricePoint(last.minusMonths((prices.size - 1 - i).toLong()), price) }
+    }
+
+    override fun purchaseClients(): List<String> = PURCHASE_CLIENTS
+
+    override fun purchaseSummary(clientName: String, period: SummaryPeriod): PurchaseSummary? =
+        PURCHASES.firstOrNull { it.clientName == clientName && it.period == period }
+
+    override fun nextInvoiceId(): String = "INV-${nextNumber++}"
+
+    override suspend fun refresh() {
+        val remote = withContext(Dispatchers.IO) { runCatching { RetrofitClient.api.getInvoices() } }
+        remote.onSuccess { dtos ->
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+            val mapped = dtos.mapIndexedNotNull { index, dto -> dto.toInvoice(index) }
+            if (mapped.isNotEmpty()) _invoices.update { (mapped + it).distinctBy { invoice -> invoice.id } }
+        }.onFailure {
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+        }
+    }
+
+    private fun InvoiceDto.toInvoice(index: Int): Invoice? {
+        val issued = issueDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: return null
+        val due = dueDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: issued.plusDays(30)
+        return Invoice(
+            id = invoiceNumber ?: "INV-API-${id ?: index}",
+            counterpartyName = clientName ?: return null,
+            amount = amount ?: return null,
+            issuedOn = issued,
+            dueOn = due,
+            type = if (type.equals("PAYABLE", ignoreCase = true)) InvoiceType.PAYABLE else InvoiceType.RECEIVABLE,
+            status = when (status?.uppercase()) {
+                "PAID" -> InvoiceStatus.PAID
+                "OVERDUE" -> InvoiceStatus.OVERDUE
+                else -> InvoiceStatus.PENDING
+            }
+        )
+    }
+
+    companion object {
+        val instance: FakeBillingRepository by lazy { FakeBillingRepository() }
+
+        private val PRICE_HISTORY: Map<Pair<String, String>, List<Double>> = mapOf(
+            ("Palta Hass" to "Supermercados Lima Norte") to listOf(8.2, 8.5, 9.0, 8.8, 9.4),
+            ("Arándano" to "Supermercados Lima Norte") to listOf(16.5, 17.2, 18.0, 17.8, 18.5),
+            ("Mango Kent" to "Mercados Lima Sur") to listOf(6.0, 6.4, 6.8, 7.1, 7.5),
+            ("Uva Red Globe" to "Supermercados Lima Centro") to listOf(7.9, 8.1, 8.0, 8.4, 8.6)
+        )
+
+        private val PURCHASE_CLIENTS = listOf(
+            "Supermercados Lima Norte", "Mercados Lima Sur", "Supermercados Lima Centro", "Plaza Vea Callao"
+        )
+
+        // Plaza Vea Callao has no finished purchases yet (US69, scenario 2)
+        private val PURCHASES = listOf(
+            PurchaseSummary("Supermercados Lima Norte", SummaryPeriod.WEEK, 1850, 17390.0, 3),
+            PurchaseSummary("Supermercados Lima Norte", SummaryPeriod.MONTH, 7420, 69748.0, 12),
+            PurchaseSummary("Mercados Lima Sur", SummaryPeriod.WEEK, 920, 6900.0, 2),
+            PurchaseSummary("Mercados Lima Sur", SummaryPeriod.MONTH, 3800, 28500.0, 8),
+            PurchaseSummary("Supermercados Lima Centro", SummaryPeriod.MONTH, 1240, 10664.0, 2)
+        )
+
+        private fun initialInvoices(): List<Invoice> {
+            val today = LocalDate.now()
+            fun invoice(id: String, who: String, amount: Double, issuedDaysAgo: Long, type: InvoiceType, status: InvoiceStatus, order: String? = null) =
+                Invoice(id, who, amount, today.minusDays(issuedDaysAgo), today.minusDays(issuedDaysAgo).plusDays(30), type, status, order)
+            return listOf(
+                // To collect from clients
+                invoice("INV-1035", "Supermercados Lima Centro", 9880.0, 3, InvoiceType.RECEIVABLE, InvoiceStatus.PENDING, "FX-1035"),
+                invoice("INV-1029", "Supermercados Lima Norte", 8450.0, 12, InvoiceType.RECEIVABLE, InvoiceStatus.PENDING),
+                invoice("INV-1032", "Distribuidora Pacífico", 6200.0, 6, InvoiceType.RECEIVABLE, InvoiceStatus.PAID, "FX-1032"),
+                invoice("INV-1026", "Mercados Lima Sur", 3850.0, 40, InvoiceType.RECEIVABLE, InvoiceStatus.PENDING),
+                // To pay to producers
+                invoice("INV-2031", "Fundo Santa Rosa", 5200.0, 4, InvoiceType.PAYABLE, InvoiceStatus.PENDING),
+                invoice("INV-2028", "Agro Valle Verde", 3200.0, 8, InvoiceType.PAYABLE, InvoiceStatus.PAID),
+                invoice("INV-2024", "Campos del Norte", 4100.0, 35, InvoiceType.PAYABLE, InvoiceStatus.PENDING)
+            )
+        }
+
+        private fun initialCreditNotes() = listOf(
+            ProposedCreditNote(
+                id = "NC-2026-01", invoiceId = "INV-1029", clientName = "Supermercados Lima Norte",
+                reason = CreditReason.THERMAL_EXCURSION, productName = "Arándano", affectedKg = 45,
+                peakCelsius = 9.4, excursionMinutes = 25, suggestedAmount = 405.0
             ),
-            Invoice(
-                id = "INV-1038",
-                counterpartyName = "Mercados Lima Sur",
-                amount = 6200.00,
-                dateLabel = "20 Oct 2026",
-                type = InvoiceType.RECEIVABLE,
-                status = InvoiceStatus.PAID
-            ),
-            Invoice(
-                id = "INV-1034",
-                counterpartyName = "Distribuidora Central",
-                amount = 3850.00,
-                dateLabel = "15 Oct 2026",
-                type = InvoiceType.RECEIVABLE,
-                status = InvoiceStatus.OVERDUE
-            ),
-            Invoice(
-                id = "INV-2031",
-                counterpartyName = "Finca Los Andes",
-                amount = 5200.00,
-                dateLabel = "23 Oct 2026",
-                type = InvoiceType.PAYABLE,
-                status = InvoiceStatus.PENDING
-            ),
-            Invoice(
-                id = "INV-2028",
-                counterpartyName = "Agro Valle Verde",
-                amount = 3200.00,
-                dateLabel = "18 Oct 2026",
-                type = InvoiceType.PAYABLE,
-                status = InvoiceStatus.PAID
-            ),
-            Invoice(
-                id = "INV-2024",
-                counterpartyName = "Campos del Norte",
-                amount = 4100.00,
-                dateLabel = "12 Oct 2026",
-                type = InvoiceType.PAYABLE,
-                status = InvoiceStatus.OVERDUE
+            ProposedCreditNote(
+                id = "NC-2026-02", invoiceId = "INV-1026", clientName = "Mercados Lima Sur",
+                reason = CreditReason.DAMAGED_IN_RECEPTION, productName = "Palta Hass", affectedKg = 62,
+                suggestedAmount = 558.0
             )
         )
     }

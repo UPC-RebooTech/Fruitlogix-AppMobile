@@ -1,779 +1,288 @@
 package com.rebootech.fruitlogix.distributor.profilesManagement.presentation
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.Producer
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerEntityType
-import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerItem
-import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerKpiSummary
-import com.rebootech.fruitlogix.shared.ui.theme.*
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerStatus
+import com.rebootech.fruitlogix.distributor.profilesManagement.presentation.components.InviteProducerSheet
+import com.rebootech.fruitlogix.distributor.profilesManagement.presentation.components.ProducerFormSheet
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import com.rebootech.fruitlogix.shared.ui.components.BackHeader
+import com.rebootech.fruitlogix.shared.ui.components.ConfirmDialog
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
+import com.rebootech.fruitlogix.shared.ui.components.KpiCard
+import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
+import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
+import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
+import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
+import com.rebootech.fruitlogix.shared.ui.components.whiteCard
+import com.rebootech.fruitlogix.shared.ui.format.appLocale
+import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
+import com.rebootech.fruitlogix.shared.ui.format.initialsOf
+import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import java.text.NumberFormat
 
 @Composable
 fun ProducersScreen(
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProducersViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
     val context = LocalContext.current
+    val snackbar = remember { SnackbarHostState() }
+    val shareTitle = stringResource(R.string.prod_invite_share_title)
+    val anyCrop = stringResource(R.string.prod_invite_any_crop)
 
-    var showRegisterDialog by remember { mutableStateOf(false) }
-    var showInviteDialog by remember { mutableStateOf(false) }
-    var producerToEdit by remember { mutableStateOf<ProducerItem?>(null) }
-    var producerToDelete by remember { mutableStateOf<ProducerItem?>(null) }
-
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(ColorBg),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Cabecera y botones de acción (US05 y US41)
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Gestión de Productores",
-                        color = ColorTextOnLight,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Red de abastecimiento y fichas técnicas",
-                        color = ColorAppbar,
-                        fontSize = 12.sp
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.clearMessages()
-                            showInviteDialog = true
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ColorSurfaceDark),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)
-                    ) {
-                        Text("Invitar Link", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-
-                    Button(
-                        onClick = {
-                            viewModel.clearMessages()
-                            showRegisterDialog = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = ColorPrimary,
-                            contentColor = ColorOnPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        Text("+ Registrar", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                }
-            }
+    LaunchedEffect(state.message) {
+        state.message?.let {
+            snackbar.showSnackbar(it.asString(context))
+            viewModel.onMessageShown()
         }
+    }
+    // US41: hand the invitation to WhatsApp, email or SMS
+    val inviteText = state.invite?.let { stringResource(R.string.prod_invite_text, it.name, it.inviterName, it.crop.ifBlank { anyCrop }, it.link) }
+    LaunchedEffect(state.invite) {
+        inviteText?.let { text ->
+            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }, shareTitle))
+            viewModel.onInviteShared()
+        }
+    }
 
-        // Banner de confirmación si existe
-        state.feedbackMessage?.let { msg ->
+    Box(modifier = modifier.fillMaxSize().background(scheme.background)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = spacing.sm, end = spacing.sm, top = spacing.sm, bottom = spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(spacing.inner)
+        ) {
+            item { BackHeader(title = stringResource(R.string.prod_title), subtitle = stringResource(R.string.prod_subtitle), onBack = onBack) }
+            item { Kpis(state) }
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(ColorSurfaceDark)
-                        .border(1.dp, ColorPrimary, RoundedCornerShape(12.dp))
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = msg,
-                        color = ColorPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.weight(1f)
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                    PrimaryButton(text = stringResource(R.string.prod_register), onClick = { viewModel.openSheet(ProducerSheet.Register) }, modifier = Modifier.weight(1.4f))
+                    SecondaryButton(
+                        text = stringResource(R.string.prod_invite),
+                        onClick = { viewModel.openSheet(ProducerSheet.Invite) },
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = { AppIcon(id = R.drawable.ic_share, contentDescription = null, modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)) }
                     )
-                    TextButton(onClick = { viewModel.clearMessages() }) {
-                        Text("OK", color = ColorTextOnDark, fontSize = 12.sp)
-                    }
                 }
             }
-        }
-
-        // KPIs de Gestión de Productores (US42)
-        item {
-            ProducerKpisGrid(kpis = state.kpis)
-        }
-
-        // Buscador
-        item {
-            OutlinedTextField(
-                value = state.searchQuery,
-                onValueChange = viewModel::onSearchQueryChange,
-                placeholder = { Text("Buscar por productor, fundo, valle o fruta...", color = ColorTextMuted) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = ColorTextOnDark,
-                    unfocusedTextColor = ColorTextOnDark,
-                    focusedBorderColor = ColorPrimary,
-                    unfocusedBorderColor = ColorAppbar,
-                    focusedContainerColor = ColorSurfaceDark,
-                    unfocusedContainerColor = ColorSurfaceDark
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
-            )
-        }
-
-        // Lista de productores o estado vacío (US06 Escenario 1 y 2)
-        if (state.filteredProducers.isEmpty()) {
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(ColorSurfaceDark)
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No se encontraron productores registrados",
-                            color = ColorTextOnDark,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Usa '+ Registrar' o 'Invitar Link' para vincular proveedores a tu red.",
-                            color = ColorTextMuted,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-        } else {
-            items(state.filteredProducers, key = { it.id }) { producer ->
-                ProducerCardItem(
-                    producer = producer,
-                    onEditClick = {
-                        viewModel.clearMessages()
-                        producerToEdit = producer
-                    },
-                    onDeleteClick = {
-                        viewModel.clearMessages()
-                        producerToDelete = producer
-                    },
-                    onContactClick = {
-                        val dialIntent = Intent(Intent.ACTION_DIAL).apply {
-                            data = android.net.Uri.parse("tel:${producer.phone}")
-                        }
-                        context.startActivity(dialIntent)
-                    }
+                LabeledTextField(
+                    label = stringResource(R.string.prod_search),
+                    value = state.query,
+                    onValueChange = viewModel::onQueryChange,
+                    leadingIconRes = R.drawable.ic_search,
+                    imeAction = ImeAction.Search
                 )
+            }
+            if (state.visible.isEmpty()) {
+                item { EmptyState(title = stringResource(R.string.prod_empty_title), message = stringResource(R.string.prod_empty_message)) }
+            } else {
+                items(state.visible, key = { it.id }) { producer ->
+                    ProducerCard(
+                        producer = producer,
+                        onCall = {
+                            val number = producer.phone.filter { it.isDigit() || it == '+' }
+                            context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")))
+                        },
+                        onEdit = { viewModel.openSheet(ProducerSheet.Edit(producer)) },
+                        onDelete = { viewModel.askDelete(producer) }
+                    )
+                }
             }
         }
-    }
 
-    // Modal US05: Registrar productor con tipado estricto (Individual / Company)
-    if (showRegisterDialog) {
-        RegisterProducerDialog(
-            errorMessage = state.errorMessage,
-            onDismiss = {
-                viewModel.clearMessages()
-                showRegisterDialog = false
-            },
-            onConfirm = { name, farm, loc, crop, email, phone, entityType ->
-                viewModel.registerProducer(
-                    name = name,
-                    farmName = farm,
-                    location = loc,
-                    cropType = crop,
-                    email = email,
-                    phone = phone,
-                    entityType = entityType,
-                    onSuccess = { showRegisterDialog = false }
-                )
-            }
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(spacing.sm)
         )
     }
 
-    // Modal US41: Invitar productor a la red (Correo o Share Sheet WhatsApp)
-    if (showInviteDialog) {
-        InviteProducerShareDialog(
-            errorMessage = state.errorMessage,
-            onDismiss = {
-                viewModel.clearMessages()
-                showInviteDialog = false
-            },
-            onSendInvite = { name, contact, loc, crop ->
-                viewModel.inviteProducer(
-                    name = name,
-                    emailOrPhone = contact,
-                    location = loc,
-                    cropType = crop,
-                    onShareLinkReady = { shareText ->
-                        showInviteDialog = false
-                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, "Invitación a FruitLogix")
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                        }
-                        context.startActivity(
-                            Intent.createChooser(sendIntent, "Enviar invitación al productor vía")
-                        )
-                    }
-                )
-            }
-        )
-    }
-
-    // Modal US39: Editar ficha técnica de productor
-    producerToEdit?.let { current ->
-        EditProducerDialog(
-            producer = current,
-            errorMessage = state.errorMessage,
-            onDismiss = {
-                viewModel.clearMessages()
-                producerToEdit = null
-            },
-            onSave = { updated ->
-                viewModel.updateProducer(
-                    updated = updated,
-                    onSuccess = { producerToEdit = null }
-                )
-            }
-        )
-    }
-
-    // Modal US40: Eliminar productor con confirmación
-    producerToDelete?.let { target ->
-        AlertDialog(
-            onDismissRequest = { producerToDelete = null },
-            containerColor = ColorSurfaceDark,
-            shape = RoundedCornerShape(20.dp),
-            title = {
-                Text("Eliminar Productor", color = ColorTextOnDark, fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Text(
-                    "¿Estás seguro de eliminar a '${target.name}' (${target.farmName}) de tu red activa de proveedores?",
-                    color = ColorTextMuted,
-                    fontSize = 13.sp
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteProducer(target.id)
-                        producerToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = ColorDangerStrong,
-                        contentColor = ColorTextOnDark
-                    ),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Eliminar", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { producerToDelete = null }) {
-                    Text("Cancelar", color = ColorTextMuted)
-                }
-            }
+    state.sheet?.let { ProducerSheetHost(it, state, viewModel) }
+    state.deleting?.let { producer ->
+        ConfirmDialog(
+            title = stringResource(R.string.prod_delete_title, producer.name),
+            message = stringResource(R.string.prod_delete_message),
+            confirmText = stringResource(R.string.prod_delete_confirm),
+            onConfirm = viewModel::confirmDelete,
+            onDismiss = viewModel::cancelDelete,
+            destructive = true
         )
     }
 }
 
+/** US42: network summary. */
 @Composable
-private fun ProducerKpisGrid(kpis: ProducerKpiSummary) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            ProducerKpiTile(
-                label = "TOTAL PRODUCTORES",
-                value = kpis.totalProducers.toString(),
-                badge = "Red activa",
-                modifier = Modifier.weight(1f)
-            )
-            ProducerKpiTile(
-                label = "CALIDAD PROMEDIO",
-                value = "${kpis.averageQuality} ★",
-                badge = "Óptimo",
+private fun Kpis(state: ProducersUiState) {
+    val scheme = MaterialTheme.colorScheme
+    val kpis = state.kpis
+    val spacing = FruitLogixTheme.spacing
+
+    @Composable
+    fun icon(id: Int): @Composable () -> Unit = {
+        AppIcon(id = id, contentDescription = null, tint = scheme.inversePrimary, modifier = Modifier.size(FruitLogixTheme.sizing.iconSm))
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+            KpiCard(caption = stringResource(R.string.prod_kpi_total), value = kpis.total.toString(), icon = icon(R.drawable.ic_producers), modifier = Modifier.weight(1f))
+            KpiCard(
+                caption = stringResource(R.string.prod_kpi_quality),
+                value = stringResource(R.string.prod_kpi_quality_value, formatDecimal(kpis.averageQuality)),
+                icon = icon(R.drawable.ic_star),
                 modifier = Modifier.weight(1f)
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            ProducerKpiTile(
-                label = "PRODUCCIÓN SEMANAL",
-                value = "${kpis.weeklyProductionTons} tn",
-                badge = "Abastecimiento",
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+            KpiCard(
+                caption = stringResource(R.string.prod_kpi_tons),
+                value = stringResource(R.string.prod_kpi_tons_value, formatDecimal(kpis.weeklyTons)),
+                icon = icon(R.drawable.ic_inventory),
                 modifier = Modifier.weight(1f)
             )
-            ProducerKpiTile(
-                label = "INCIDENCIAS (30D)",
-                value = kpis.incidentsLast30d.toString(),
-                badge = if (kpis.incidentsLast30d == 0) "Sin alertas" else "En revisión",
-                modifier = Modifier.weight(1f)
-            )
+            KpiCard(caption = stringResource(R.string.prod_kpi_incidents), value = kpis.incidents30d.toString(), icon = icon(R.drawable.ic_alert), modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun ProducerKpiTile(
-    label: String,
-    value: String,
-    badge: String,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(ColorSurfaceDark)
-            .border(1.dp, ColorAppbar, RoundedCornerShape(16.dp))
-            .padding(14.dp)
-    ) {
-        Text(
-            text = label,
-            color = ColorTextMuted,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = value,
-                color = ColorTextOnDark,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = badge,
-                color = ColorPrimary,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProducerCardItem(
-    producer: ProducerItem,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-    onContactClick: () -> Unit
-) {
-    val initials = producer.name
-        .split(" ")
-        .mapNotNull { it.firstOrNull()?.uppercase() }
-        .take(2)
-        .joinToString("")
-
+private fun ProducerCard(producer: Producer, onCall: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val invited = producer.status == ProducerStatus.INVITED
+    val number = NumberFormat.getIntegerInstance(appLocale())
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(ColorSurfaceDark)
-            .border(1.dp, ColorAppbar, RoundedCornerShape(18.dp))
-            .padding(16.dp)
+            .whiteCard()
+            .padding(FruitLogixTheme.spacing.inner)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(FruitLogixTheme.sizing.iconBox)
                     .clip(CircleShape)
-                    .background(if (producer.isPending) Color(0xFF332B14) else ColorPrimary),
+                    .background(scheme.secondaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = initials,
-                    color = if (producer.isPending) ColorWarning else ColorOnPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                Text(initialsOf(producer.name), style = FruitLogixTheme.typography.titleSmall, color = scheme.onSecondaryContainer)
             }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.inner))
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = producer.name,
-                        color = ColorTextOnDark,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(ColorAppbar)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = producer.entityType.backendValue,
-                            color = ColorPrimary,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    if (producer.isPending) {
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF332B14))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "Pendiente",
-                                color = ColorWarning,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
+                Text(producer.name, style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    text = "${producer.farmName} • ${producer.location}",
-                    color = ColorTextMuted,
-                    fontSize = 12.sp
-                )
-                Text(
-                    text = "Especialidad: ${producer.cropType} • ★ ${producer.qualityRating}",
-                    color = ColorPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    text = stringResource(if (producer.entityType == ProducerEntityType.COMPANY) R.string.prod_company else R.string.prod_individual),
+                    style = FruitLogixTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant
                 )
             }
+            if (invited) StatusBadge(text = stringResource(R.string.prod_invited), type = StatusBadgeType.INFO, maxLines = 1, softWrap = false)
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        HorizontalDivider(color = ColorAppbar, thickness = 0.7.dp)
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Text(
-            text = "STOCK ACTUAL: ${producer.currentStockSummary}",
-            color = ColorTextMuted,
-            fontSize = 11.sp
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+        val place = listOf(producer.farmName, producer.location).filter { it.isNotBlank() }.joinToString(" · ")
+        if (place.isNotBlank()) Text(place, style = FruitLogixTheme.typography.bodyMedium, color = scheme.onSurface)
+        if (invited) {
+            Text(stringResource(R.string.prod_waiting), style = FruitLogixTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+        } else {
             Text(
-                text = "${producer.activeOrdersCount} PEDIDOS ASIGNADOS",
-                color = ColorPrimary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
+                text = stringResource(R.string.prod_crop_rating, producer.cropType, formatDecimal(producer.qualityRating)),
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant
             )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedButton(
-                    onClick = onContactClick,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text("Contactar", color = ColorTextOnDark, fontSize = 11.sp)
-                }
-
-                IconButton(
-                    onClick = onEditClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_edit),
-                        contentDescription = "Editar ficha",
-                        tint = ColorPrimary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = onDeleteClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_close),
-                        contentDescription = "Eliminar productor",
-                        tint = ColorDangerStrong,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
+            Text(
+                text = stringResource(R.string.prod_stock_orders, number.format(producer.stockKg), producer.activeOrders),
+                style = FruitLogixTheme.extraTypography.dataMonoSmall,
+                color = scheme.onSurfaceVariant
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            if (producer.phone.isNotBlank()) TextActionButton(text = stringResource(R.string.prod_call), onClick = onCall)
+            TextActionButton(text = stringResource(R.string.prod_edit), onClick = onEdit)
+            TextActionButton(text = stringResource(R.string.prod_delete), onClick = onDelete)
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RegisterProducerDialog(
-    errorMessage: String?,
-    onDismiss: () -> Unit,
-    onConfirm: (
-        name: String,
-        farm: String,
-        location: String,
-        crop: String,
-        email: String,
-        phone: String,
-        entityType: ProducerEntityType
-    ) -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var farm by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var crop by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf(ProducerEntityType.INDIVIDUAL) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = ColorSurfaceDark,
-        shape = RoundedCornerShape(20.dp),
-        title = {
-            Text("Registrar Productor (US05)", color = ColorTextOnDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Selecciona la naturaleza comercial estricta (Enum para el Backend):",
-                    color = ColorTextMuted,
-                    fontSize = 12.sp
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ProducerEntityType.entries.forEach { type ->
-                        val isSelected = selectedType == type
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSelected) ColorPrimary else ColorAppbar)
-                                .clickable { selectedType = type }
-                                .padding(vertical = 8.dp, horizontal = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = type.backendValue,
-                                color = if (isSelected) ColorOnPrimary else ColorTextOnDark,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                }
-
-                errorMessage?.let {
-                    Text(text = it, color = ColorDangerStrong, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-
-                DialogField("Nombre o Razón Social *", name) { name = it }
-                DialogField("Nombre del Fundo / Parcela *", farm) { farm = it }
-                DialogField("Ubicación / Valle (ej. Ica, Perú) *", location) { location = it }
-                DialogField("Cultivo Principal (ej. Palta Hass) *", crop) { crop = it }
-                DialogField("Correo Electrónico", email) { email = it }
-                DialogField("Teléfono", phone) { phone = it }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(name, farm, location, crop, email, phone, selectedType) },
-                colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text("Guardar (${selectedType.backendValue})", fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = ColorTextMuted)
+private fun ProducerSheetHost(sheet: ProducerSheet, state: ProducersUiState, viewModel: ProducersViewModel) {
+    val scheme = MaterialTheme.colorScheme
+    val title = when (sheet) {
+        ProducerSheet.Register -> stringResource(R.string.prod_form_register_title)
+        is ProducerSheet.Edit -> stringResource(R.string.prod_form_edit_title, sheet.producer.name)
+        ProducerSheet.Invite -> stringResource(R.string.prod_invite_title)
+    }
+    ModalBottomSheet(
+        onDismissRequest = viewModel::closeSheet,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = scheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = FruitLogixTheme.spacing.md)
+                .padding(bottom = FruitLogixTheme.spacing.lg)
+        ) {
+            Text(title, style = FruitLogixTheme.typography.titleLarge, color = scheme.onSurface)
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
+            when (sheet) {
+                ProducerSheet.Register -> ProducerFormSheet(producer = null, errors = state.formErrors, onSave = viewModel::save)
+                is ProducerSheet.Edit -> ProducerFormSheet(producer = sheet.producer, errors = state.formErrors, onSave = viewModel::save)
+                ProducerSheet.Invite -> InviteProducerSheet(error = state.inviteError?.let { stringResource(it) }, onInvite = viewModel::invite)
             }
         }
-    )
-}
-
-@Composable
-private fun InviteProducerShareDialog(
-    errorMessage: String?,
-    onDismiss: () -> Unit,
-    onSendInvite: (name: String, emailOrPhone: String, location: String, crop: String) -> Unit
-) {
-    var name by remember { mutableStateOf("") }
-    var contact by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var crop by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = ColorSurfaceDark,
-        shape = RoundedCornerShape(20.dp),
-        title = {
-            Text("Invitar Productor a la Red (US41)", color = ColorTextOnDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Envía un enlace directo de registro por WhatsApp o correo electrónico mediante el Share Sheet nativo.",
-                    color = ColorTextMuted,
-                    fontSize = 12.sp
-                )
-                errorMessage?.let {
-                    Text(text = it, color = ColorDangerStrong, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-                DialogField("Nombre del Productor *", name) { name = it }
-                DialogField("Correo o Celular (+51...) *", contact) { contact = it }
-                DialogField("Valle / Ubicación", location) { location = it }
-                DialogField("Cultivo Principal", crop) { crop = it }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (name.isNotBlank()) {
-                        onSendInvite(name, contact, location, crop)
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text("Compartir Invitación", fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = ColorTextMuted)
-            }
-        }
-    )
-}
-
-@Composable
-private fun EditProducerDialog(
-    producer: ProducerItem,
-    errorMessage: String?,
-    onDismiss: () -> Unit,
-    onSave: (ProducerItem) -> Unit
-) {
-    var name by remember { mutableStateOf(producer.name) }
-    var farm by remember { mutableStateOf(producer.farmName) }
-    var location by remember { mutableStateOf(producer.location) }
-    var crop by remember { mutableStateOf(producer.cropType) }
-    var stock by remember { mutableStateOf(producer.currentStockSummary) }
-    var entityType by remember { mutableStateOf(producer.entityType) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = ColorSurfaceDark,
-        shape = RoundedCornerShape(20.dp),
-        title = {
-            Text("Editar Ficha Técnica (US39)", color = ColorTextOnDark, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                errorMessage?.let {
-                    Text(text = it, color = ColorDangerStrong, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-                DialogField("Nombre o Razón Social *", name) { name = it }
-                DialogField("Fundo / Parcela *", farm) { farm = it }
-                DialogField("Ubicación *", location) { location = it }
-                DialogField("Especialidad / Cultivo *", crop) { crop = it }
-                DialogField("Resumen de Stock", stock) { stock = it }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onSave(
-                        producer.copy(
-                            name = name,
-                            farmName = farm,
-                            location = location,
-                            cropType = crop,
-                            currentStockSummary = stock,
-                            entityType = entityType
-                        )
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = ColorPrimary, contentColor = ColorOnPrimary),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text("Guardar Cambios", fontWeight = FontWeight.Bold)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = ColorTextMuted)
-            }
-        }
-    )
-}
-
-@Composable
-private fun DialogField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label, color = ColorTextMuted, fontSize = 11.sp) },
-        singleLine = true,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = ColorTextOnDark,
-            unfocusedTextColor = ColorTextOnDark,
-            focusedBorderColor = ColorPrimary,
-            unfocusedBorderColor = ColorAppbar,
-            focusedContainerColor = ColorAppbar,
-            unfocusedContainerColor = ColorAppbar
-        ),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp)
-    )
+    }
 }

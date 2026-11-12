@@ -24,306 +24,89 @@
     <string name="producer_topbar_subtitle">CAMPO PRODUCTOR</string>
 
     <!-- Greeting -->
-    <string name="greeting_welcome">Bienvenido, %1$s</string>
-    <string name="greeting_active_shift">Turno Activo Matutino</string>
 
     <!-- Priority Actions -->
-    <string name="priority_actions_label">ACCIONES PRIORITARIAS</string>
-    <string name="priority_ready_count">%1$d Listas</string>
-    <string name="action_scan_lot">Escanear lote</string>
-    <string name="action_dispatch_fleet">Despachar flota</string>
-    <string name="action_sensors">Sensores</string>
 
     <!-- Predictive Alert -->
-    <string name="alert_predictive_label">ALERTA PREDICTIVA</string>
-    <string name="alert_predictive_unit_line">Unidad %1$s • %2$s</string>
-    <string name="alert_predictive_headline">Excederá %1$s en %2$d min</string>
-    <string name="alert_predictive_subline">Sube %1$s/min • Ahora %2$s</string>
-    <string name="alert_predictive_ceiling">Límite crítico %1$s</string>
-    <string name="alert_predictive_now_label">Ahora %1$s</string>
-    <string name="alert_predictive_plus_min">+%1$d min</string>
-    <string name="alert_predictive_minus_min">-%1$d min</string>
-    <string name="alert_predictive_now_caption">Ahora</string>
-    <string name="alert_immediate_action">ACCIÓN INMEDIATA</string>
-    <string name="alert_review_reefer">Revisar reefer →</string>
-    <string name="alert_nominal_title">Todas las cadenas de frío nominales</string>
-    <string name="alert_breached_label">LÍMITE EXCEDIDO</string>
 
     <!-- KPI -->
-    <string name="kpi_active_orders">Órdenes Activas</string>
-    <string name="kpi_daily_deliveries">Entregas Día</string>
-    <string name="kpi_fruit_quality">Calidad Fruta</string>
-    <string name="kpi_iot_alerts">Alertas IoT</string>
-    <string name="kpi_vs_yesterday">+12.5% vs ayer</string>
-    <string name="kpi_avg_eta">ETA Prom: %1$s</string>
-    <string name="kpi_on_time">A Tiempo</string>
-    <string name="kpi_last_lots">Últimos %1$d lotes</string>
-    <string name="kpi_grade_a">Grado A Certificado</string>
-    <string name="kpi_critical_warning">%1$d Críticas • %2$d Aviso</string>
 
     <!-- Action Center -->
-    <string name="action_center_title">Centro de Acción</string>
-    <string name="action_center_clear_all">Borrar todo</string>
-    <string name="action_cfdi_seal_title">Guía de remisión SUNAT pendiente</string>
-    <string name="action_cfdi_seal_sub">Orden #ORD-1048 • Finca Los Andes</string>
-    <string name="action_cfdi_seal_caption">REQUISITO ADUANERO DE EXPORTACIÓN</string>
-    <string name="action_cfdi_seal_btn">Aprobar guía</string>
-    <string name="action_precooling_title">Ingreso precooling Puerta 3</string>
-    <string name="action_precooling_sub">320 cajas Limón Persa en espera</string>
-    <string name="action_precooling_caption">RECEPCIÓN ANDÉN FRÍO</string>
-    <string name="action_precooling_btn">Verificar ingreso</string>
 
     <!-- Live Fleet (Home screen) -->
-    <string name="fleet_title">Flota en Vivo</string>
-    <string name="fleet_in_transit_count">(%1$d en tránsito)</string>
-    <string name="fleet_map_view">Ver mapa ></string>
-    <string name="fleet_status_on_time">A tiempo</string>
-    <string name="fleet_status_delay">Retraso balanza</string>
-    <string name="fleet_label_reefer_temp">TEMP REEFER</string>
-    <string name="fleet_label_humidity">HUMEDAD</string>
-    <string name="fleet_label_dest_eta">ETA DESTINO</string>
-    <string name="fleet_label_delay_delta">RETRASO</string>
-    <string name="fleet_mileage_format">Kilometraje tránsito: %1$s</string>
 
     <!-- Cold-Chain Compliance -->
-    <string name="compliance_title">Cumplimiento Cadena de Frío</string>
-    <string name="compliance_subtitle">Índice de adherencia 24h</string>
-    <string name="compliance_label_compliant">Cumplimiento</string>
-    <string name="compliance_line_integrity">INTEGRIDAD DE TRÁNSITO</string>
-    <string name="compliance_line_integrity_sub">94%% Trayectoria Nominal</string>
-    <string name="compliance_line_breaches">VIOLACIONES DE TOLERANCIA</string>
-    <string name="compliance_line_breaches_sub">0 Brechas Frías Hoy</string>
-    <string name="compliance_risk_label">RIESGO PREDICTIVO</string>
-    <string name="compliance_risk_format">%1$d Alerta Térmica</string>
 
     <!-- Fleet Control Center screen -->
-    <string name="fleet_screen_title">Centro de Control de Flota</string>
-    <string name="fleet_screen_subtitle">Tracking de despachos, cadena de frío y sensores</string>
-    <string name="fleet_limits_btn">Límites</string>
 
     <!-- KPI chips -->
-    <string name="fleet_kpi_on_route">En ruta %1$d</string>
-    <string name="fleet_kpi_alerts">Alertas %1$d</string>
 
     <!-- Radar card -->
-    <string name="fleet_radar_live">RADAR EN VIVO</string>
-    <string name="fleet_radar_gps_active">GPS Activo • 0.8s</string>
 
     <!-- Segmented tabs -->
-    <string name="fleet_tab_dispatches">Despachos Activos %1$d</string>
-    <string name="fleet_tab_alerts">Alertas</string>
-    <string name="fleet_tab_sensors">Sensores</string>
 
     <!-- Dispatch card -->
-    <string name="fleet_dispatch_unit">Unidad %1$s</string>
-    <string name="fleet_label_dock_eta">ETA ANDÉN</string>
-    <string name="fleet_transit_progress">Progreso Tránsito • %1$d%%</string>
-    <string name="fleet_view_dispatch_detail">Ver Detalle de Despacho ›</string>
-    <string name="fleet_immediate_reefer_diagnostic">Diagnóstico inmediato reefer →</string>
 
     <!-- Dispatch status badges -->
-    <string name="dispatch_status_on_time">A TIEMPO</string>
-    <string name="dispatch_status_temp_alert">ALERTA TEMP</string>
-    <string name="dispatch_status_weigh_delay">RETRASO BALANZA</string>
 
     <!-- Footer -->
-    <string name="fleet_footer_gateways">3 Gateways BLE Activos • SatCom v4.2</string>
-    <string name="fleet_footer_updated">Actualizado hace 10s</string>
 
     <!-- Sensors screen -->
-    <string name="sensor_status_online">%1$d EN LÍNEA</string>
-    <string name="sensor_status_low_batt">%1$d BATERÍA BAJA</string>
-    <string name="sensor_status_offline">%1$d DESCONECTADO</string>
 
-    <string name="sensor_filter_all">Todos</string>
-    <string name="sensor_filter_on_route">En ruta</string>
-    <string name="sensor_filter_warehouse">En almacén</string>
-    <string name="sensor_filter_offline">Desconectados</string>
 
-    <string name="sensor_order_id">Orden #%1$s</string>
-    <string name="sensor_battery_label">%1$d%% BATT</string>
 
-    <string name="sensor_status_label_online">EN LÍNEA</string>
-    <string name="sensor_status_label_low_batt">BATERÍA BAJA</string>
-    <string name="sensor_status_label_offline">DESCONECTADO</string>
-    <string name="sensor_status_label_standby">ESPERA</string>
 
-    <string name="sensor_type_temperature">Temp Central &amp; Humedad (Sonda BLE)</string>
-    <string name="sensor_type_humidity">Sensor O₂ Atmosférico &amp; Etileno</string>
-    <string name="sensor_type_gps">Beacon GPS &amp; Sello Puerta</string>
 
-    <string name="sensor_btn_troubleshoot">Solucionar problema</string>
-    <string name="sensor_btn_link_order">Vincular a orden</string>
 
-    <string name="sensor_sheet_status">Estado</string>
-    <string name="sensor_sheet_truck">Camión vinculado</string>
-    <string name="sensor_sheet_order">Orden vinculada</string>
-    <string name="sensor_sheet_last_signal">Última señal</string>
-    <string name="sensor_sheet_battery">Batería</string>
 
     <!-- Order Management -->
-    <string name="orders_title">Gestión de pedidos</string>
-    <string name="orders_subtitle">Pedidos activos para distribución</string>
-    <string name="orders_active_count">%1$d pedidos activos</string>
-    <string name="order_delivery_date">Entrega: %1$s</string>
 
-    <string name="order_status_pending">Pendiente</string>
-    <string name="order_status_in_preparation">En preparación</string>
-    <string name="order_status_on_route">En ruta</string>
 
-    <string name="orders_empty_title">No hay pedidos pendientes</string>
-    <string name="orders_empty_message">No se encontraron pedidos pendientes asignados al distribuidor.</string>
 
-    <string name="orders_new_order">Nuevo pedido</string>
 
     <!-- Create Order -->
-    <string name="create_order_back">← Volver a pedidos</string>
-    <string name="create_order_title">Registrar nuevo pedido</string>
-    <string name="create_order_subtitle">Ingresa los datos requeridos para crear el pedido.</string>
 
-    <string name="create_order_product">Variedad de fruta</string>
-    <string name="create_order_product_example">Ej. Palta Hass</string>
-    <string name="create_order_product_error">Selecciona o ingresa una variedad de fruta.</string>
 
-    <string name="create_order_quantity">Cantidad</string>
-    <string name="create_order_quantity_example">Ej. 12.5</string>
-    <string name="create_order_quantity_error">Ingresa una cantidad mayor que cero.</string>
 
-    <string name="create_order_date">Fecha requerida</string>
-    <string name="create_order_date_example">dd/mm/aaaa</string>
-    <string name="create_order_date_error">Ingresa la fecha requerida.</string>
 
-    <string name="create_order_submit">Registrar pedido</string>
 
-    <string name="create_order_success_title">Pedido registrado</string>
-    <string name="create_order_success_message">El pedido %1$s fue registrado correctamente.</string>
-    <string name="create_order_success_button">Volver a pedidos</string>
 
     <!-- Edit Order -->
-    <string name="order_edit">Editar pedido</string>
-    <string name="edit_order_back">← Volver a pedidos</string>
-    <string name="edit_order_title">Editar pedido</string>
-    <string name="edit_order_subtitle">Pedido %1$s</string>
-    <string name="edit_order_blocked">Este pedido ya no puede editarse porque no se encuentra pendiente.</string>
-    <string name="edit_order_save">Guardar cambios</string>
-    <string name="edit_order_success_title">Pedido actualizado</string>
-    <string name="edit_order_success_message">El pedido fue actualizado correctamente.</string>
-    <string name="edit_order_success_button">Volver a pedidos</string>
 
     <!-- Delete Order -->
-    <string name="order_delete">Eliminar pedido</string>
 
-    <string name="delete_order_confirm_title">Eliminar pedido</string>
-    <string name="delete_order_confirm_message">¿Estás seguro de que deseas eliminar el pedido %1$s?</string>
-    <string name="delete_order_confirm">Eliminar</string>
-    <string name="delete_order_cancel">Cancelar</string>
 
-    <string name="delete_order_success_title">Pedido eliminado</string>
-    <string name="delete_order_success_message">Pedido eliminado correctamente.</string>
 
-    <string name="delete_order_expired_title">Eliminación no disponible</string>
-    <string name="delete_order_expired_message">El plazo de cancelación de 24 horas ha expirado. Este pedido no puede eliminarse.</string>
 
-    <string name="delete_order_error_title">Pedido no encontrado</string>
-    <string name="delete_order_error_message">No se pudo encontrar el pedido seleccionado.</string>
 
-    <string name="delete_order_ok">Aceptar</string>
 
     <!-- Order History -->
-    <string name="orders_history">Ver historial de pedidos</string>
-    <string name="order_history_back">← Volver a pedidos</string>
-    <string name="order_history_title">Historial de pedidos</string>
-    <string name="order_history_subtitle">Consulta los pedidos finalizados anteriormente.</string>
 
-    <string name="order_history_delivered">Entregado</string>
-    <string name="order_history_cancelled">Cancelado</string>
-    <string name="order_history_date">Finalizado: %1$s</string>
 
-    <string name="order_history_empty_title">Sin historial de pedidos</string>
-    <string name="order_history_empty_message">Aún no hay pedidos finalizados en el historial.</string>
 
     <!-- Order History Filters -->
-    <string name="order_history_filters_title">Filtrar historial</string>
-    <string name="order_history_search">Buscar pedidos</string>
-    <string name="order_history_search_example">ID del pedido o cliente</string>
 
-    <string name="order_history_filter_date">Fecha</string>
-    <string name="order_history_filter_date_example">Ej. 21 Oct</string>
 
-    <string name="order_history_filter_producer">Productor</string>
-    <string name="order_history_filter_producer_example">Ej. Finca Los Andes</string>
 
-    <string name="order_history_filter_status">Estado</string>
-    <string name="order_history_filter_all">Todos</string>
-    <string name="order_history_clear_filters">Limpiar filtros</string>
 
-    <string name="order_history_producer">Productor: %1$s</string>
 
-    <string name="order_history_no_results_title">No se encontraron resultados</string>
-    <string name="order_history_no_results_message">Ningún pedido coincide con los filtros aplicados.</string>
 
     <!-- Scan Reception -->
-    <string name="scan_reception_back">← Volver a pedidos</string>
-    <string name="scan_reception_title">Escanear recepción</string>
-    <string name="scan_reception_subtitle">Escanea el código QR o de barras del lote para validar la recepción.</string>
 
-    <string name="scan_reception_camera_hint">Alinea el código del lote dentro del marco.</string>
 
-    <string name="scan_reception_demo_valid">Probar código reconocido</string>
-    <string name="scan_reception_demo_invalid">Probar código dañado</string>
 
-    <string name="scan_reception_permission_title">Se requiere acceso a la cámara</string>
-    <string name="scan_reception_permission_message">FruitLogix necesita acceso a la cámara para escanear códigos de lotes.</string>
-    <string name="scan_reception_permission_button">Permitir cámara</string>
 
-    <string name="scan_reception_match_title">Coincidencia confirmada</string>
-    <string name="scan_reception_order">Pedido: %1$s</string>
-    <string name="scan_reception_product">Producto: %1$s</string>
-    <string name="scan_reception_quantity">Cantidad: %1$s</string>
-    <string name="scan_reception_scan_again">Escanear otro lote</string>
 
-    <string name="scan_reception_error_title">Código no reconocido</string>
-    <string name="scan_reception_error_message">El código no pudo leerse o no coincide con un pedido registrado.</string>
 
-    <string name="scan_reception_manual_option">Ingresar código manualmente</string>
-    <string name="scan_reception_manual_title">Ingreso manual del código</string>
-    <string name="scan_reception_manual_label">Código del lote</string>
-    <string name="scan_reception_validate">Validar código</string>
 
-    <string name="orders_scan_reception">Escanear recepción de lote</string>
 
     <!-- Billing -->
-    <string name="billing_title">Facturas y facturación</string>
-    <string name="billing_subtitle">Gestiona las cuentas por cobrar y por pagar desde tu celular.</string>
 
-    <string name="billing_receivables">Cuentas por cobrar</string>
-    <string name="billing_payables">Cuentas por pagar</string>
-    <string name="billing_outstanding">Pendiente</string>
 
-    <string name="billing_filters">Filtrar facturación</string>
-    <string name="billing_filter_date">Fecha</string>
-    <string name="billing_filter_date_example">Ej. 24 Oct</string>
-    <string name="billing_filter_status">Estado</string>
-    <string name="billing_clear_filters">Limpiar filtros</string>
 
-    <string name="billing_status_all">Todos</string>
-    <string name="billing_status_pending">Pendiente</string>
-    <string name="billing_status_paid">Pagado</string>
-    <string name="billing_status_overdue">Vencido</string>
 
-    <string name="billing_empty_title">Sin registros de facturación</string>
-    <string name="billing_empty_message">Aún no existen facturas registradas.</string>
 
-    <string name="billing_no_results_title">No se encontraron resultados</string>
-    <string name="billing_no_results_message">Ninguna factura coincide con los filtros aplicados.</string>
 
-    <string name="billing_export_report">Exportar reporte</string>
-    <string name="invoice_detail_back">Volver a facturas</string>
-    <string name="invoice_detail_title">Detalle de factura</string>
-    <string name="invoice_detail_subtitle">Información financiera de %1$s</string>
-    <string name="invoice_detail_not_found_title">Factura no disponible</string>
-    <string name="invoice_detail_not_found_message">No se pudo encontrar la factura %1$s. Es posible que ya no esté disponible.</string>
-    <string name="invoice_detail_back_to_invoices">Volver a facturas</string>
     <!-- Producer Orders Screen -->
     <string name="producer_orders_search_placeholder">Buscar pedido o cliente</string>
     <string name="producer_orders_tile_awaiting_action">Acción requerida</string>
@@ -411,101 +194,11 @@
     <string name="producer_orders_filter_date_pill">Fecha: %1$s</string>
     <string name="producer_orders_filter_close">Cerrar filtros</string>
     <!-- Auth & Session -->
-    <string name="auth_login_title">Iniciar sesión</string>
-    <string name="auth_login_subtitle">Bienvenido a FruitLogix</string>
-    <string name="auth_sign_up_button">Crear cuenta</string>
-    <string name="auth_signup_title">Crear cuenta</string>
-    <string name="auth_signup_subtitle">Registro de nuevo usuario</string>
-    <string name="auth_back_to_login">Volver a Iniciar sesión</string>
     <string name="auth_logout_button">Cerrar sesión</string>
     <string name="auth_logout_dialog_title">¿Cerrar sesión?</string>
     <string name="auth_logout_dialog_message">Tendrás que volver a iniciar sesión para entrar.</string>
     <string name="auth_logout_dialog_confirm">Cerrar sesión</string>
     <string name="auth_logout_dialog_cancel">Cancelar</string>
     <!-- Auth Login Strings -->
-    <string name="auth_version_badge">FruitLogix · v%1$s</string>
-    <string name="auth_agro_logistics_badge">LOGÍSTICA AGROINDUSTRIAL</string>
-    <string name="auth_tagline">PLATAFORMA DE CADENA DE SUMINISTRO DE FRUTA</string>
-    <string name="auth_login_card_subtitle">Accede con tu usuario y contraseña</string>
-    <string name="auth_label_username">USUARIO</string>
-    <string name="auth_placeholder_username">Ingresa tu usuario</string>
-    <string name="auth_label_password">CONTRASEÑA</string>
-    <string name="auth_placeholder_password">Ingresa tu contraseña</string>
-    <string name="auth_forgot_password">¿Olvidaste tu contraseña?</string>
-    <string name="auth_remember_device">Recordar dispositivo</string>
-    <string name="auth_biometric_button">Huella / Rostro</string>
-    <string name="auth_btn_login">Iniciar sesión</string>
-    <string name="auth_no_account_prompt">¿No tienes cuenta? </string>
-    <string name="auth_create_account_link">Crear cuenta</string>
-    <string name="auth_error_empty_username">Ingresa tu usuario</string>
-    <string name="auth_error_empty_password">Ingresa tu contraseña</string>
-    <string name="auth_error_invalid_credentials">Usuario o contraseña incorrectos. Verifica tus datos.</string>
-    <string name="auth_error_network">Sin conexión. Revisa tu internet e inténtalo de nuevo.</string>
-    <string name="auth_forgot_password_coming_soon">Próximamente disponible</string>
-    <string name="auth_show_password">Mostrar contraseña</string>
-    <string name="auth_hide_password">Ocultar contraseña</string>
-    <string name="auth_brand_logo_desc">FruitLogix Brand Logo</string>
     <!-- Auth Sign Up Strings -->
-    <string name="auth_signup_step1_header">PASO 1 DE 2</string>
-    <string name="auth_signup_step1_progress">50%% completado</string>
-    <string name="auth_signup_step2_header">PASO 2 DE 2</string>
-    <string name="auth_signup_step2_progress">Finalizando perfil</string>
-    <string name="auth_signup_step1_title">¿Cómo vas a usar FruitLogix?</string>
-    <string name="auth_signup_step1_subtitle">Selecciona el perfil que mejor describe tu operación agrícola o logística en campo.</string>
-    <string name="auth_signup_role_producer">Productor</string>
-    <string name="auth_signup_role_producer_tag">Campo</string>
-    <string name="auth_signup_role_producer_desc">Recibe pedidos, inspecciona la calidad y gestiona tu stock.</string>
-    <string name="auth_signup_role_distributor">Distribuidor</string>
-    <string name="auth_signup_role_distributor_tag">Logística</string>
-    <string name="auth_signup_role_distributor_desc">Asigna productores, gestiona tu flota y tus pedidos.</string>
-    <string name="auth_signup_notice">Aviso: El tipo de cuenta no se puede cambiar después.</string>
-    <string name="auth_signup_btn_continue">Continuar →</string>
-    <string name="auth_signup_have_account_prompt">¿Ya tienes cuenta? </string>
-    <string name="auth_signup_login_link">Iniciar sesión</string>
-    <string name="auth_signup_step2_title">Crea tu cuenta</string>
-    <string name="auth_signup_badge_producer">Productor agrícola</string>
-    <string name="auth_signup_badge_distributor">Distribuidor logístico</string>
-    <string name="auth_signup_label_fullname">NOMBRE COMPLETO</string>
-    <string name="auth_signup_placeholder_fullname_producer">ej. Roberto Garza</string>
-    <string name="auth_signup_placeholder_fullname_distributor">ej. Carlos Mendoza</string>
-    <string name="auth_signup_label_username">USUARIO</string>
-    <string name="auth_signup_placeholder_username">ej. alexandra.productora</string>
-    <string name="auth_signup_username_taken_badge">No disponible</string>
-    <string name="auth_signup_label_email">CORREO ELECTRÓNICO</string>
-    <string name="auth_signup_placeholder_email_producer">ej. roberto@fundo.pe</string>
-    <string name="auth_signup_placeholder_email_distributor">ej. carlos@fruitlogix.pe</string>
-    <string name="auth_signup_label_phone">TELÉFONO</string>
-    <string name="auth_signup_optional_badge">(Opcional)</string>
-    <string name="auth_signup_placeholder_phone">+51 987 654 321</string>
-    <string name="auth_signup_label_farm_name">NOMBRE DE LA FINCA</string>
-    <string name="auth_signup_placeholder_farm_name">ej. Fundo Santa Rosa</string>
-    <string name="auth_signup_label_invitation_code">CÓDIGO DE INVITACIÓN</string>
-    <string name="auth_signup_placeholder_invitation_code">ej. DIST-LIMA-101</string>
-    <string name="auth_signup_help_invitation_code">Si un distribuidor te invitó, ingrésalo aquí para vincular tu cuenta automáticamente.</string>
-    <string name="auth_signup_label_company_name">NOMBRE DE LA EMPRESA</string>
-    <string name="auth_signup_placeholder_company_name">ej. FruitLogix Distributor</string>
-    <string name="auth_signup_help_company_name">Razón social o nombre comercial de tu centro de distribución.</string>
-    <string name="auth_signup_label_password">CONTRASEÑA</string>
-    <string name="auth_signup_password_insecure">Insegura</string>
-    <string name="auth_signup_password_secure">Segura</string>
-    <string name="auth_signup_password_req_title">REQUISITOS MÍNIMOS</string>
-    <string name="auth_signup_req_min_chars">Mínimo 8 caracteres</string>
-    <string name="auth_signup_req_one_letter">Al menos una letra</string>
-    <string name="auth_signup_req_one_number">Al menos un número</string>
-    <string name="auth_signup_label_confirm_password">CONFIRMAR CONTRASEÑA</string>
-    <string name="auth_signup_password_match">Coincide</string>
-    <string name="auth_signup_password_mismatch">Discrepancia</string>
-    <string name="auth_signup_terms_checkbox">Acepto los Términos de Servicio y la Política de Privacidad de FruitLogix.</string>
-    <string name="auth_signup_btn_submit">Crear cuenta →</string>
-    <string name="auth_signup_error_fullname">Ingresa tu nombre completo (2 a 60 caracteres)</string>
-    <string name="auth_signup_error_username_invalid">4 a 20 caracteres (minúsculas, números, . o _), iniciando con letra.</string>
-    <string name="auth_signup_error_username_taken">Este usuario ya existe. Elige otro nombre de usuario.</string>
-    <string name="auth_signup_error_email_invalid">Ingresa un correo electrónico válido</string>
-    <string name="auth_signup_error_email_taken">Este correo electrónico ya está registrado</string>
-    <string name="auth_signup_error_phone_invalid">Formato de teléfono inválido (+51...)</string>
-    <string name="auth_signup_error_farm_empty">Ingresa el nombre de la finca</string>
-    <string name="auth_signup_error_company_empty">Ingresa el nombre de la empresa</string>
-    <string name="auth_signup_error_passwords_dont_match">Las contraseñas no coinciden.</string>
-    <string name="auth_signup_error_terms_required">Debes aceptar los Términos y la Política de Privacidad.</string>
-    <string name="auth_signup_back_arrow_desc">Volver</string>
 </resources>

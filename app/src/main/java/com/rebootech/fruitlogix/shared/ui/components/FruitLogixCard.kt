@@ -13,6 +13,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
@@ -87,6 +89,20 @@ fun FruitLogixCard(
     ) {
         Column(content = content)
     }
+}
+
+/**
+ * Same look as [CardVariant.White] for rows and cards built with Row/Column:
+ * white surface with a hairline green-grey border. Use it instead of a plain
+ * surfaceContainerLow background so cards stand out from the page.
+ */
+@Composable
+fun Modifier.whiteCard(shape: Shape = FruitLogixTheme.shapes.Card): Modifier {
+    val scheme = MaterialTheme.colorScheme
+    return this
+        .clip(shape)
+        .background(scheme.surfaceContainerLowest)
+        .border(1.dp, scheme.outlineVariant, shape)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF7FAF6)

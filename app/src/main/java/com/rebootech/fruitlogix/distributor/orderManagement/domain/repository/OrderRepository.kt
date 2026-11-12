@@ -1,39 +1,31 @@
 ﻿package com.rebootech.fruitlogix.distributor.orderManagement.domain.repository
 
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderRegistration
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderSummary
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.RegisteredOrder
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DeleteOrderResult
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryItem
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanResult
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDraft
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryItem
+import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * Flows instead of one-off reads, so every screen (Home, Orders, History) updates by itself
+ * after creating, editing, deleting or receiving an order.
+ */
 interface OrderRepository {
+    val orders: StateFlow<List<DistributorOrder>>
+    val history: StateFlow<List<OrderHistoryItem>>
 
-    fun getOrders(): List<OrderSummary>
+    fun orderById(orderId: String): DistributorOrder?
 
-    fun getOrderById(
-        orderId: String
-    ): OrderSummary?
+    suspend fun createOrder(draft: OrderDraft): DistributorOrder
 
-    fun createOrder(
-        order: OrderRegistration
-    ): RegisteredOrder
+    /** @return false if the order does not exist or is no longer editable. */
+    suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean
 
-    fun updateOrder(
-        orderId: String,
-        productName: String,
-        quantity: Double,
-        requiredDate: String
-    ): Boolean
+    suspend fun deleteOrder(orderId: String): DeleteOrderResult
 
-    fun deleteOrder(
-        orderId: String
-    ): DeleteOrderResult
+    fun validateLotCode(code: String): LotScanResult
 
-    fun getOrderHistory(): List<OrderHistoryItem>
-
-    fun validateLotCode(
-        code: String
-    ): LotScanResult
-
+    /** The lot arrived at the warehouse: the order is delivered and moves to history. */
+    suspend fun confirmReception(orderId: String): Boolean
 }

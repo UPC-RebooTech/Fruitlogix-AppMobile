@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Red de productores -->
+    <string name="prod_title">Productores</string>
+    <string name="prod_subtitle">Los fundos que abastecen tu hub.</string>
+    <string name="prod_kpi_total">Productores</string>
+    <string name="prod_kpi_quality">Calidad promedio</string>
+    <string name="prod_kpi_tons">Producción semanal</string>
+    <string name="prod_kpi_incidents">Incidencias (30 días)</string>
+    <string name="prod_kpi_tons_value">%1$s t</string>
+    <string name="prod_kpi_quality_value">%1$s / 5</string>
+    <string name="prod_register">Registrar productor</string>
+    <string name="prod_invite">Invitar</string>
+    <string name="prod_search">Busca por nombre, fundo, lugar o cultivo</string>
+    <string name="prod_company">Empresa</string>
+    <string name="prod_individual">Persona natural</string>
+    <string name="prod_invited">Invitación enviada</string>
+    <string name="prod_farm_place">%1$s · %2$s</string>
+    <string name="prod_crop_rating">%1$s · ★ %2$s</string>
+    <string name="prod_stock_orders">%1$s kg en stock · %2$d pedidos activos</string>
+    <string name="prod_waiting">Esperando que el productor complete su registro</string>
+    <string name="prod_call">Llamar</string>
+    <string name="prod_call_cd">Llamar a %1$s</string>
+    <string name="prod_edit">Editar</string>
+    <string name="prod_delete">Quitar</string>
+    <string name="prod_empty_title">No se encontraron productores</string>
+    <string name="prod_empty_message">Prueba con otra palabra o registra un productor nuevo.</string>
+
+    <!-- Registrar / editar (US05, US39) -->
+    <string name="prod_form_register_title">Registrar productor</string>
+    <string name="prod_form_edit_title">Editar %1$s</string>
+    <string name="prod_form_type">Tipo</string>
+    <string name="prod_form_name">Nombre o razón social</string>
+    <string name="prod_form_name_placeholder">ej. Fundo Santa Rosa</string>
+    <string name="prod_form_farm">Fundo</string>
+    <string name="prod_form_location">Ubicación</string>
+    <string name="prod_form_location_placeholder">ej. Huaraz, Áncash</string>
+    <string name="prod_form_crop">Cultivo principal</string>
+    <string name="prod_form_email">Correo (opcional)</string>
+    <string name="prod_form_phone">Teléfono (opcional)</string>
+    <string name="prod_form_save_register">Registrar</string>
+    <string name="prod_form_save_edit">Guardar cambios</string>
+    <string name="prod_error_name">Ingresa el nombre</string>
+    <string name="prod_error_farm">Ingresa el fundo</string>
+    <string name="prod_error_location">Ingresa la ubicación</string>
+    <string name="prod_error_crop">Ingresa el cultivo principal</string>
+    <string name="prod_error_email">Ingresa un correo válido</string>
+    <string name="prod_error_email_taken">Este correo ya pertenece a un productor de tu red</string>
+    <string name="prod_error_phone">Ingresa al menos 9 dígitos</string>
+    <string name="prod_registered">%1$s se agregó a tu red</string>
+    <string name="prod_updated">%1$s actualizado</string>
+
+    <!-- Invitar (US41) -->
+    <string name="prod_invite_title">Invitar a un productor</string>
+    <string name="prod_invite_message">Recibe un enlace para unirse a tu red. Puedes enviarlo por WhatsApp, correo o SMS.</string>
+    <string name="prod_invite_name">Nombre</string>
+    <string name="prod_invite_contact">Correo o teléfono</string>
+    <string name="prod_invite_contact_placeholder">ej. 912 345 678</string>
+    <string name="prod_invite_send">Crear invitación</string>
+    <string name="prod_invite_error_contact">Ingresa un correo válido o un teléfono de al menos 9 dígitos</string>
+    <string name="prod_invite_error_member">Este productor ya está en tu red</string>
+    <string name="prod_invite_share_title">Enviar la invitación</string>
+    <string name="prod_invite_text">¡Hola %1$s! %2$s te invita a unirte a su red de abastecimiento FruitLogix para %3$s. Regístrate aquí: %4$s</string>
+    <string name="prod_invite_any_crop">tu fruta</string>
+    <string name="prod_invited_msg">Invitación para %1$s lista para enviar</string>
+
+    <!-- Quitar (US40) -->
+    <string name="prod_delete_title">¿Quitar a %1$s?</string>
+    <string name="prod_delete_message">Sale de tu red. Sus pedidos y facturas anteriores se conservan.</string>
+    <string name="prod_delete_confirm">Quitar</string>
+    <string name="prod_deleted">%1$s salió de tu red</string>
+
+    <!-- Perfil del distribuidor -->
+    <string name="dprof_role">Distribuidor</string>
+    <string name="dprof_section_business">Datos de la empresa</string>
+    <string name="dprof_role_title">Cargo</string>
+    <string name="dprof_hub">Hub</string>
+    <string name="dprof_email">Correo</string>
+    <string name="dprof_phone">Teléfono</string>
+    <string name="dprof_ruc">RUC</string>
+    <string name="dprof_full_name">Nombre completo</string>
+    <string name="dprof_save">Guardar cambios</string>
+    <string name="dprof_saved">Perfil actualizado</string>
+    <string name="dprof_error_name">Ingresa tu nombre</string>
+    <string name="dprof_error_email">Ingresa un correo válido</string>
+    <string name="dprof_error_phone">Ingresa al menos 9 dígitos</string>
+    <string name="dprof_error_ruc">El RUC tiene 11 dígitos</string>
+</resources>

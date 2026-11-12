@@ -7,6 +7,6 @@ import com.rebootech.fruitlogix.distributor.qualityControl.presentation.QualityC
 
 fun NavGraphBuilder.qualityControlGraph(navController: NavHostController) {
     composable(QualityControlRoutes.QualityControl) {
-        QualityControlScreen()
+        QualityControlScreen(onBack = { navController.popBackStack() })
     }
 }

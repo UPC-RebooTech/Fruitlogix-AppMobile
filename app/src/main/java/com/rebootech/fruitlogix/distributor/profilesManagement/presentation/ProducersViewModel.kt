@@ -1,158 +1,127 @@
 package com.rebootech.fruitlogix.distributor.profilesManagement.presentation
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rebootech.fruitlogix.distributor.profilesManagement.data.FakeProfilesRepository
-import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerEntityType
-import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerItem
-import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerKpiSummary
+import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.DistributorDependencies
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.Producer
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerDraft
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerKpis
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.repository.ProfilesRepository
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.rules.InviteRules
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.rules.ProducerRules
+import com.rebootech.fruitlogix.shared.core.model.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
+
+sealed interface ProducerSheet {
+    data object Register : ProducerSheet
+    data class Edit(val producer: Producer) : ProducerSheet
+    data object Invite : ProducerSheet
+}
+
+/** Invitation ready to be shared (opens the system share sheet once). */
+data class PendingInvite(val name: String, val crop: String, val inviterName: String, val link: String)
 
 data class ProducersUiState(
-    val searchQuery: String = "",
-    val producers: List<ProducerItem> = emptyList(),
-    val filteredProducers: List<ProducerItem> = emptyList(),
-    val kpis: ProducerKpiSummary = ProducerKpiSummary(),
-    val feedbackMessage: String? = null,
-    val errorMessage: String? = null
-)
+    val producers: List<Producer> = emptyList(),
+    val query: String = "",
+    val sheet: ProducerSheet? = null,
+    val formErrors: Set<ProducerRules.Error> = emptySet(),
+    @field:StringRes val inviteError: Int? = null,
+    val deleting: Producer? = null,
+    val invite: PendingInvite? = null,
+    val message: UiText? = null
+) {
+    val kpis: ProducerKpis get() = ProducerRules.kpis(producers)
+    val visible: List<Producer> get() = ProducerRules.search(producers, query)
+}
 
-class ProducersViewModel(
-    private val repository: ProfilesRepository = FakeProfilesRepository
-) : ViewModel() {
+/** Producer network: KPIs (US42), search (US06), register (US05), edit (US39), remove (US40), invite (US41). */
+class ProducersViewModel(private val repository: ProfilesRepository) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ProducersUiState())
-    val uiState: StateFlow<ProducersUiState> = _uiState.asStateFlow()
+    /** Used by the default ViewModel factory. */
+    constructor() : this(DistributorDependencies.profilesRepository)
+
+    private val local = MutableStateFlow(ProducersUiState())
+
+    val uiState: StateFlow<ProducersUiState> = combine(repository.producers, local) { producers, local ->
+        local.copy(producers = producers)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProducersUiState())
 
     init {
+        viewModelScope.launch { repository.refresh() }
+    }
+
+    fun onQueryChange(value: String) = local.update { it.copy(query = value) }
+
+    fun openSheet(sheet: ProducerSheet) = local.update { it.copy(sheet = sheet, formErrors = emptySet(), inviteError = null) }
+    fun closeSheet() = local.update { it.copy(sheet = null, formErrors = emptySet(), inviteError = null) }
+    fun onMessageShown() = local.update { it.copy(message = null) }
+    fun onInviteShared() = local.update { it.copy(invite = null) }
+
+    fun save(draft: ProducerDraft) {
+        val editing = (local.value.sheet as? ProducerSheet.Edit)?.producer
+        val others = uiState.value.producers.filter { it.id != editing?.id }
+        val errors = ProducerRules.validate(draft, others)
+        if (errors.isNotEmpty()) {
+            local.update { it.copy(formErrors = errors) }
+            return
+        }
         viewModelScope.launch {
-            repository.producers.collect { list ->
-                recomputeState(list, _uiState.value.searchQuery)
+            val message = if (editing == null) {
+                val created = repository.registerProducer(draft)
+                UiText.StringResource(R.string.prod_registered, arrayOf(created.name))
+            } else {
+                repository.updateProducer(editing.id, draft)
+                UiText.StringResource(R.string.prod_updated, arrayOf(draft.name.trim()))
             }
+            local.update { it.copy(sheet = null, formErrors = emptySet(), message = message) }
         }
     }
 
-    fun onSearchQueryChange(query: String) {
-        recomputeState(repository.producers.value, query)
-    }
-
-    fun registerProducer(
-        name: String,
-        farmName: String,
-        location: String,
-        cropType: String,
-        email: String,
-        phone: String,
-        entityType: ProducerEntityType,
-        onSuccess: () -> Unit
-    ) {
-        val result = repository.registerProducer(name, farmName, location, cropType, email, phone, entityType)
-        result.fold(
-            onSuccess = { created ->
-                _uiState.update {
+    fun invite(name: String, contact: String, location: String, crop: String) {
+        when (InviteRules.validate(name, contact, uiState.value.producers)) {
+            InviteRules.Error.NAME -> local.update { it.copy(inviteError = R.string.prod_error_name) }
+            InviteRules.Error.CONTACT_FORMAT -> local.update { it.copy(inviteError = R.string.prod_invite_error_contact) }
+            InviteRules.Error.ALREADY_MEMBER -> local.update { it.copy(inviteError = R.string.prod_invite_error_member) }
+            null -> viewModelScope.launch {
+                val invited = repository.inviteProducer(name, contact, location, crop)
+                local.update {
                     it.copy(
-                        feedbackMessage = "Productor '${created.name}' registrado con tipo estricto: ${created.entityType.backendValue}",
-                        errorMessage = null
+                        sheet = null,
+                        inviteError = null,
+                        invite = PendingInvite(
+                            name = invited.name,
+                            crop = invited.cropType,
+                            inviterName = repository.distributorProfile.value.fullName,
+                            link = "$INVITE_URL${invited.id}"
+                        ),
+                        message = UiText.StringResource(R.string.prod_invited_msg, arrayOf(invited.name))
                     )
                 }
-                onSuccess()
-            },
-            onFailure = { err ->
-                _uiState.update { it.copy(errorMessage = err.message) }
             }
-        )
+        }
     }
 
-    fun inviteProducer(
-        name: String,
-        emailOrPhone: String,
-        location: String,
-        cropType: String,
-        onShareLinkReady: (String) -> Unit
-    ) {
-        val result = repository.inviteProducer(name, emailOrPhone, location, cropType)
-        result.fold(
-            onSuccess = { invited ->
-                val inviteText = "¡Hola ${invited.name}! Carlos Mendoza te invita a unirte a la red de abastecimiento FruitLogix para el cultivo de ${invited.cropType}. Completa tu registro aquí: https://upc-rebootech.github.io/Fruitlogix-website/?invite=${invited.id}"
-                _uiState.update {
-                    it.copy(
-                        feedbackMessage = "Invitación generada para ${invited.name}",
-                        errorMessage = null
-                    )
-                }
-                onShareLinkReady(inviteText)
-            },
-            onFailure = { err ->
-                _uiState.update { it.copy(errorMessage = err.message) }
-            }
-        )
-    }
+    fun askDelete(producer: Producer) = local.update { it.copy(deleting = producer) }
+    fun cancelDelete() = local.update { it.copy(deleting = null) }
 
-    fun updateProducer(updated: ProducerItem, onSuccess: () -> Unit) {
-        val result = repository.updateProducer(updated)
-        result.fold(
-            onSuccess = {
-                _uiState.update {
-                    it.copy(
-                        feedbackMessage = "Ficha técnica de '${updated.name}' actualizada correctamente.",
-                        errorMessage = null
-                    )
-                }
-                onSuccess()
-            },
-            onFailure = { err ->
-                _uiState.update { it.copy(errorMessage = err.message) }
-            }
-        )
-    }
-
-    fun deleteProducer(producerId: String) {
-        repository.deleteProducer(producerId)
-        _uiState.update {
-            it.copy(feedbackMessage = "Productor eliminado de la red activa.", errorMessage = null)
+    fun confirmDelete() {
+        val producer = local.value.deleting ?: return
+        viewModelScope.launch {
+            repository.deleteProducer(producer.id)
+            local.update { it.copy(deleting = null, message = UiText.StringResource(R.string.prod_deleted, arrayOf(producer.name))) }
         }
     }
 
-    fun clearMessages() {
-        _uiState.update { it.copy(feedbackMessage = null, errorMessage = null) }
-    }
-
-    private fun recomputeState(list: List<ProducerItem>, query: String) {
-        val filtered = if (query.isBlank()) {
-            list
-        } else {
-            list.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.farmName.contains(query, ignoreCase = true) ||
-                        it.location.contains(query, ignoreCase = true) ||
-                        it.cropType.contains(query, ignoreCase = true)
-            }
-        }
-
-        val avgQuality = if (list.isEmpty()) 0.0 else {
-            String.format(Locale.US, "%.1f", list.map { it.qualityRating }.average()).toDouble()
-        }
-        val totalTons = String.format(Locale.US, "%.1f", list.sumOf { it.weeklyTons }).toDouble()
-        val totalIncidents = list.sumOf { it.incidents30d }
-
-        _uiState.update {
-            it.copy(
-                searchQuery = query,
-                producers = list,
-                filteredProducers = filtered,
-                kpis = ProducerKpiSummary(
-                    totalProducers = list.size,
-                    averageQuality = avgQuality,
-                    weeklyProductionTons = totalTons,
-                    incidentsLast30d = totalIncidents
-                )
-            )
-        }
+    private companion object {
+        const val INVITE_URL = "https://upc-rebootech.github.io/Fruitlogix-website-v2/?invite="
     }
 }

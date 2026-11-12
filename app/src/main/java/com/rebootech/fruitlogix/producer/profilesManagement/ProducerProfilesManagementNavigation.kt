@@ -7,7 +7,7 @@ import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagement
 import com.rebootech.fruitlogix.producer.profilesManagement.presentation.ProducerProfileScreen
 import com.rebootech.fruitlogix.producer.profilesManagement.presentation.edit.EditProfileScreen
 import com.rebootech.fruitlogix.producer.profilesManagement.presentation.settings.HelpSupportScreen
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.settings.LanguageSettingsScreen
+import com.rebootech.fruitlogix.shared.ui.settings.LanguageSettingsScreen
 import com.rebootech.fruitlogix.producer.profilesManagement.presentation.settings.NotificationSettingsScreen
 import com.rebootech.fruitlogix.producer.profilesManagement.presentation.settings.SyncSettingsScreen
 

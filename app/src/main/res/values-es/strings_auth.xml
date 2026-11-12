@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- IAM: compartido -->
+    <string name="iam_brand_cd">Logo de FruitLogix</string>
+    <string name="iam_version">Versión %1$s</string>
+    <string name="iam_language_es">Español</string>
+    <string name="iam_language_en">English</string>
+    <string name="iam_show_password">Mostrar contraseña</string>
+    <string name="iam_hide_password">Ocultar contraseña</string>
+    <string name="iam_error_network">Sin conexión. Revisa tu internet e inténtalo de nuevo.</string>
+    <string name="iam_error_unknown">Algo salió mal. Inténtalo de nuevo.</string>
+
+    <!-- IAM: iniciar sesión -->
+    <string name="login_welcome">Hola de nuevo</string>
+    <string name="login_subtitle">Inicia sesión para continuar</string>
+    <string name="login_username">Usuario</string>
+    <string name="login_username_placeholder">ej. rosa.quispe</string>
+    <string name="login_password">Contraseña</string>
+    <string name="login_keep_signed_in">Mantener la sesión iniciada</string>
+    <string name="login_submit">Iniciar sesión</string>
+    <string name="login_forgot">¿Olvidaste tu contraseña?</string>
+    <string name="login_forgot_soon">La recuperación de contraseña estará disponible pronto.</string>
+    <string name="login_new_here">¿Eres nuevo en FruitLogix?</string>
+    <string name="login_create_account">Crear cuenta</string>
+    <string name="login_error_username_empty">Ingresa tu usuario</string>
+    <string name="login_error_password_empty">Ingresa tu contraseña</string>
+    <string name="login_error_credentials">Usuario o contraseña incorrectos. Revísalos e inténtalo de nuevo.</string>
+
+    <!-- IAM: crear cuenta -->
+    <string name="signup_step">Paso %1$d de %2$d</string>
+    <string name="signup_role_title">¿Cómo usarás FruitLogix?</string>
+    <string name="signup_role_subtitle">Elige tu rol. No se puede cambiar después.</string>
+    <string name="signup_role_producer">Productor</string>
+    <string name="signup_role_producer_desc">Cultivo fruta: recibo pedidos, inspecciono la calidad y manejo mi stock.</string>
+    <string name="signup_role_distributor">Distribuidor</string>
+    <string name="signup_role_distributor_desc">Compro y transporto fruta: manejo pedidos, productores y mi flota.</string>
+    <string name="signup_role_chip">Cuenta: %1$s</string>
+
+    <string name="signup_about_title">Tus datos</string>
+    <string name="signup_about_subtitle">Así te verán tus clientes y socios.</string>
+    <string name="signup_full_name">Nombre completo</string>
+    <string name="signup_full_name_placeholder">ej. Rosa Quispe</string>
+    <string name="signup_farm_name">Nombre del fundo</string>
+    <string name="signup_farm_name_placeholder">ej. Fundo Santa Rosa</string>
+    <string name="signup_company_name">Nombre de la empresa</string>
+    <string name="signup_company_name_placeholder">ej. Frutas del Norte S.A.C.</string>
+    <string name="signup_email">Correo electrónico</string>
+    <string name="signup_email_placeholder">ej. rosa@fundo.pe</string>
+    <string name="signup_next">Continuar</string>
+
+    <string name="signup_account_title">Crea tu acceso</string>
+    <string name="signup_account_subtitle">Con estos datos iniciarás sesión.</string>
+    <string name="signup_username">Usuario</string>
+    <string name="signup_username_help">Minúsculas, números, punto o guion bajo. De 4 a 20 caracteres.</string>
+    <string name="signup_password">Contraseña</string>
+    <string name="signup_req_length">Al menos 8 caracteres</string>
+    <string name="signup_req_letter">Al menos una letra</string>
+    <string name="signup_req_number">Al menos un número</string>
+    <string name="signup_invitation_toggle">Tengo un código de invitación</string>
+    <string name="signup_invitation_label">Código de invitación (opcional)</string>
+    <string name="signup_invitation_help">Tu distribuidor te da este código para vincular sus cuentas.</string>
+    <string name="signup_terms">Acepto los Términos del servicio y la Política de privacidad</string>
+    <string name="signup_submit">Crear cuenta</string>
+    <string name="signup_have_account">¿Ya tienes una cuenta?</string>
+    <string name="signup_sign_in">Iniciar sesión</string>
+
+    <string name="signup_error_full_name">Ingresa tu nombre completo (2 a 60 caracteres)</string>
+    <string name="signup_error_farm">Ingresa el nombre de tu fundo</string>
+    <string name="signup_error_company">Ingresa el nombre de tu empresa</string>
+    <string name="signup_error_email">Ingresa un correo válido</string>
+    <string name="signup_error_email_taken">Este correo ya está registrado</string>
+    <string name="signup_error_username">Usa de 4 a 20 caracteres y empieza con una letra</string>
+    <string name="signup_error_username_taken">Este usuario ya existe. Prueba con otro.</string>
+    <string name="signup_error_password">Tu contraseña no cumple los requisitos</string>
+    <string name="signup_error_terms">Acepta los términos para continuar</string>
+</resources>

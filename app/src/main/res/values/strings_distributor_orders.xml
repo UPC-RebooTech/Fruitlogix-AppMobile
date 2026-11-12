@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Distributor orders: list -->
+    <string name="dist_orders_title">Orders</string>
+    <plurals name="dist_orders_active_count">
+        <item quantity="one">%d active order</item>
+        <item quantity="other">%d active orders</item>
+    </plurals>
+    <string name="dist_orders_new">New order</string>
+    <string name="dist_orders_scan">Scan reception</string>
+    <string name="dist_orders_history">History</string>
+    <string name="dist_orders_filter_all">All</string>
+    <string name="dist_orders_filter_count">%1$s (%2$d)</string>
+    <string name="dist_order_status_pending">Pending</string>
+    <string name="dist_order_status_in_preparation">In preparation</string>
+    <string name="dist_order_status_on_route">On route</string>
+    <string name="dist_orders_quantity">%1$s t · %2$d pallets</string>
+    <string name="dist_orders_delivery">Delivery %1$s</string>
+    <string name="dist_orders_today">today</string>
+    <string name="dist_orders_tomorrow">tomorrow</string>
+    <string name="dist_orders_empty_title">No active orders</string>
+    <string name="dist_orders_empty_message">Create an order to send it to a producer.</string>
+    <string name="dist_orders_empty_filter">There are no orders with this status.</string>
+    <string name="dist_orders_deleted">Order %1$s deleted</string>
+
+    <!-- Order form (create and edit) -->
+    <string name="dist_order_create_title">New order</string>
+    <string name="dist_order_create_subtitle">Who it is for, what and when.</string>
+    <string name="dist_order_edit_title">Edit order %1$s</string>
+    <string name="dist_order_client">Client</string>
+    <string name="dist_order_client_placeholder">e.g. Supermercados Lima Norte</string>
+    <string name="dist_order_product">Product</string>
+    <string name="dist_order_product_placeholder">e.g. Palta Hass</string>
+    <string name="dist_order_product_suggestions">Or pick one:</string>
+    <string name="dist_order_quantity">Quantity (tonnes)</string>
+    <string name="dist_order_quantity_placeholder">e.g. 12.5</string>
+    <string name="dist_order_quantity_pallets">About %1$d pallets</string>
+    <string name="dist_order_date">Delivery date</string>
+    <string name="dist_order_date_placeholder">Choose a date</string>
+    <string name="dist_order_date_cd">Open the calendar to choose the delivery date</string>
+    <string name="dist_order_date_ok">OK</string>
+    <string name="dist_order_error_client">Enter the client\'s name</string>
+    <string name="dist_order_error_product">Type or pick a product</string>
+    <string name="dist_order_error_quantity">Enter a quantity between 0.1 and 100 t</string>
+    <string name="dist_order_error_date">Choose today or a later date</string>
+    <string name="dist_order_create_submit">Create order</string>
+    <string name="dist_order_edit_submit">Save changes</string>
+    <string name="dist_order_created_title">Order %1$s created</string>
+    <string name="dist_order_created_message">It stays pending until a producer accepts it.</string>
+    <string name="dist_order_back_to_orders">Back to orders</string>
+    <string name="dist_order_create_another">Create another</string>
+    <string name="dist_order_saved">Changes saved</string>
+    <string name="dist_order_locked_title">This order can\'t be edited</string>
+    <string name="dist_order_locked_message">Status: %1$s. Only pending orders can be changed.</string>
+    <string name="dist_order_not_found">We could not find this order.</string>
+    <string name="dist_order_delete">Delete order</string>
+    <string name="dist_order_delete_title">Delete order %1$s?</string>
+    <string name="dist_order_delete_message">This can\'t be undone.</string>
+    <string name="dist_order_delete_confirm">Delete</string>
+    <string name="dist_order_delete_expired">Orders can only be deleted during their first 24 hours.</string>
+
+    <!-- History -->
+    <string name="dist_history_title">Order history</string>
+    <string name="dist_history_subtitle">Delivered and cancelled orders</string>
+    <string name="dist_history_search">Search by order, client or producer</string>
+    <string name="dist_history_delivered">Delivered</string>
+    <string name="dist_history_cancelled">Cancelled</string>
+    <string name="dist_history_product_producer">%1$s · %2$s</string>
+    <string name="dist_history_delivered_at">Delivered %1$s</string>
+    <string name="dist_history_cancelled_at">Cancelled %1$s</string>
+    <string name="dist_history_empty_title">No finished orders yet</string>
+    <string name="dist_history_empty_message">Delivered orders will appear here.</string>
+    <string name="dist_history_no_results">No orders match your search.</string>
+    <string name="dist_history_clear">Clear search</string>
+
+    <!-- Scan reception -->
+    <string name="dist_scan_title">Scan reception</string>
+    <string name="dist_scan_subtitle">Point the camera at the lot label when the truck arrives.</string>
+    <string name="dist_scan_camera_hint">Center the label inside the frame</string>
+    <string name="dist_scan_permission_title">Camera access needed</string>
+    <string name="dist_scan_permission_message">Allow the camera to read lot labels, or type the code.</string>
+    <string name="dist_scan_permission_allow">Allow camera</string>
+    <string name="dist_scan_type_code">Type the code</string>
+    <string name="dist_scan_code_label">Lot code</string>
+    <string name="dist_scan_code_placeholder">e.g. LOT-FX-1041-UVA</string>
+    <string name="dist_scan_check_code">Check code</string>
+    <string name="dist_scan_demo_title">Demo: the camera does not read labels yet</string>
+    <string name="dist_scan_demo_valid">Simulate a valid label</string>
+    <string name="dist_scan_demo_invalid">Simulate a damaged label</string>
+    <string name="dist_scan_matched_title">Lot matches order %1$s</string>
+    <string name="dist_scan_for_client">For %1$s</string>
+    <string name="dist_scan_confirm">Confirm reception</string>
+    <string name="dist_scan_not_on_route_title">Order %1$s is not on its way</string>
+    <string name="dist_scan_not_on_route_message">Its status is %1$s. Check the label with the driver.</string>
+    <string name="dist_scan_unknown_title">We could not read this label</string>
+    <string name="dist_scan_unknown_message">Try again or type the code printed under the barcode.</string>
+    <string name="dist_scan_received_title">Reception confirmed</string>
+    <string name="dist_scan_received_message">Order %1$s is now delivered and in the history.</string>
+    <string name="dist_scan_another">Scan another lot</string>
+    <string name="dist_scan_again">Scan again</string>
+</resources>

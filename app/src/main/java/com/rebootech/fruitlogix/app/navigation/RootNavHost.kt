@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,7 +25,7 @@ import com.rebootech.fruitlogix.auth.domain.model.UserRole
 import com.rebootech.fruitlogix.auth.domain.repository.SessionRepository
 import com.rebootech.fruitlogix.distributor.DistributorShell
 import com.rebootech.fruitlogix.producer.ProducerShell
-import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.launch
 
 sealed interface SessionState {
@@ -44,7 +43,6 @@ object RootRoutes {
 @Composable
 fun RootNavHost(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
     sessionRepository: SessionRepository? = null
 ) {
     val context = LocalContext.current
@@ -66,27 +64,31 @@ fun RootNavHost(
 
     when (val state = sessionState) {
         SessionState.Loading -> {
-            // Mientras carga, muestra solo el fondo ColorSurfaceDark con un indicador de progreso
+            // While the saved session loads: light background (same as sign in) and a spinner
             Box(
                 modifier = modifier
                     .fillMaxSize()
-                    .background(FruitLogixTheme.colors.surfaceDark),
+                    .background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
-                    color = FruitLogixTheme.colors.primary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(48.dp)
                 )
             }
         }
 
         SessionState.SignedOut -> {
+            // Created here (not as a parameter) so it is discarded when the user signs in.
+            // After signing out a new one starts at Login, instead of restoring the old
+            // back stack (e.g. the last sign-up step).
+            val authNavController = rememberNavController()
             NavHost(
-                navController = navController,
+                navController = authNavController,
                 startDestination = AuthRoutes.Login,
                 modifier = modifier
             ) {
-                authGraph(navController)
+                authGraph(authNavController)
             }
         }
 

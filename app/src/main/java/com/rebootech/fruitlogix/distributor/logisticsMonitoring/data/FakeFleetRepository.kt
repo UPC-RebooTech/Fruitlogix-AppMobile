@@ -1,511 +1,166 @@
 ﻿package com.rebootech.fruitlogix.distributor.logisticsMonitoring.data
 
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Arrival
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ArrivalStatus
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchDetail
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchStatus
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchSummary
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchTemperaturePoint
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.FleetAlert
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.MilestoneStatus
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.RouteMilestone
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ActiveDispatch
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Checkpoint
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.CheckpointKind
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DelayReason
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DeliveryState
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DriverInfo
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.repository.FleetRepository
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Sensor
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.SensorStatus
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.SensorType
-import com.rebootech.fruitlogix.shared.ui.components.TemperaturePoint
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.rules.EtaRules
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 /**
- * In-memory fake implementation of [FleetRepository].
- *
- * All data uses Peruvian context:
- *  - Country: Peru, hub: Lima
- *  - Time format: 24h + "PET" suffix
- *  - Currency: Peruvian Sol (S/)
- *  - Plates: Peruvian format ABC-123
- *  - Routes: Panamericana Sur / Norte / Carretera Central
- *  - Sensor TH-09 is the ONLY offline sensor and belongs to FL-408
+ * Sample fleet of the Lima Central Hub (Callao, Peru). Every truck carries an order that is
+ * "on route" in Orders. Reading the orders through their domain interface keeps both sides in
+ * sync: an order received at the gate (Scan reception) also closes its trip here.
  */
-class FakeFleetRepository : FleetRepository {
+class FakeFleetRepository(
+    private val orderRepository: OrderRepository
+) : FleetRepository {
 
-    override fun getActiveDispatches(): List<DispatchSummary> = listOf(
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val trips = MutableStateFlow(initialTrips())
 
-        // FL-102 – ON TIME – Ica grapes – Panamericana Sur
-        DispatchSummary(
-            id = "FL-102",
-            licensePlate = "BQK-482",
-            cargoDescription = "Ica grapes \u2022 16 Pallets (Grade A)",
-            routeLabel = "Ica \u2192 Lima Central Hub",
-            reeferTemp = "3.4\u00b0C",
-            reeferTempTarget = "Target 3.0\u00b0C",
-            humidity = "88% RH",
-            dockEta = "14:30 PET",
-            etaDelta = null,
-            progressFraction = 0.72f,
-            progressLabel = "284 / 395 km",
-            status = DispatchStatus.ON_TIME,
-            footerNote = "BLE Sensatag Sync OK",
-            showImmediateDiagnostic = false
-        ),
-
-        // FL-408 – TEMP ALERT – Hass avocado (Chavín de Huántar) – Carretera Central
-        DispatchSummary(
-            id = "FL-408",
-            licensePlate = "AZT-901",
-            cargoDescription = "Hass avocado \u2022 18 Pallets",
-            routeLabel = "Chav\u00edn de Hu\u00e1ntar \u2192 Callao Cold Hub",
-            reeferTemp = "3.2\u00b0C",
-            reeferTempTarget = "Target 4.0\u00b0C",
-            humidity = "84% RH",
-            dockEta = "14:50 PET",
-            etaDelta = null,
-            progressFraction = 0.82f,
-            progressLabel = "182 / 223 km \u2022 Gateway Delay",
-            status = DispatchStatus.TEMP_ALERT,
-            footerNote = null,
-            showImmediateDiagnostic = true
-        ),
-
-        // FL-219 – WEIGH STATION DELAY – Piura mango – Panamericana Norte
-        DispatchSummary(
-            id = "FL-219",
-            licensePlate = "CHD-330",
-            cargoDescription = "Piura mango \u2022 20 Pallets",
-            routeLabel = "Piura \u2192 Lima Central Hub",
-            reeferTemp = "2.1\u00b0C",
-            reeferTempTarget = "Nominal",
-            humidity = "91% RH",
-            dockEta = "16:45 PET",
-            etaDelta = "+45m",
-            progressFraction = 0.40f,
-            progressLabel = "112 / 280 km \u2022 Weigh station delay",
-            status = DispatchStatus.WEIGH_STATION_DELAY,
-            footerNote = "Weigh Station Hold",
-            showImmediateDiagnostic = false
-        )
-    )
-
-    override fun getFleetAlerts(): List<FleetAlert> = listOf(
-        FleetAlert(
-            id = "alert-1",
-            title = "Reefer temp 4.3\u00b0C – above 3.5\u00b0C threshold",
-            unitId = "FL-408",
-            severity = DispatchStatus.TEMP_ALERT
-        ),
-        FleetAlert(
-            id = "alert-2",
-            title = "Sensor TH-09 offline \u2022 47 min last seen",
-            unitId = "FL-408",
-            severity = DispatchStatus.WEIGH_STATION_DELAY
-        )
-    )
-
-    override fun getAllSensors(): List<Sensor> = listOf(
-
-        // ----------- ON ROUTE SENSORS -----------
-
-        // TH-09 – OFFLINE – belongs to FL-408 (the ONLY offline sensor)
-        Sensor(
-            id = "#TH-09",
-            type = SensorType.TEMPERATURE,
-            linkedTruckId = "FL-408",
-            linkedOrderId = "FX-1042",
-            cargoOrLocation = "Hass Avocado Premium Export",
-            lastSignal = "Lost 47 min ago \u2022 KM 184 Carretera Central",
-            batteryPercent = 14,
-            status = SensorStatus.OFFLINE,
-            isOfflineWithLastSeen = true
-        ),
-
-        // GPS-204 – LOW BATTERY – belongs to FL-219
-        Sensor(
-            id = "#GPS-204",
-            type = SensorType.GPS,
-            linkedTruckId = "FL-219",
-            linkedOrderId = "FX-1039",
-            cargoOrLocation = "Piura mango \u2013 Locked",
-            lastSignal = "1 min ago \u2022 SatCom Mesh Sync",
-            batteryPercent = 18,
-            status = SensorStatus.LOW_BATTERY,
-            detailLabel1 = "Ambient",
-            detailValue1 = "26.4\u00b0C",
-            detailLabel2 = "Seal Status",
-            detailValue2 = "Tamper Safe"
-        ),
-
-        // TH-04 – ONLINE – belongs to FL-102
-        Sensor(
-            id = "#TH-04",
-            type = SensorType.TEMPERATURE,
-            linkedTruckId = "FL-102",
-            linkedOrderId = "FX-1040",
-            cargoOrLocation = "Ica Organic Grapes",
-            lastSignal = "24 s ago \u2022 BLE Gateway Sync",
-            batteryPercent = 86,
-            status = SensorStatus.ONLINE,
-            detailLabel1 = "CHILL CORE",
-            detailValue1 = "3.4\u00b0C",
-            detailLabel2 = "HUMIDITY",
-            detailValue2 = "88%"
-        ),
-
-        // ----------- WAREHOUSE / STANDBY SENSORS -----------
-
-        // TH-15 – STANDBY – Callao Cold Hub, Staging Bay 3 (unlinked)
-        Sensor(
-            id = "#TH-15",
-            type = SensorType.TEMPERATURE,
-            linkedTruckId = null,
-            linkedOrderId = null,
-            cargoOrLocation = "Multi-Zone Reefer Probe",
-            lastSignal = "5 min ago \u2022 Mesh Relay Active (94% BATT)",
-            batteryPercent = 94,
-            status = SensorStatus.STANDBY,
-            warehouseLocation = "Callao Cold Hub \u2022 Staging Bay 3"
-        ),
-
-        // ENV-08 – STANDBY – Cold Room 02 (unlinked)
-        Sensor(
-            id = "#ENV-08",
-            type = SensorType.HUMIDITY,
-            linkedTruckId = null,
-            linkedOrderId = null,
-            cargoOrLocation = "Atmospheric O\u2082 & Ethylene Sensor",
-            lastSignal = "12 min ago \u2022 Ethylene: 0.02 ppm (76% BATT)",
-            batteryPercent = 76,
-            status = SensorStatus.STANDBY,
-            warehouseLocation = "Callao Cold Hub \u2022 Dock B"
-        )
-    )
-
-    override fun getDispatchDetail(unitId: String): DispatchDetail {
-        val summary = getActiveDispatches().find { it.id == unitId } ?: getActiveDispatches().first()
-
-        return when (unitId) {
-            "FL-408" -> {
-                DispatchDetail(
-                    unitId = "FL-408",
-                    licensePlate = "AZT-901",
-                    truckModel = "International LT Refrigerated",
-                    orderId = "FX-1042",
-                    cargoDescription = "Hass avocado \u2022 18 Pallets",
-                    originName = "Chav\u00edn de Hu\u00e1ntar",
-                    destinationName = "Callao Cold Hub",
-                    routeLabel = "Chav\u00edn de Hu\u00e1ntar \u2192 Callao Cold Hub",
-                    status = DispatchStatus.TEMP_ALERT,
-                    dockEta = "14:30 PET",
-                    progressFraction = 0.82f,
-                    distanceProgress = "182 / 220 km",
-                    delayText = "+12m delay",
-                    progressLabel = "182 / 220 km \u2022 +12m delay",
-                    currentTemp = "3.2\u00b0C",
-                    tempTarget = "Target 4.0\u00b0C",
-                    rateOfRise = "+0.4\u00b0C/min",
-                    timeToBreachMinutes = 12,
-                    humidity = "92% RH",
-                    speedKmh = "68 km/h",
-                    ambientTemp = "24.5\u00b0C",
-                    batteryPercent = 78,
-                    sensorId = "#TH-09",
-                    sensorSignal = "BLE Gateway Sync OK",
-                    currentLocationLabel = "Carretera Central \u2022 Km 182",
-                    hasPredictiveAlert = true,
-                    predictiveAlertMessage = "Forecast: will exceed 4.0\u00b0C in 12 min",
-                    driverName = "Mateo Silva",
-                    driverPhone = "+51 987 654 321",
-                    driverLicense = "Lic. A-IIIc \u2022 8 yrs exp",
-                    minTempThreshold = 2.0f,
-                    maxTempThreshold = 4.0f,
-                    temperaturePoints = listOf(
-                        TemperaturePoint(timeLabel = "04:00", celsius = 2.4f),
-                        TemperaturePoint(timeLabel = "06:42", celsius = 4.6f),
-                        TemperaturePoint(timeLabel = "08:30", celsius = 2.8f),
-                        TemperaturePoint(timeLabel = "10:00", celsius = 2.9f),
-                        TemperaturePoint(timeLabel = "13:00", celsius = 3.0f),
-                        TemperaturePoint(timeLabel = "13:48", celsius = 3.2f)
-                    ),
-                    detailedTemperaturePoints = listOf(
-                        DispatchTemperaturePoint("04:00", 2.4f),
-                        DispatchTemperaturePoint(
-                            timeLabel = "06:42",
-                            celsius = 4.6f,
-                            isExcursion = true,
-                            excursionDurationMinutes = 8,
-                            excursionTooltip = "Excursion 06:42 \u2022 4.6\u00b0C \u2022 8 min"
-                        ),
-                        DispatchTemperaturePoint("08:30", 2.8f),
-                        DispatchTemperaturePoint("10:00", 2.9f),
-                        DispatchTemperaturePoint("13:00", 3.0f),
-                        DispatchTemperaturePoint("NOW (13:48)", 3.2f)
-                    ),
-                    milestones = listOf(
-                        RouteMilestone(
-                            id = "m1",
-                            title = "Chav\u00edn de Hu\u00e1ntar Packhouse",
-                            locationName = "Origin Facility",
-                            timestamp = "04:15 PET",
-                            status = MilestoneStatus.COMPLETED,
-                            detailNote = "Departed \u2022 Pallets inspected & sealed"
-                        ),
-                        RouteMilestone(
-                            id = "m2",
-                            title = "San Mateo Checkpoint",
-                            locationName = "KM 94 Carretera Central",
-                            timestamp = "07:30 PET",
-                            status = MilestoneStatus.COMPLETED,
-                            detailNote = "Passed \u2022 Telemetry ping normal"
-                        ),
-                        RouteMilestone(
-                            id = "m3",
-                            title = "Current Position: Km 182",
-                            locationName = "Carretera Central",
-                            timestamp = "13:48 PET",
-                            status = MilestoneStatus.IN_TRANSIT,
-                            detailNote = "Cruising at 68 km/h \u2022 Carretera Central (+12m delay)"
-                        ),
-                        RouteMilestone(
-                            id = "m4",
-                            title = "Callao Cold-Hub Dock #14",
-                            locationName = "Destination Bay",
-                            timestamp = "Est. 14:30 PET",
-                            status = MilestoneStatus.PENDING,
-                            detailNote = "Inbound staging bay reserved"
-                        )
-                    )
-                )
+    override val dispatches: StateFlow<List<ActiveDispatch>> =
+        combine(trips, orderRepository.orders) { list, orders ->
+            val activeOrderIds = orders.map { it.id }.toSet()
+            list.map { trip ->
+                if (trip.isActive && trip.orderId !in activeOrderIds) {
+                    trip.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = trip.deliveredAt ?: LocalDateTime.now())
+                } else trip
             }
-            "FL-219" -> {
-                DispatchDetail(
-                    unitId = "FL-219",
-                    licensePlate = "CHD-330",
-                    truckModel = "Volvo FH Refrigerated",
-                    orderId = "FX-1039",
-                    cargoDescription = "Piura mango \u2022 20 Pallets",
-                    originName = "Piura Packing Bay",
-                    destinationName = "Lima Central Hub",
-                    routeLabel = "Piura \u2192 Lima Central Hub",
-                    status = DispatchStatus.WEIGH_STATION_DELAY,
-                    dockEta = "16:45 PET",
-                    progressFraction = 0.40f,
-                    distanceProgress = "112 / 280 km",
-                    delayText = "+45m delay",
-                    progressLabel = "112 / 280 km \u2022 Weigh station delay",
-                    currentTemp = "2.1\u00b0C",
-                    tempTarget = "Nominal",
-                    rateOfRise = "+0.1\u00b0C/min",
-                    timeToBreachMinutes = Int.MAX_VALUE,
-                    humidity = "91% RH",
-                    speedKmh = "45 km/h",
-                    ambientTemp = "26.4\u00b0C",
-                    batteryPercent = 65,
-                    sensorId = "#GPS-204",
-                    sensorSignal = "SatCom Mesh Sync",
-                    currentLocationLabel = "Panamericana Norte KM 112",
-                    hasPredictiveAlert = false,
-                    predictiveAlertMessage = null,
-                    driverName = "Luis Ramos",
-                    driverPhone = "+51 976 543 210",
-                    driverLicense = "Lic. A-IIIc \u2022 10 yrs exp",
-                    minTempThreshold = 2.0f,
-                    maxTempThreshold = 4.0f,
-                    temperaturePoints = listOf(
-                        TemperaturePoint(timeLabel = "04:00", celsius = 2.0f),
-                        TemperaturePoint(timeLabel = "07:00", celsius = 2.1f),
-                        TemperaturePoint(timeLabel = "10:00", celsius = 2.0f),
-                        TemperaturePoint(timeLabel = "13:00", celsius = 2.1f),
-                        TemperaturePoint(timeLabel = "13:48", celsius = 2.1f)
-                    ),
-                    detailedTemperaturePoints = listOf(
-                        DispatchTemperaturePoint("04:00", 2.0f),
-                        DispatchTemperaturePoint("07:00", 2.1f),
-                        DispatchTemperaturePoint("10:00", 2.0f),
-                        DispatchTemperaturePoint("13:00", 2.1f),
-                        DispatchTemperaturePoint("NOW (13:48)", 2.1f)
-                    ),
-                    milestones = listOf(
-                        RouteMilestone(
-                            id = "m1",
-                            title = "Piura Packhouse",
-                            locationName = "Origin",
-                            timestamp = "03:00 PET",
-                            status = MilestoneStatus.COMPLETED,
-                            detailNote = "Departed \u2022 Pallets inspected & sealed"
-                        ),
-                        RouteMilestone(
-                            id = "m2",
-                            title = "Anc\u00f3n Weigh Station",
-                            locationName = "KM 48 Panamericana Norte",
-                            timestamp = "10:45 PET",
-                            status = MilestoneStatus.WARNING,
-                            detailNote = "Stalled in queue (+45m delay)"
-                        ),
-                        RouteMilestone(
-                            id = "m3",
-                            title = "Current Position: Km 112",
-                            locationName = "Panamericana Norte",
-                            timestamp = "13:48 PET",
-                            status = MilestoneStatus.IN_TRANSIT,
-                            detailNote = "Cruising at 45 km/h"
-                        ),
-                        RouteMilestone(
-                            id = "m4",
-                            title = "Lima Central Hub",
-                            locationName = "Destination",
-                            timestamp = "Est. 16:45 PET",
-                            status = MilestoneStatus.PENDING,
-                            detailNote = "Inbound staging bay reserved"
-                        )
-                    )
-                )
-            }
-            else -> {
-                // FL-102 or default on-time unit
-                DispatchDetail(
-                    unitId = summary.id,
-                    licensePlate = summary.licensePlate,
-                    truckModel = "Kenworth T680 Reefer",
-                    orderId = "FX-1040",
-                    cargoDescription = summary.cargoDescription,
-                    originName = summary.routeLabel.split("\u2192").firstOrNull()?.trim() ?: "Ica",
-                    destinationName = summary.routeLabel.split("\u2192").lastOrNull()?.trim() ?: "Lima Central Hub",
-                    routeLabel = summary.routeLabel,
-                    status = summary.status,
-                    dockEta = summary.dockEta,
-                    progressFraction = summary.progressFraction,
-                    distanceProgress = summary.progressLabel.split("\u2022").firstOrNull()?.trim() ?: "284 / 395 km",
-                    delayText = summary.etaDelta,
-                    progressLabel = summary.progressLabel,
-                    currentTemp = summary.reeferTemp,
-                    tempTarget = summary.reeferTempTarget,
-                    rateOfRise = "+0.0\u00b0C/min",
-                    timeToBreachMinutes = Int.MAX_VALUE,
-                    humidity = summary.humidity,
-                    speedKmh = "72 km/h",
-                    ambientTemp = "22.0\u00b0C",
-                    batteryPercent = 86,
-                    sensorId = "#TH-04",
-                    sensorSignal = "24 s ago \u2022 BLE Gateway Sync OK",
-                    currentLocationLabel = "Panamericana Sur KM 284",
-                    hasPredictiveAlert = false,
-                    predictiveAlertMessage = null,
-                    driverName = "Jorge Huam\u00e1n",
-                    driverPhone = "+51 912 345 678",
-                    driverLicense = "Lic. A-IIIc \u2022 12 yrs exp",
-                    minTempThreshold = 2.0f,
-                    maxTempThreshold = 4.0f,
-                    temperaturePoints = listOf(
-                        TemperaturePoint(timeLabel = "04:00", celsius = 3.0f),
-                        TemperaturePoint(timeLabel = "07:00", celsius = 3.1f),
-                        TemperaturePoint(timeLabel = "10:00", celsius = 3.2f),
-                        TemperaturePoint(timeLabel = "13:00", celsius = 3.3f),
-                        TemperaturePoint(timeLabel = "13:48", celsius = 3.4f)
-                    ),
-                    detailedTemperaturePoints = listOf(
-                        DispatchTemperaturePoint("04:00", 3.0f),
-                        DispatchTemperaturePoint("07:00", 3.1f),
-                        DispatchTemperaturePoint("10:00", 3.2f),
-                        DispatchTemperaturePoint("13:00", 3.3f),
-                        DispatchTemperaturePoint("NOW (13:48)", 3.4f)
-                    ),
-                    milestones = listOf(
-                        RouteMilestone(
-                            id = "m1",
-                            title = "Ica Packhouse",
-                            locationName = "Origin",
-                            timestamp = "06:00 PET",
-                            status = MilestoneStatus.COMPLETED,
-                            detailNote = "Departed \u2022 Pallets inspected & sealed"
-                        ),
-                        RouteMilestone(
-                            id = "m2",
-                            title = "Chincha Checkpoint",
-                            locationName = "KM 200 Panamericana Sur",
-                            timestamp = "09:15 PET",
-                            status = MilestoneStatus.COMPLETED,
-                            detailNote = "Passed \u2022 Telemetry ping normal"
-                        ),
-                        RouteMilestone(
-                            id = "m3",
-                            title = "Current Position: Km 284",
-                            locationName = "Panamericana Sur",
-                            timestamp = "13:48 PET",
-                            status = MilestoneStatus.IN_TRANSIT,
-                            detailNote = "Cruising at 72 km/h \u2022 Panamericana Sur"
-                        ),
-                        RouteMilestone(
-                            id = "m4",
-                            title = "Lima Central Hub",
-                            locationName = "Destination",
-                            timestamp = summary.dockEta,
-                            status = MilestoneStatus.PENDING,
-                            detailNote = "Inbound staging bay reserved"
-                        )
-                    )
-                )
-            }
-        }
+        }.stateIn(scope, SharingStarted.Eagerly, trips.value)
+
+    override fun dispatch(unitId: String): ActiveDispatch? =
+        dispatches.value.firstOrNull { it.unitId.equals(unitId, ignoreCase = true) }
+
+    private fun change(unitId: String, block: (ActiveDispatch) -> ActiveDispatch) =
+        trips.update { list -> list.map { if (it.unitId.equals(unitId, ignoreCase = true)) block(it) else it } }
+
+    override suspend fun updateDeliveryState(unitId: String, state: DeliveryState) =
+        change(unitId) { it.copy(deliveryState = state) }
+
+    override suspend fun updateEta(unitId: String, newEta: java.time.LocalTime, reason: DelayReason) =
+        change(unitId) { EtaRules.apply(it, newEta, reason) }
+
+    override suspend fun recordReeferCheck(unitId: String) =
+        change(unitId) { it.copy(reeferCheckedAt = LocalDateTime.now()) }
+
+    override suspend fun completeDelivery(unitId: String) {
+        val trip = dispatch(unitId) ?: return
+        change(unitId) { it.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = LocalDateTime.now(), travelledKm = it.totalKm) }
+        // The order is received at the hub: it moves to the order history
+        orderRepository.confirmReception(trip.orderId)
     }
 
-    override fun getArrivals(): List<Arrival> = listOf(
-        // FL-102 – AT GATE – Ica grapes – BQK-482 – Jorge Huamán
-        Arrival(
-            unitId = "FL-102",
-            licensePlate = "BQK-482",
-            driverName = "Jorge Huamán",
-            cargoDescription = "Ica grapes • 16 Pallets (Grade A)",
-            palletsCount = 16,
-            orderId = "FX-1040",
-            assignedDock = "Dock B",
-            reeferTemp = "3.4°C",
-            tempSafeRange = "Safe 2.0 - 4.0°C",
-            humidity = "88% RH",
-            distanceKm = 0.1f,
-            distanceLabel = "0.1 km • Inside Perimeter",
-            status = ArrivalStatus.AT_GATE,
-            etaMinutes = 0,
-            speedKmh = "0 km/h",
-            eSealStatus = "#PE-99410-X Intact",
-            notes = "Holding at Gate 2 Checkpoint."
-        ),
-        // FL-408 – APPROACHING – Hass avocado – AZT-901 – Mateo Silva
-        Arrival(
-            unitId = "FL-408",
-            licensePlate = "AZT-901",
-            driverName = "Mateo Silva",
-            cargoDescription = "Hass avocado • 18 Pallets",
-            palletsCount = 18,
-            orderId = "FX-1042",
-            assignedDock = "Dock A",
-            reeferTemp = "3.2°C",
-            tempSafeRange = "Safe 2.0 - 4.0°C",
-            humidity = "84% RH",
-            distanceKm = 1.8f,
-            distanceLabel = "1.8 km to warehouse",
-            status = ArrivalStatus.APPROACHING,
-            etaMinutes = 6,
-            speedKmh = "34 km/h",
-            eSealStatus = "#PE-88310-Y Intact",
-            notes = "Cruising 34 km/h on Carretera Central."
-        ),
-        // FL-219 – APPROACHING – Piura mango – CHD-330 – Luis Ramos
-        Arrival(
-            unitId = "FL-219",
-            licensePlate = "CHD-330",
-            driverName = "Luis Ramos",
-            cargoDescription = "Piura mango • 20 Pallets",
-            palletsCount = 20,
-            orderId = "FX-1039",
-            assignedDock = "Dock C",
-            reeferTemp = "2.1°C",
-            tempSafeRange = "Safe 2.0 - 4.0°C",
-            humidity = "91% RH",
-            distanceKm = 4.8f,
-            distanceLabel = "4.8 km to warehouse",
-            status = ArrivalStatus.APPROACHING,
-            etaMinutes = 14,
-            speedKmh = "68 km/h",
-            eSealStatus = "#PE-77210-Z Intact",
-            notes = "On transit Panamericana Norte."
-        )
-    ).sortedBy { it.distanceKm }
+    override suspend fun rejectDelivery(unitId: String, reason: String) =
+        change(unitId) { it.copy(deliveryState = DeliveryState.REJECTED, rejectionReason = reason.trim()) }
+
+    private companion object {
+        fun initialTrips(): List<ActiveDispatch> {
+            val now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+            val today = now.toLocalTime()
+            return listOf(
+                ActiveDispatch(
+                    unitId = "FL-408",
+                    plate = "C7X-915",
+                    truckModel = "International LT",
+                    driver = DriverInfo("Mateo Silva", "+51 956 410 228", "Q-41872093"),
+                    orderId = "FX-1042",
+                    productName = "Palta Hass",
+                    pallets = 18,
+                    producerName = "Fundo Santa Rosa",
+                    originName = "Chavín de Huántar",
+                    destinationName = "Lima Central Hub",
+                    dock = "A",
+                    sealId = "PE-99410-X",
+                    sensorId = "TH-408",
+                    totalKm = 223.0,
+                    travelledKm = 182.0,
+                    eta = today.plusMinutes(50),
+                    harvestedAt = now.minusDays(1).withHour(5).withMinute(30),
+                    inspectedAt = now.minusDays(1).withHour(7).withMinute(15),
+                    departedAt = now.minusMinutes(300),
+                    checkpoints = listOf(
+                        Checkpoint("Chavín de Huántar", CheckpointKind.ORIGIN, passedAt = today.minusMinutes(300)),
+                        Checkpoint("Huaraz", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(200)),
+                        Checkpoint("Pativilca", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(65)),
+                        Checkpoint("Panamericana Norte", CheckpointKind.CURRENT, km = 182),
+                        Checkpoint("Lima Central Hub", CheckpointKind.DESTINATION)
+                    )
+                ),
+                ActiveDispatch(
+                    unitId = "FL-102",
+                    plate = "BQK-482",
+                    truckModel = "Kenworth T680",
+                    driver = DriverInfo("Jorge Huamán", "+51 987 112 340", "Q-30551876"),
+                    orderId = "FX-1041",
+                    productName = "Uva Red Globe",
+                    pallets = 16,
+                    producerName = "Viñedos de Ica",
+                    originName = "Ica",
+                    destinationName = "Lima Central Hub",
+                    dock = "B",
+                    sealId = "PE-99387-K",
+                    sensorId = "TH-102",
+                    totalKm = 395.0,
+                    travelledKm = 394.6,
+                    eta = today.plusMinutes(3),
+                    harvestedAt = now.minusDays(1).withHour(4).withMinute(50),
+                    inspectedAt = now.minusDays(1).withHour(6).withMinute(40),
+                    departedAt = now.minusMinutes(360),
+                    reeferCheckedAt = now.minusMinutes(365),
+                    checkpoints = listOf(
+                        Checkpoint("Ica", CheckpointKind.ORIGIN, passedAt = today.minusMinutes(360)),
+                        Checkpoint("Chincha", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(290)),
+                        Checkpoint("Lurín", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(70)),
+                        Checkpoint("Av. Néstor Gambetta", CheckpointKind.CURRENT, km = 394),
+                        Checkpoint("Lima Central Hub", CheckpointKind.DESTINATION)
+                    )
+                ),
+                ActiveDispatch(
+                    unitId = "FL-219",
+                    plate = "AFR-307",
+                    truckModel = "Freightliner M2",
+                    driver = DriverInfo("Luis Ramos", "+51 944 870 615", "Q-27409318"),
+                    orderId = "FX-1038",
+                    productName = "Mango Kent",
+                    pallets = 20,
+                    producerName = "Campos del Norte",
+                    originName = "Piura",
+                    destinationName = "Lima Central Hub",
+                    dock = "C",
+                    sealId = "PE-99355-M",
+                    sensorId = "TH-219",
+                    totalKm = 980.0,
+                    travelledKm = 812.0,
+                    eta = today.plusMinutes(195),
+                    delayMinutes = 45,
+                    delayReason = DelayReason.WEIGH_STATION,
+                    harvestedAt = now.minusDays(2).withHour(5).withMinute(0),
+                    inspectedAt = now.minusDays(2).withHour(8).withMinute(20),
+                    departedAt = now.minusMinutes(600),
+                    checkpoints = listOf(
+                        Checkpoint("Piura", CheckpointKind.ORIGIN, passedAt = today.minusMinutes(600)),
+                        Checkpoint("Chiclayo", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(430)),
+                        Checkpoint("Huarmey", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(240), hasIssue = true),
+                        Checkpoint("Panamericana Norte", CheckpointKind.CURRENT, km = 812),
+                        Checkpoint("Lima Central Hub", CheckpointKind.DESTINATION)
+                    )
+                )
+            )
+        }
+    }
 }

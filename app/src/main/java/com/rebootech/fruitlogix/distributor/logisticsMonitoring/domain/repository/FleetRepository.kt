@@ -1,35 +1,29 @@
 ﻿package com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.repository
 
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Arrival
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchDetail
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DispatchSummary
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.FleetAlert
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Sensor
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ActiveDispatch
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DelayReason
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DeliveryState
+import kotlinx.coroutines.flow.StateFlow
+import java.time.LocalTime
 
 /**
- * Repository interface for the Fleet Control Center.
- * The domain layer depends only on this abstraction.
+ * Trips of the distributor's fleet. State changes are kept here (not in a screen),
+ * so leaving and coming back to a dispatch shows the same status, ETA and checks.
  */
 interface FleetRepository {
+    val dispatches: StateFlow<List<ActiveDispatch>>
 
-    /** Returns the list of active dispatches (on-route trucks). */
-    fun getActiveDispatches(): List<DispatchSummary>
+    fun dispatch(unitId: String): ActiveDispatch?
 
-    /** Returns the list of active fleet alerts. */
-    fun getFleetAlerts(): List<FleetAlert>
+    /** Pending ⇄ On route. Closing the order goes through [completeDelivery] / [rejectDelivery]. */
+    suspend fun updateDeliveryState(unitId: String, state: DeliveryState)
 
-    /** Returns all sensors tracked by the system. */
-    fun getAllSensors(): List<Sensor>
+    suspend fun updateEta(unitId: String, newEta: LocalTime, reason: DelayReason)
 
-    /** Returns inbound arrivals tracked by geofence at Callao Cold Hub. */
-    fun getArrivals(): List<Arrival>
+    suspend fun recordReeferCheck(unitId: String)
 
-    /** Returns the count of dispatches currently on route. */
-    fun getOnRouteCount(): Int = getActiveDispatches().size
+    /** Delivered with proof: the order is also closed in Orders. */
+    suspend fun completeDelivery(unitId: String)
 
-    /** Returns the count of active alerts. */
-    fun getAlertCount(): Int = getFleetAlerts().size
-
-    /** Returns full dispatch detail for a specific unit ID. */
-    fun getDispatchDetail(unitId: String): DispatchDetail?
+    suspend fun rejectDelivery(unitId: String, reason: String)
 }

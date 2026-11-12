@@ -1,146 +1,172 @@
 ﻿package com.rebootech.fruitlogix.distributor.paymentManagement.presentation
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
-import com.rebootech.fruitlogix.distributor.paymentManagement.data.FakeBillingRepository
+import androidx.lifecycle.viewModelScope
+import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.DistributorDependencies
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.BillingTotals
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceType
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.ProposedCreditNote
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository.BillingRepository
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.rules.AutoInvoiceRules
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.rules.CreditNoteRules
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.rules.InvoiceRules
+import com.rebootech.fruitlogix.shared.core.model.UiText
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-class InvoicesViewModel : ViewModel() {
+import java.text.NumberFormat
+import java.time.LocalDate
 
-    private val repository: BillingRepository =
-        FakeBillingRepository()
+enum class InvoiceTab { COLLECT, PAY }
 
-    private val _uiState =
-        MutableStateFlow(InvoicesUiState())
+/** Billing tools, each opened in its own sheet. */
+enum class BillingTool { AUTO_INVOICE, CREDIT_NOTES, PRICES, PURCHASES }
+
+data class InvoicesUiState(
+    val all: List<Invoice> = emptyList(),
+    val creditNotes: List<ProposedCreditNote> = emptyList(),
+    val tab: InvoiceTab = InvoiceTab.COLLECT,
+    /** null = all statuses. */
+    val status: InvoiceStatus? = null,
+    val tool: BillingTool? = null,
+    @field:StringRes val toolError: Int? = null,
+    val toolErrorArg: String? = null,
+    /** Note being adjusted inside the credit notes sheet. */
+    val adjustingNoteId: String? = null,
+    val message: UiText? = null
+) {
+    val totals: BillingTotals get() = InvoiceRules.totals(all)
+
+    private val tabInvoices: List<Invoice>
+        get() = all.filter { it.type == if (tab == InvoiceTab.COLLECT) InvoiceType.RECEIVABLE else InvoiceType.PAYABLE }
+
+    /** Overdue first, then pending, then paid; newest first inside each group. */
+    val visible: List<Invoice>
+        get() = tabInvoices
+            .filter { status == null || InvoiceRules.effectiveStatus(it) == status }
+            .sortedWith(compareBy<Invoice> { InvoiceRules.effectiveStatus(it).sortOrder() }.thenByDescending { it.issuedOn })
+
+    fun count(type: InvoiceType): Int = all.count { it.type == type }
+    fun count(status: InvoiceStatus): Int = tabInvoices.count { InvoiceRules.effectiveStatus(it) == status }
+    val tabCount: Int get() = tabInvoices.size
+    val notesToReview: Int get() = creditNotes.count { !it.isApproved }
+}
+
+private fun InvoiceStatus.sortOrder() = when (this) {
+    InvoiceStatus.OVERDUE -> 0
+    InvoiceStatus.PENDING -> 1
+    InvoiceStatus.PAID -> 2
+}
+
+/** Invoices tab. Rules (totals, overdue, auto invoice, credit notes) are in domain. */
+class InvoicesViewModel(private val repository: BillingRepository) : ViewModel() {
+
+    /** Used by the default ViewModel factory. */
+    constructor() : this(DistributorDependencies.billingRepository)
+
+    private val local = MutableStateFlow(InvoicesUiState())
 
     val uiState: StateFlow<InvoicesUiState> =
-        _uiState.asStateFlow()
+        combine(repository.invoices, repository.creditNotes, local) { invoices, notes, local ->
+            local.copy(all = invoices, creditNotes = notes)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InvoicesUiState())
 
     init {
-        loadInvoices()
+        // Merge invoices from the Render backend when it answers
+        viewModelScope.launch { repository.refresh() }
     }
 
-    fun loadInvoices() {
-        val localInvoices = repository.getInvoices()
-        _uiState.value = InvoicesUiState(
-            isLoading = false,
-            allInvoices = localInvoices,
-            invoices = localInvoices
-        )
+    fun onTabChange(value: InvoiceTab) = local.update { it.copy(tab = value, status = null) }
+    fun onStatusChange(value: InvoiceStatus?) = local.update { it.copy(status = value) }
 
-        // Sincronización en vivo con Render API (/api/v1/invoices)
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-            runCatching {
-                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.api.getInvoices()
-            }.onSuccess { remoteDtos ->
-                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.updateSyncStatus(
-                    com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus.ONLINE
+    fun openTool(tool: BillingTool) = local.update { it.copy(tool = tool, toolError = null, toolErrorArg = null, adjustingNoteId = null) }
+    fun closeTool() = local.update { it.copy(tool = null, toolError = null, toolErrorArg = null, adjustingNoteId = null) }
+    fun onMessageShown() = local.update { it.copy(message = null) }
+
+    private fun toolError(@StringRes res: Int, arg: String? = null) = local.update { it.copy(toolError = res, toolErrorArg = arg) }
+
+    private fun pen(amount: Double): UiText {
+        val format = NumberFormat.getNumberInstance().apply {
+            minimumFractionDigits = 2
+            maximumFractionDigits = 2
+        }
+        return UiText.StringResource(R.string.common_amount_pen, arrayOf(format.format(amount)))
+    }
+
+    private fun parse(text: String) = text.trim().replace(',', '.').toDoubleOrNull()
+
+    // US66 -------------------------------------------------------------------
+
+    fun issueAutoInvoice(client: String, kilosText: String, priceText: String) {
+        when (val result = AutoInvoiceRules.calculate(client, parse(kilosText), parse(priceText))) {
+            AutoInvoiceRules.Result.MissingClient -> toolError(R.string.inv_auto_error_client)
+            AutoInvoiceRules.Result.InvalidKilos -> toolError(R.string.inv_auto_error_kilos)
+            AutoInvoiceRules.Result.PendingPrice -> toolError(R.string.inv_auto_pending, client.trim())
+            is AutoInvoiceRules.Result.Issued -> viewModelScope.launch {
+                val today = LocalDate.now()
+                val invoice = Invoice(
+                    id = repository.nextInvoiceId(),
+                    counterpartyName = client.trim(),
+                    amount = result.amount,
+                    issuedOn = today,
+                    dueOn = today.plusDays(AutoInvoiceRules.PAYMENT_TERM_DAYS),
+                    type = InvoiceType.RECEIVABLE,
+                    status = InvoiceStatus.PENDING
                 )
-                if (remoteDtos.isNotEmpty()) {
-                    val remoteMapped = remoteDtos.mapIndexed { index, dto ->
-                        com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice(
-                            id = dto.invoiceNumber ?: "INV-API-${dto.id ?: index}",
-                            counterpartyName = dto.clientName ?: "Cliente API Render",
-                            amount = dto.amount ?: 1500.0,
-                            dateLabel = dto.issueDate?.take(10) ?: "2026-10-25",
-                            type = if (dto.type.equals("PAYABLE", ignoreCase = true)) {
-                                com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceType.PAYABLE
-                            } else {
-                                com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceType.RECEIVABLE
-                            },
-                            status = when (dto.status?.uppercase()) {
-                                "PAID" -> com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus.PAID
-                                "OVERDUE" -> com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus.OVERDUE
-                                else -> com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus.PENDING
-                            }
-                        )
-                    }
-                    val merged = (remoteMapped + localInvoices).distinctBy { it.id }
-                    _uiState.value = _uiState.value.copy(
-                        allInvoices = merged,
-                        invoices = merged
+                repository.addInvoice(invoice)
+                local.update {
+                    it.copy(
+                        tool = null, toolError = null, tab = InvoiceTab.COLLECT, status = null,
+                        message = UiText.StringResource(R.string.inv_auto_issued, arrayOf(invoice.id, pen(invoice.amount)))
                     )
                 }
-            }.onFailure {
-                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.updateSyncStatus(
-                    com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus.OFFLINE_FALLBACK
-                )
             }
         }
     }
 
-    fun onDateFilterChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            dateFilter = value
-        )
+    // US67 -------------------------------------------------------------------
 
-        applyFilters()
-    }
+    fun startAdjusting(noteId: String) = local.update { it.copy(adjustingNoteId = noteId, toolError = null) }
 
-    fun onStatusFilterChange(
-        status: InvoiceStatus?
-    ) {
-        _uiState.value = _uiState.value.copy(
-            statusFilter = status
-        )
-
-        applyFilters()
-    }
-
-    fun clearFilters() {
-        _uiState.value = _uiState.value.copy(
-            dateFilter = "",
-            statusFilter = null,
-            invoices = _uiState.value.allInvoices
-        )
-    }
-    fun addAutoGeneratedInvoice(newInvoice: com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice) {
-        val updatedAll = listOf(newInvoice) + _uiState.value.allInvoices
-        _uiState.value = _uiState.value.copy(
-            allInvoices = updatedAll
-        )
-        applyFilters()
-
-        // Enviar POST /api/v1/invoices al backend en Render
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-            runCatching {
-                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.api.createInvoice(
-                    com.rebootech.fruitlogix.shared.core.network.InvoiceDto(
-                        invoiceNumber = newInvoice.id,
-                        clientName = newInvoice.counterpartyName,
-                        amount = newInvoice.amount,
-                        issueDate = "2026-10-25",
-                        type = newInvoice.type.name,
-                        status = newInvoice.status.name
+    /** @param amountText null approves the suggested amount. */
+    fun approveCreditNote(noteId: String, amountText: String? = null) {
+        val note = uiState.value.creditNotes.firstOrNull { it.id == noteId } ?: return
+        val amount = if (amountText == null) note.suggestedAmount else parse(amountText)
+        val invoiceAmount = repository.getInvoiceById(note.invoiceId)?.amount
+        when (CreditNoteRules.validate(amount, invoiceAmount)) {
+            CreditNoteRules.Error.NOT_A_NUMBER -> toolError(R.string.inv_credit_error_number)
+            CreditNoteRules.Error.NOT_POSITIVE -> toolError(R.string.inv_credit_error_positive)
+            CreditNoteRules.Error.ABOVE_INVOICE -> {
+                val format = NumberFormat.getNumberInstance().apply { minimumFractionDigits = 2; maximumFractionDigits = 2 }
+                toolError(R.string.inv_credit_error_above, "S/ ${format.format(invoiceAmount)}")
+            }
+            null -> viewModelScope.launch {
+                repository.approveCreditNote(noteId, amount!!)
+                local.update {
+                    it.copy(
+                        adjustingNoteId = null, toolError = null,
+                        message = UiText.StringResource(R.string.inv_credit_done, arrayOf(noteId, pen(amount)))
                     )
-                )
+                }
             }
         }
     }
-    private fun applyFilters() {
-        val state = _uiState.value
 
-        val filtered = state.allInvoices.filter { invoice ->
+    // US68 / US69: read-only lookups ------------------------------------------
 
-            val matchesDate =
-                state.dateFilter.isBlank() ||
-                        invoice.dateLabel.contains(
-                            state.dateFilter,
-                            ignoreCase = true
-                        )
+    val priceProducts: List<String> get() = repository.priceProducts()
+    val priceClients: List<String> get() = repository.priceClients()
+    fun priceHistory(product: String, client: String) = repository.priceHistory(product, client)
 
-            val matchesStatus =
-                state.statusFilter == null ||
-                        invoice.status == state.statusFilter
-
-            matchesDate && matchesStatus
-        }
-
-        _uiState.value = state.copy(
-            invoices = filtered
-        )
-    }
+    val purchaseClients: List<String> get() = repository.purchaseClients()
+    fun purchaseSummary(client: String, period: com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.SummaryPeriod) =
+        repository.purchaseSummary(client, period)
 }

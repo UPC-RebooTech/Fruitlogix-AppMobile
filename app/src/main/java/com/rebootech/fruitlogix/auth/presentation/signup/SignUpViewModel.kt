@@ -1,10 +1,10 @@
 package com.rebootech.fruitlogix.auth.presentation.signup
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.auth.data.DataStoreSessionRepository
 import com.rebootech.fruitlogix.auth.data.FakeAuthRepository
 import com.rebootech.fruitlogix.auth.domain.model.AuthError
 import com.rebootech.fruitlogix.auth.domain.model.AuthResult
@@ -13,354 +13,158 @@ import com.rebootech.fruitlogix.auth.domain.model.UserRole
 import com.rebootech.fruitlogix.auth.domain.repository.AuthRepository
 import com.rebootech.fruitlogix.auth.domain.repository.SessionRepository
 import com.rebootech.fruitlogix.auth.domain.validation.AuthValidators
-import com.rebootech.fruitlogix.shared.ui.components.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 
-class SignUpViewModel(
-    private val authRepository: AuthRepository = FakeAuthRepository.instance,
-    private val fakeRepoHelper: FakeAuthRepository? = authRepository as? FakeAuthRepository
-) : ViewModel() {
+/**
+ * Each step is validated when the user taps Continue (not while typing), so errors
+ * do not appear before the person has finished writing.
+ */
+class SignUpViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(
-        SignUpUiState(
-            selectedLanguage = detectCurrentLanguage()
-        )
-    )
+    private val authRepository: AuthRepository = FakeAuthRepository.instance
+    private val sessionRepository: SessionRepository = DataStoreSessionRepository.getInstance(application)
+
+    private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
 
-    private fun detectCurrentLanguage(): AppLanguage {
-        val currentLocales = AppCompatDelegate.getApplicationLocales()
-        if (!currentLocales.isEmpty) {
-            val firstLocale = currentLocales.get(0)
-            if (firstLocale != null && firstLocale.language.equals("en", ignoreCase = true)) {
-                return AppLanguage.EN
-            }
-        }
-        val defaultLang = Locale.getDefault().language
-        return if (defaultLang.equals("en", ignoreCase = true)) AppLanguage.EN else AppLanguage.ES
-    }
+    // Step 1 ---------------------------------------------------------------
 
-    fun onLanguageSelected(language: AppLanguage) {
-        _uiState.update { it.copy(selectedLanguage = language) }
-        val localeTag = when (language) {
-            AppLanguage.ES -> "es"
-            AppLanguage.EN -> "en"
-        }
-        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(localeTag))
-    }
-
-    fun onSelectRole(role: UserRole) {
-        _uiState.update { it.copy(selectedRole = role) }
-    }
-
-    fun onNextStep() {
-        if (_uiState.value.isStep1Valid) {
-            _uiState.update { it.copy(step = 2) }
-        }
-    }
-
-    fun onPreviousStep() {
-        if (_uiState.value.step == 2) {
-            _uiState.update { it.copy(step = 1) }
-        }
-    }
-
-    fun onFullNameChange(name: String) {
+    /** Choosing a role goes straight to the next step: one tap less. */
+    fun selectRole(role: UserRole) {
         _uiState.update {
             it.copy(
-                fullName = name,
-                fullNameErrorRes = null,
-                generalErrorRes = null
+                role = role,
+                step = SignUpStep.ABOUT,
+                // The organization error text depends on the role
+                organizationError = null,
+                invitationCode = if (role == UserRole.PRODUCER) it.invitationCode else "",
+                showInvitationCode = role == UserRole.PRODUCER && it.showInvitationCode
             )
         }
     }
 
-    fun onFullNameBlur() {
-        val name = _uiState.value.fullName.trim()
-        if (name.isNotEmpty() && !AuthValidators.isValidName(name)) {
-            _uiState.update { it.copy(fullNameErrorRes = R.string.auth_signup_error_fullname) }
-        }
-    }
-
-    fun onUsernameChange(username: String) {
-        val clean = username.replace("@", "").replace(" ", "").lowercase()
-        val taken = fakeRepoHelper?.isUsernameTaken(clean) ?: false
+    /** @return false when already on the first step (the screen then goes back to sign in). */
+    fun back(): Boolean {
+        val step = _uiState.value.step
+        if (step == SignUpStep.ROLE) return false
         _uiState.update {
-            it.copy(
-                username = clean,
-                usernameErrorRes = if (taken) R.string.auth_signup_error_username_taken else null,
-                isUsernameTaken = taken,
-                generalErrorRes = null
-            )
+            it.copy(step = SignUpStep.entries[step.ordinal - 1], generalError = null)
         }
+        return true
     }
 
-    fun onUsernameBlur() {
-        val u = _uiState.value.username.trim()
-        if (u.isEmpty()) return
-        if (!AuthValidators.isValidUsername(u)) {
-            _uiState.update {
-                it.copy(
-                    usernameErrorRes = R.string.auth_signup_error_username_invalid,
-                    isUsernameTaken = false
-                )
-            }
-        } else {
-            val taken = fakeRepoHelper?.isUsernameTaken(u) ?: false
-            _uiState.update {
-                it.copy(
-                    isUsernameTaken = taken,
-                    usernameErrorRes = if (taken) R.string.auth_signup_error_username_taken else null
-                )
-            }
-        }
-    }
+    // Step 2 ---------------------------------------------------------------
 
-    fun onEmailChange(email: String) {
-        val clean = email.replace(" ", "").lowercase()
-        val taken = fakeRepoHelper?.isEmailTaken(clean) ?: false
-        _uiState.update {
-            it.copy(
-                email = clean,
-                emailErrorRes = if (taken) R.string.auth_signup_error_email_taken else null,
-                isEmailTaken = taken,
-                generalErrorRes = null
-            )
-        }
-    }
+    fun onFullNameChange(value: String) = _uiState.update { it.copy(fullName = value, fullNameError = null) }
+    fun onOrganizationChange(value: String) = _uiState.update { it.copy(organizationName = value, organizationError = null) }
+    fun onEmailChange(value: String) =
+        _uiState.update { it.copy(email = value.replace(" ", "").lowercase(), emailError = null) }
 
-    fun onEmailBlur() {
-        val e = _uiState.value.email.trim()
-        if (e.isEmpty()) return
-        if (!AuthValidators.isValidEmail(e)) {
-            _uiState.update { it.copy(emailErrorRes = R.string.auth_signup_error_email_invalid) }
-        } else {
-            val taken = fakeRepoHelper?.isEmailTaken(e) ?: false
-            _uiState.update {
-                it.copy(
-                    isEmailTaken = taken,
-                    emailErrorRes = if (taken) R.string.auth_signup_error_email_taken else null
-                )
-            }
-        }
-    }
-
-    fun onPhoneChange(phone: String) {
-        _uiState.update {
-            it.copy(
-                phone = phone,
-                phoneErrorRes = null,
-                generalErrorRes = null
-            )
-        }
-    }
-
-    fun onPhoneBlur() {
-        val p = _uiState.value.phone.trim()
-        if (p.isNotEmpty() && !AuthValidators.isValidPhone(p)) {
-            _uiState.update { it.copy(phoneErrorRes = R.string.auth_signup_error_phone_invalid) }
-        }
-    }
-
-    fun onOrganizationNameChange(name: String) {
-        _uiState.update {
-            it.copy(
-                organizationName = name,
-                organizationErrorRes = null,
-                generalErrorRes = null
-            )
-        }
-    }
-
-    fun onOrganizationNameBlur() {
-        val org = _uiState.value.organizationName.trim()
-        if (org.isNotEmpty() && !AuthValidators.isValidName(org)) {
-            val err = if (_uiState.value.selectedRole == UserRole.PRODUCER) {
-                R.string.auth_signup_error_farm_empty
-            } else {
-                R.string.auth_signup_error_company_empty
-            }
-            _uiState.update { it.copy(organizationErrorRes = err) }
-        }
-    }
-
-    fun onInvitationCodeChange(code: String) {
-        _uiState.update { it.copy(invitationCode = code.uppercase()) }
-    }
-
-    fun onPasswordChange(password: String) {
-        _uiState.update {
-            val match = if (it.confirmPassword.isNotEmpty()) password == it.confirmPassword else true
-            it.copy(
-                password = password,
-                passwordErrorRes = null,
-                confirmPasswordErrorRes = if (!match && it.confirmPassword.isNotEmpty()) R.string.auth_signup_error_passwords_dont_match else null,
-                generalErrorRes = null
-            )
-        }
-    }
-
-    fun onConfirmPasswordChange(confirmPassword: String) {
-        _uiState.update {
-            val match = it.password == confirmPassword
-            it.copy(
-                confirmPassword = confirmPassword,
-                confirmPasswordErrorRes = if (!match && confirmPassword.isNotEmpty()) R.string.auth_signup_error_passwords_dont_match else null,
-                generalErrorRes = null
-            )
-        }
-    }
-
-    fun onTogglePasswordVisibility() {
-        _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
-    }
-
-    fun onToggleConfirmPasswordVisibility() {
-        _uiState.update { it.copy(isConfirmPasswordVisible = !it.isConfirmPasswordVisible) }
-    }
-
-    fun onTermsAcceptedChange(accepted: Boolean) {
-        _uiState.update { it.copy(termsAccepted = accepted) }
-    }
-
-    fun onSnackbarDismissed() {
-        _uiState.update { it.copy(snackbarMessage = null) }
-    }
-
-    fun onSubmitSignUp(sessionRepository: SessionRepository) {
+    fun continueFromAbout() {
         val state = _uiState.value
-        val role = state.selectedRole ?: return
+        if (state.isLoading) return
+        val fullNameError = if (!AuthValidators.isValidName(state.fullName)) R.string.signup_error_full_name else null
+        val organizationError = if (!AuthValidators.isValidName(state.organizationName)) {
+            if (state.role == UserRole.PRODUCER) R.string.signup_error_farm else R.string.signup_error_company
+        } else null
+        val emailError = if (!AuthValidators.isValidEmail(state.email)) R.string.signup_error_email else null
 
-        var hasError = false
-        var fnError: Int? = null
-        var uError: Int? = null
-        var eError: Int? = null
-        var pError: Int? = null
-        var orgError: Int? = null
-        var pwdError: Int? = null
-        var cpError: Int? = null
-
-        if (!AuthValidators.isValidName(state.fullName)) {
-            fnError = R.string.auth_signup_error_fullname
-            hasError = true
-        }
-
-        if (!AuthValidators.isValidUsername(state.username)) {
-            uError = R.string.auth_signup_error_username_invalid
-            hasError = true
-        } else if (state.isUsernameTaken) {
-            uError = R.string.auth_signup_error_username_taken
-            hasError = true
-        }
-
-        if (!AuthValidators.isValidEmail(state.email)) {
-            eError = R.string.auth_signup_error_email_invalid
-            hasError = true
-        } else if (state.isEmailTaken) {
-            eError = R.string.auth_signup_error_email_taken
-            hasError = true
-        }
-
-        if (!AuthValidators.isValidPhone(state.phone)) {
-            pError = R.string.auth_signup_error_phone_invalid
-            hasError = true
-        }
-
-        if (!AuthValidators.isValidName(state.organizationName)) {
-            orgError = if (role == UserRole.PRODUCER) R.string.auth_signup_error_farm_empty else R.string.auth_signup_error_company_empty
-            hasError = true
-        }
-
-        if (!AuthValidators.isValidPassword(state.password)) {
-            pwdError = R.string.auth_signup_error_username_invalid // or password invalid
-            hasError = true
-        }
-
-        if (!AuthValidators.doPasswordsMatch(state.password, state.confirmPassword)) {
-            cpError = R.string.auth_signup_error_passwords_dont_match
-            hasError = true
-        }
-
-        if (!state.termsAccepted) {
-            hasError = true
-        }
-
-        if (hasError) {
+        if (fullNameError != null || organizationError != null || emailError != null) {
             _uiState.update {
-                it.copy(
-                    fullNameErrorRes = fnError,
-                    usernameErrorRes = uError,
-                    emailErrorRes = eError,
-                    phoneErrorRes = pError,
-                    organizationErrorRes = orgError,
-                    passwordErrorRes = pwdError,
-                    confirmPasswordErrorRes = cpError
-                )
+                it.copy(fullNameError = fullNameError, organizationError = organizationError, emailError = emailError)
             }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, generalErrorRes = null) }
+            _uiState.update { it.copy(isLoading = true) }
+            if (authRepository.isEmailTaken(state.email.trim())) {
+                _uiState.update { it.copy(isLoading = false, emailError = R.string.signup_error_email_taken) }
+                return@launch
+            }
+            val suggestion = if (state.usernameEdited) null else availableSuggestion(state.fullName)
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    step = SignUpStep.ACCESS,
+                    username = suggestion ?: it.username,
+                    usernameError = null
+                )
+            }
+        }
+    }
 
+    /** "Rosa Quispe" → "rosa.quispe", or "rosa.quispe2"… if it is taken. */
+    private suspend fun availableSuggestion(fullName: String): String? {
+        val base = AuthValidators.suggestUsername(fullName) ?: return null
+        if (!authRepository.isUsernameTaken(base)) return base
+        for (n in 2..9) {
+            val candidate = "${base.take(19)}$n"
+            if (!authRepository.isUsernameTaken(candidate)) return candidate
+        }
+        return null
+    }
+
+    // Step 3 ---------------------------------------------------------------
+
+    fun onUsernameChange(value: String) = _uiState.update {
+        it.copy(username = AuthValidators.cleanUsername(value), usernameEdited = true, usernameError = null)
+    }
+
+    fun onPasswordChange(value: String) = _uiState.update { it.copy(password = value, passwordError = null) }
+    fun onTogglePasswordVisibility() = _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+    fun onShowInvitationCode() = _uiState.update { it.copy(showInvitationCode = true) }
+    fun onInvitationCodeChange(value: String) = _uiState.update { it.copy(invitationCode = value.uppercase().trim()) }
+    fun onTermsChange(value: Boolean) = _uiState.update { it.copy(termsAccepted = value, termsError = null) }
+
+    fun submit() {
+        val state = _uiState.value
+        val role = state.role ?: return
+        if (state.isLoading) return
+        val usernameError = if (!AuthValidators.isValidUsername(state.username)) R.string.signup_error_username else null
+        val passwordError = if (!AuthValidators.isValidPassword(state.password)) R.string.signup_error_password else null
+        val termsError = if (!state.termsAccepted) R.string.signup_error_terms else null
+        if (usernameError != null || passwordError != null || termsError != null) {
+            _uiState.update {
+                it.copy(usernameError = usernameError, passwordError = passwordError, termsError = termsError, generalError = null)
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, generalError = null) }
             val request = SignUpRequest(
                 role = role,
                 fullName = state.fullName.trim(),
                 username = state.username.trim(),
                 email = state.email.trim(),
-                phone = state.phone.trim().ifEmpty { null },
+                phone = null,
                 organizationName = state.organizationName.trim(),
                 password = state.password,
-                invitationCode = if (role == UserRole.PRODUCER) state.invitationCode.trim().ifEmpty { null } else null
+                invitationCode = state.invitationCode.takeIf { role == UserRole.PRODUCER && it.isNotBlank() }
             )
-
             when (val result = authRepository.signUp(request)) {
                 is AuthResult.Success -> {
+                    // Just created the account: keep it signed in, like "Keep me signed in" on sign in
+                    sessionRepository.save(result.session, remember = true)
                     _uiState.update { it.copy(isLoading = false) }
-                    // Guardar sesión sin recordar dispositivo (remember = false)
-                    sessionRepository.save(result.session, remember = false)
                 }
-                is AuthResult.Failure -> {
+                is AuthResult.Failure -> _uiState.update {
                     when (result.error) {
-                        is AuthError.UsernameTaken -> {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    isUsernameTaken = true,
-                                    usernameErrorRes = R.string.auth_signup_error_username_taken
-                                )
-                            }
-                        }
-                        is AuthError.EmailTaken -> {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    isEmailTaken = true,
-                                    emailErrorRes = R.string.auth_signup_error_email_taken
-                                )
-                            }
-                        }
-                        is AuthError.Network -> {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    generalErrorRes = R.string.auth_error_network
-                                )
-                            }
-                        }
-                        else -> {
-                            _uiState.update {
-                                it.copy(
-                                    isLoading = false,
-                                    generalErrorRes = R.string.auth_error_network
-                                )
-                            }
-                        }
+                        AuthError.UsernameTaken -> it.copy(isLoading = false, usernameError = R.string.signup_error_username_taken)
+                        // The email is on the previous step: go back there and show the error
+                        AuthError.EmailTaken -> it.copy(
+                            isLoading = false,
+                            step = SignUpStep.ABOUT,
+                            emailError = R.string.signup_error_email_taken
+                        )
+                        AuthError.WeakPassword -> it.copy(isLoading = false, passwordError = R.string.signup_error_password)
+                        AuthError.Network -> it.copy(isLoading = false, generalError = R.string.iam_error_network)
+                        else -> it.copy(isLoading = false, generalError = R.string.iam_error_unknown)
                     }
                 }
             }

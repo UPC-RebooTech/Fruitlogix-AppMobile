@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="drv_title">Drivers and vehicles</string>
+    <string name="drv_subtitle">Who drives which truck, and who is free to leave.</string>
+    <string name="drv_assign">Assign driver and vehicle</string>
+    <string name="drv_assign_pending">%1$d orders waiting for a truck</string>
+    <string name="drv_tab_drivers">Drivers (%1$d)</string>
+    <string name="drv_tab_vehicles">Vehicles (%1$d)</string>
+    <string name="drv_filter_all">All</string>
+    <string name="drv_status_available">Available</string>
+    <string name="drv_status_on_route">On route</string>
+    <string name="drv_status_off_duty">Resting</string>
+    <string name="drv_status_maintenance">Maintenance</string>
+    <string name="drv_license">License %1$s</string>
+    <string name="drv_license_expires">Expires in %1$d days</string>
+    <string name="drv_license_expired">License expired on %1$s: cannot be assigned</string>
+    <string name="drv_cold_chain">Cold-chain certified</string>
+    <string name="drv_assignment">%1$s · %2$s · order %3$s</string>
+    <string name="drv_rest_until">Resting until %1$s</string>
+    <string name="drv_call">Call</string>
+    <string name="drv_empty">There are no drivers with this status.</string>
+
+    <string name="veh_capacity">%1$s t</string>
+    <string name="veh_range">%1$s to %2$s</string>
+    <string name="veh_driven_by">Driven by %1$s</string>
+    <string name="veh_at_hub">Waiting at Lima Central Hub</string>
+    <string name="veh_in_workshop">In the workshop</string>
+    <string name="veh_type_heavy">Heavy reefer truck</string>
+    <string name="veh_type_truck">Reefer truck</string>
+    <string name="veh_type_van">Medium reefer van</string>
+    <string name="veh_type_light">Light reefer truck</string>
+
+    <!-- US79 -->
+    <string name="asg_message">Pick the order, then a free driver and a free truck big enough for the load.</string>
+    <string name="asg_order">Order</string>
+    <string name="asg_order_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_no_orders">Every order ready to leave already has a truck.</string>
+    <string name="asg_driver">Driver</string>
+    <string name="asg_vehicle">Vehicle</string>
+    <string name="asg_vehicle_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_confirm">Assign</string>
+    <string name="asg_error_order">Choose an order</string>
+    <string name="asg_error_driver">Choose a driver</string>
+    <string name="asg_error_vehicle">Choose a vehicle</string>
+    <string name="asg_error_driver_busy">That driver is not available</string>
+    <string name="asg_error_license">That driver\'s license is expired</string>
+    <string name="asg_error_vehicle_busy">That vehicle is not available</string>
+    <string name="asg_error_capacity">The load (%1$s t) is more than the truck can carry (%2$s t)</string>
+    <string name="asg_done">Order %1$s assigned to %2$s with %3$s</string>
+</resources>

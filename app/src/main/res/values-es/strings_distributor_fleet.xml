@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Centro de flota -->
+    <string name="fleet_title">Flota</string>
+    <string name="fleet_summary">%1$d en ruta · %2$d por llegar · %3$d alertas</string>
+    <string name="fleet_sensors_button">Sensores y umbrales</string>
+    <string name="fleet_tab_on_route">En ruta (%1$d)</string>
+    <string name="fleet_tab_arrivals">Llegadas (%1$d)</string>
+    <string name="fleet_tab_alerts">Alertas (%1$d)</string>
+
+    <string name="fleet_cargo">%1$s · %2$d pallets</string>
+    <string name="fleet_route">%1$s → %2$s</string>
+    <string name="fleet_km">%1$d de %2$d km</string>
+    <string name="fleet_eta">Llega %1$s</string>
+    <string name="fleet_delay">+%1$d min de retraso</string>
+    <string name="fleet_reefer">%1$s · rango %2$s</string>
+    <string name="fleet_status_on_time">A tiempo</string>
+    <string name="fleet_status_delayed">Retrasado</string>
+    <string name="fleet_status_temp_risk">Riesgo de temperatura</string>
+    <string name="fleet_status_temp_out">Fuera de rango</string>
+    <string name="fleet_status_pending">Sin salir</string>
+    <string name="fleet_empty_on_route">No hay camiones en ruta en este momento.</string>
+
+    <string name="fleet_arrivals_hint">Camiones a menos de %1$d km de %2$s, del más cercano al más lejano.</string>
+    <string name="fleet_arrival_at_gate">En la puerta</string>
+    <string name="fleet_arrival_approaching">Acercándose</string>
+    <string name="fleet_arrival_distance">A %1$s km</string>
+    <string name="fleet_arrival_dock">Muelle %1$s</string>
+    <string name="fleet_arrival_seal">Precinto %1$s</string>
+    <string name="fleet_arrival_start">Iniciar recepción</string>
+    <string name="fleet_arrival_view_trip">Ver viaje</string>
+    <string name="fleet_arrivals_empty">No hay camiones cerca del hub.</string>
+    <string name="fleet_geofence_demo">Demo: un camión ingresa al perímetro del hub</string>
+    <string name="fleet_geofence_simulate">Simular ingreso al perímetro</string>
+    <string name="fleet_geofence_title">%1$s ingresó al perímetro del hub</string>
+    <string name="fleet_geofence_message">A %1$s km de %2$s · unos %3$d min al muelle %4$s</string>
+    <string name="fleet_geofence_channel_name">Llegadas al hub</string>
+    <string name="fleet_geofence_channel_desc">Avisa cuando un camión llega al hub</string>
+
+    <string name="fleet_alert_temp_risk">%1$s: la temperatura sube hacia %2$s</string>
+    <string name="fleet_alert_temp_out">%1$s: temperatura fuera de rango (%2$s)</string>
+    <string name="fleet_alert_offline">El sensor %1$s no tiene señal</string>
+    <string name="fleet_alert_low_battery">Batería del sensor %1$s al %2$d%%</string>
+    <string name="fleet_alert_where">%1$s · %2$s</string>
+    <string name="fleet_alert_critical">Crítica</string>
+    <string name="fleet_alert_warning">Aviso</string>
+    <string name="fleet_alert_info">Info</string>
+    <string name="fleet_alert_resolve">Marcar como resuelta</string>
+    <string name="fleet_alert_open_trip">Ver viaje</string>
+    <string name="fleet_alert_open_sensor">Ver sensores</string>
+    <string name="fleet_alerts_empty">No hay alertas activas. Todo está en rango.</string>
+    <string name="fleet_alert_resolved">Alerta marcada como resuelta</string>
+
+    <!-- Detalle de despacho -->
+    <string name="dispatch_subtitle">%1$s · %2$s</string>
+    <string name="dispatch_order">Pedido %1$s</string>
+    <string name="dispatch_producer">De %1$s</string>
+    <string name="dispatch_driver">Conductor</string>
+    <string name="dispatch_call">Llamar a %1$s</string>
+    <string name="dispatch_not_found">No encontramos este viaje.</string>
+    <string name="dispatch_temp_label">Temperatura de la cámara</string>
+    <string name="dispatch_temp_range">Rango seguro %1$s a %2$s</string>
+    <string name="dispatch_temp_rate">%1$s por min</string>
+    <string name="dispatch_forecast_risk">A este ritmo superará %1$s en unos %2$d min.</string>
+    <string name="dispatch_forecast_out">Ahora está fuera del rango seguro.</string>
+    <string name="dispatch_forecast_ok">Estable dentro del rango seguro.</string>
+    <string name="dispatch_filter_1h">1 h</string>
+    <string name="dispatch_filter_6h">6 h</string>
+    <string name="dispatch_filter_trip">Viaje</string>
+    <string name="dispatch_chart_cd">Gráfico de temperatura. Ahora %1$s, rango seguro %2$s a %3$s.</string>
+    <string name="dispatch_no_readings">Aún no hay lecturas.</string>
+    <string name="dispatch_route_title">Ruta</string>
+    <string name="dispatch_route_progress">%1$d de %2$d km · %3$d%%</string>
+    <string name="dispatch_route_eta">Llega a las %1$s</string>
+    <string name="dispatch_route_delay">%1$d min de retraso · %2$s</string>
+    <string name="dispatch_checkpoint_now">Ahora · km %1$d</string>
+    <string name="dispatch_checkpoint_eta">Previsto %1$s</string>
+    <string name="dispatch_checkpoint_issue">Parada más larga de lo previsto</string>
+    <string name="dispatch_humidity">Humedad</string>
+    <string name="dispatch_battery">Batería del sensor</string>
+    <string name="dispatch_percent">%1$d%%</string>
+    <string name="dispatch_sensor_line">Sensor %1$s · %2$s</string>
+
+    <string name="dispatch_actions_title">Acciones</string>
+    <string name="dispatch_action_status">Estado del pedido</string>
+    <string name="dispatch_action_reefer">Verificar cámara de frío</string>
+    <string name="dispatch_action_reefer_done">Verificada %1$s</string>
+    <string name="dispatch_action_reefer_pending">Aún no verificada</string>
+    <string name="dispatch_action_delay">Notificar un retraso</string>
+    <string name="dispatch_action_delay_sub">Llegada actual %1$s</string>
+    <string name="dispatch_action_delivery">Registrar entrega</string>
+    <string name="dispatch_action_delivery_sub">Firma, foto y ubicación</string>
+    <string name="dispatch_action_delivery_closed">El pedido está cerrado</string>
+    <string name="dispatch_action_certificate">Certificado de cadena de frío</string>
+    <string name="dispatch_action_certificate_sub">%1$d lecturas · %2$d fuera de rango</string>
+    <string name="dispatch_action_trace">Trazabilidad del lote</string>
+    <string name="dispatch_action_trace_sub">De la cosecha a la factura</string>
+
+    <string name="delivery_state_pending">Pendiente</string>
+    <string name="delivery_state_on_route">En camino</string>
+    <string name="delivery_state_delivered">Entregado</string>
+    <string name="delivery_state_rejected">Rechazado</string>
+
+    <string name="delay_reason_traffic">Tráfico</string>
+    <string name="delay_reason_weigh_station">Balanza de pesaje</string>
+    <string name="delay_reason_road_works">Obras en la vía</string>
+    <string name="delay_reason_weather">Clima</string>
+    <string name="delay_reason_mechanical">Falla mecánica</string>
+    <string name="delay_reason_other">Otro</string>
+
+    <string name="dispatch_close">Cerrar</string>
+
+    <!-- Estado del pedido (US14) -->
+    <string name="status_sheet_message">Cambia un paso a la vez. Entregado se registra con la prueba de entrega.</string>
+    <string name="status_error_skip">Primero márcalo en camino: un pedido no puede pasar de pendiente a entregado.</string>
+    <string name="status_error_closed">Este pedido ya está cerrado.</string>
+    <string name="status_updated">Estado actualizado a %1$s</string>
+
+    <!-- Verificación de cámara (US64) -->
+    <string name="reefer_sheet_message">Rango requerido para %1$s: %2$s a %3$s.</string>
+    <string name="reefer_reading">Lectura actual (°C)</string>
+    <string name="reefer_ok">Dentro del rango. El camión puede salir.</string>
+    <string name="reefer_too_warm">Muy caliente: %1$s está por encima de %2$s. Salida bloqueada.</string>
+    <string name="reefer_too_cold">Muy frío: %1$s está por debajo de %2$s. Salida bloqueada.</string>
+    <string name="reefer_invalid">Ingresa la lectura en °C</string>
+    <string name="reefer_approve">Autorizar salida</string>
+    <string name="reefer_approved">Cámara verificada a las %1$s</string>
+
+    <!-- Retraso (US17) -->
+    <string name="delay_sheet_message">Llegada actual %1$s. El cliente recibe un aviso con la nueva hora.</string>
+    <string name="delay_new_eta">Nueva hora de llegada</string>
+    <string name="delay_pick_time">Elige una hora</string>
+    <string name="delay_pick_time_cd">Abrir el reloj para elegir la nueva hora de llegada</string>
+    <string name="delay_reason">Motivo</string>
+    <string name="delay_send">Enviar aviso</string>
+    <string name="delay_error_required">Elige la nueva hora de llegada</string>
+    <string name="delay_error_not_later">La nueva hora debe ser posterior a %1$s</string>
+    <string name="delay_error_reason">Elige un motivo</string>
+    <string name="delay_sent">Cliente avisado: nueva llegada %1$s</string>
+    <string name="delay_time_ok">Aceptar</string>
+
+    <!-- Prueba de entrega (US16, US52, US56) -->
+    <string name="delivery_step_signature">1. Firma del cliente</string>
+    <string name="delivery_signature_hint">Firma dentro del recuadro con el dedo</string>
+    <string name="delivery_signature_clear">Borrar</string>
+    <string name="delivery_signature_cd">Recuadro de firma</string>
+    <string name="delivery_step_photo">2. Foto de los pallets</string>
+    <string name="delivery_take_photo">Tomar foto</string>
+    <string name="delivery_photo_taken">Foto guardada con fecha, hora y GPS</string>
+    <string name="delivery_step_location">3. Ubicación</string>
+    <string name="delivery_location_inside">Estás en %1$s</string>
+    <string name="delivery_location_demo">Demo: estoy fuera del área de entrega</string>
+    <string name="delivery_location_outside">Estás a %1$s km del punto de entrega.</string>
+    <string name="delivery_location_confirm">Confirmo la entrega en esta ubicación</string>
+    <string name="delivery_confirm">Confirmar entrega</string>
+    <string name="delivery_reject_link">El cliente rechaza la entrega</string>
+    <string name="delivery_reject_reason">Motivo del rechazo</string>
+    <string name="delivery_reject_placeholder">ej. Fruta golpeada en 3 pallets</string>
+    <string name="delivery_reject_confirm">Registrar rechazo</string>
+    <string name="delivery_error_signature">Falta la firma del cliente</string>
+    <string name="delivery_error_photo">Falta la foto de los pallets</string>
+    <string name="delivery_error_location">Confirma la ubicación para continuar</string>
+    <string name="delivery_error_reason">Escribe el motivo del rechazo</string>
+    <string name="delivery_done">Pedido %1$s entregado. La factura se genera automáticamente.</string>
+    <string name="delivery_rejected">Entrega rechazada. Se guardó el motivo.</string>
+
+    <!-- Certificado (US71) -->
+    <string name="certificate_order">Pedido %1$s · %2$s (%3$s)</string>
+    <string name="certificate_range">Rango requerido %1$s a %2$s</string>
+    <string name="certificate_readings">%1$d lecturas revisadas</string>
+    <string name="certificate_compliant">Sin excursiones: 100%% conforme</string>
+    <string name="certificate_excursions">%1$d lecturas fuera de rango</string>
+    <string name="certificate_hash">Código de verificación (SHA-256)</string>
+    <string name="certificate_share">Compartir certificado</string>
+    <string name="certificate_share_title">Compartir el certificado de cadena de frío</string>
+    <string name="certificate_no_data">No hay suficientes lecturas para emitir el certificado.</string>
+    <string name="certificate_share_text">Certificado de cadena de frío FruitLogix\nPedido %1$s · Unidad %2$s (%3$s)\nProducto: %4$s\nRuta: %5$s\nRango: %6$s a %7$s\nLecturas: %8$d · Fuera de rango: %9$d\nCódigo de verificación: %10$s</string>
+
+    <!-- Trazabilidad (US72) -->
+    <string name="trace_subtitle">Pedido %1$s · de la cosecha a la factura</string>
+    <string name="trace_harvested">Cosechado</string>
+    <string name="trace_inspected">Calidad inspeccionada</string>
+    <string name="trace_loaded">Cargado en %1$s</string>
+    <string name="trace_received">Recibido en %1$s</string>
+    <string name="trace_invoiced">Facturado</string>
+    <string name="trace_pending">Pendiente</string>
+
+    <!-- Sensores y umbrales (IoT) -->
+    <string name="sensors_title">Sensores y umbrales</string>
+    <string name="sensors_subtitle">Sensores de camiones y almacén, alertas y rangos de conservación por fruta.</string>
+    <string name="sensors_online">%1$d en línea</string>
+    <string name="sensors_low_battery">%1$d con batería baja</string>
+    <string name="sensors_offline">%1$d sin señal</string>
+    <string name="sensors_section_alerts">Alertas activas</string>
+    <string name="sensors_section_devices">Sensores</string>
+    <string name="sensors_section_limits">Umbrales por fruta</string>
+    <string name="sensors_section_limits_sub">Rangos seguros que se usan en los viajes y las alertas.</string>
+    <string name="sensors_on_unit">En el camión %1$s</string>
+    <string name="sensors_status_online">En línea</string>
+    <string name="sensors_status_low_battery">Batería baja</string>
+    <string name="sensors_status_offline">Sin señal</string>
+    <string name="sensors_status_calibrating">Calibrando…</string>
+    <string name="sensors_reading">%1$s · %2$d%% HR</string>
+    <string name="sensors_updated">Actualizado %1$s</string>
+    <string name="sensors_battery">Batería %1$d%%</string>
+    <string name="sensors_calibrate">Calibrar</string>
+    <string name="sensors_temp_range">%1$s a %2$s</string>
+    <string name="sensors_humidity_range">%1$d%% a %2$d%% HR</string>
+    <string name="sensors_edit">Editar</string>
+    <string name="sensors_edit_title">Umbrales de %1$s</string>
+    <string name="sensors_min_temp">Temperatura mínima (°C)</string>
+    <string name="sensors_max_temp">Temperatura máxima (°C)</string>
+    <string name="sensors_min_humidity" formatted="false">Humedad mínima (%)</string>
+    <string name="sensors_max_humidity" formatted="false">Humedad máxima (%)</string>
+    <string name="sensors_save">Guardar</string>
+    <string name="sensors_error_number">Ingresa un número en cada campo</string>
+    <string name="sensors_error_temp">Temperatura: el mínimo debe ser menor que el máximo, entre -5 y 30 °C</string>
+    <string name="sensors_error_humidity" formatted="false">Humedad: el mínimo debe ser menor que el máximo, entre 40% y 100%</string>
+    <string name="sensors_saved">Umbrales de %1$s guardados</string>
+</resources>

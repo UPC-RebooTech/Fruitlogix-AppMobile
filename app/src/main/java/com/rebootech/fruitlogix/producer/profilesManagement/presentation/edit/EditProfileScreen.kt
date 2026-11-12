@@ -34,7 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.profilesManagement.domain.validation.ProfileError
 import com.rebootech.fruitlogix.producer.profilesManagement.domain.validation.ProfileField
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsGroup
+import com.rebootech.fruitlogix.shared.ui.components.SettingsGroup
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.BackHeader
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
