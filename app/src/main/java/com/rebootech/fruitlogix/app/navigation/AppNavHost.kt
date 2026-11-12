@@ -9,7 +9,6 @@ import com.rebootech.fruitlogix.distributor.dashboard.presentation.HomeScreen
 import com.rebootech.fruitlogix.distributor.fleetManagement.fleetManagementGraph
 import com.rebootech.fruitlogix.distributor.infrastructureIot.infrastructureIotGraph
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.LogisticsMonitoringRoutes
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringArrivalsGraph
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.logisticsMonitoringGraph
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.FleetScreen
 import com.rebootech.fruitlogix.distributor.orderManagement.OrderManagementRoutes
@@ -34,34 +33,24 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(Route.Home.route) {
+            // Switching to another tab keeps each tab's own back stack
+            fun openTab(route: String) = navController.navigate(route) {
+                popUpTo(Route.Home.route) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
             HomeScreen(
-                onScanLotClick = {
-                    navController.navigate(OrderManagementRoutes.ScanReception)
-                },
-                onDispatchFleetClick = {
-                    navController.navigate(Route.Fleet.route) {
-                        popUpTo(Route.Home.route) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onSensorsClick = {
+                onScanReception = { navController.navigate(OrderManagementRoutes.ScanReception) },
+                onNewOrder = { navController.navigate(OrderManagementRoutes.CreateOrder) },
+                onOpenOrders = { openTab(Route.Orders.route) },
+                onOpenFleet = { openTab(Route.Fleet.route) },
+                onOpenSensors = {
                     navController.navigate(
                         com.rebootech.fruitlogix.distributor.infrastructureIot.InfrastructureIotRoutes.SensorsAlerts
                     )
                 },
-                onReviewReeferClick = { unitId ->
+                onOpenUnit = { unitId ->
                     navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
-                },
-                onFleetUnitClick = { unitId ->
-                    navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
-                },
-                onProfileClick = {
-                    navController.navigate(
-                        com.rebootech.fruitlogix.distributor.profilesManagement.ProfilesManagementRoutes.Profile
-                    )
                 }
             )
         }
@@ -70,7 +59,7 @@ fun AppNavHost(
                 onNewOrderClick = {
                     navController.navigate(OrderManagementRoutes.CreateOrder)
                 },
-                onEditOrderClick = { orderId ->
+                onOrderClick = { orderId ->
                     navController.navigate(
                         OrderManagementRoutes.editOrder(orderId)
                     )
@@ -89,13 +78,12 @@ fun AppNavHost(
         }
         composable(Route.Fleet.route) {
             FleetScreen(
-                onDispatchClick = { unitId ->
+                onOpenDispatch = { unitId ->
                     navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId))
                 },
-                onArrivalsClick = {
-                    navController.navigate(LogisticsMonitoringRoutes.Arrivals)
-                },
-                onLimitsClick = {
+                // A truck at the gate: same reception screen as Orders
+                onStartReception = { navController.navigate(OrderManagementRoutes.ScanReception) },
+                onOpenSensors = {
                     navController.navigate(
                         com.rebootech.fruitlogix.distributor.infrastructureIot.InfrastructureIotRoutes.SensorsAlerts
                     )
@@ -115,13 +103,12 @@ fun AppNavHost(
         }
 
         // Bounded context nav graphs
-        infrastructureIotGraph(navController)
+        infrastructureIotGraph(navController, onOpenUnit = { unitId -> navController.navigate(LogisticsMonitoringRoutes.dispatchDetail(unitId)) })
         qualityControlGraph(navController)
         profilesManagementGraph(navController, onSignOut = onSignOut)
         fleetManagementGraph(navController)
         orderManagementGraph(navController)
         logisticsMonitoringGraph(navController)
-        logisticsMonitoringArrivalsGraph(navController)
         paymentManagementGraph(navController)
     }
 }

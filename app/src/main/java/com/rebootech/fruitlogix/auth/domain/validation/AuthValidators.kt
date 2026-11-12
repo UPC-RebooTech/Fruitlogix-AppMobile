@@ -30,5 +30,28 @@ object AuthValidators {
         if (phone.isNullOrBlank()) return true
         return PHONE_REGEX.matches(phone.trim())
     }
+
+    /** Keeps only the characters a username accepts ("Rosa Quispe" typed as is → "rosaquispe"). */
+    fun cleanUsername(input: String): String =
+        stripAccents(input).lowercase().filter { it.isLetterOrDigit() || it == '.' || it == '_' }.take(20)
+
+    /**
+     * Suggests a username from the full name so the user does not have to invent one:
+     * "Rosa María Quispe" → "rosa.quispe". Returns null when nothing valid can be built.
+     */
+    fun suggestUsername(fullName: String): String? {
+        val parts = stripAccents(fullName).lowercase()
+            .split(Regex("\\s+"))
+            .map { part -> part.filter { it in 'a'..'z' || it.isDigit() } }
+            .filter { it.isNotEmpty() }
+        if (parts.isEmpty()) return null
+        val base = if (parts.size == 1) parts.first() else "${parts.first()}.${parts.last()}"
+        val suggestion = base.take(20)
+        return suggestion.takeIf { isValidUsername(it) }
+    }
+
+    private fun stripAccents(text: String): String =
+        java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+            .replace(Regex("\\p{Mn}+"), "")
 }
 

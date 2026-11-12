@@ -39,9 +39,9 @@ import com.rebootech.fruitlogix.auth.data.DataStoreSessionRepository
 import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
 import com.rebootech.fruitlogix.producer.profilesManagement.data.PrefsSettingsRepository
 import com.rebootech.fruitlogix.producer.profilesManagement.domain.model.NotificationSettings
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsDivider
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsGroup
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsNavRow
+import com.rebootech.fruitlogix.shared.ui.components.SettingsDivider
+import com.rebootech.fruitlogix.shared.ui.components.SettingsGroup
+import com.rebootech.fruitlogix.shared.ui.components.SettingsNavRow
 import com.rebootech.fruitlogix.shared.core.locale.AppLocale
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.AppLanguage

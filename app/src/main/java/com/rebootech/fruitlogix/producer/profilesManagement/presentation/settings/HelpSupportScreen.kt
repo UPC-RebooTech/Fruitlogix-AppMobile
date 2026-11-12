@@ -32,8 +32,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsDivider
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsGroup
+import com.rebootech.fruitlogix.shared.ui.components.SettingsDivider
+import com.rebootech.fruitlogix.shared.ui.components.SettingsGroup
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.BackHeader
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant

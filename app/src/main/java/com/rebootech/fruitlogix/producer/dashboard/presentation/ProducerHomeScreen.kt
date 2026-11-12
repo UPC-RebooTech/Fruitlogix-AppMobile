@@ -37,7 +37,7 @@ import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.DashboardSummary
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.HeroActionCard
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.PipelineBar
-import com.rebootech.fruitlogix.producer.dashboard.presentation.components.QuickActionButton
+import com.rebootech.fruitlogix.shared.ui.components.QuickActionButton
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.StockHealthSection
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.TaskRow
 import com.rebootech.fruitlogix.producer.dashboard.presentation.components.UpcomingHarvestCard

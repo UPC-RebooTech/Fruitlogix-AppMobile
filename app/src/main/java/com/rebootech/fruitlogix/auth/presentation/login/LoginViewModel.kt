@@ -1,157 +1,89 @@
 package com.rebootech.fruitlogix.auth.presentation.login
 
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.os.LocaleListCompat
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.rebootech.fruitlogix.BuildConfig
+import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.auth.data.DataStoreSessionRepository
 import com.rebootech.fruitlogix.auth.data.FakeAuthRepository
 import com.rebootech.fruitlogix.auth.domain.model.AuthError
 import com.rebootech.fruitlogix.auth.domain.model.AuthResult
 import com.rebootech.fruitlogix.auth.domain.repository.AuthRepository
 import com.rebootech.fruitlogix.auth.domain.repository.SessionRepository
-import com.rebootech.fruitlogix.shared.ui.components.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 
-class LoginViewModel(
-    private val authRepository: AuthRepository = FakeAuthRepository.instance,
-    private val sessionRepository: SessionRepository? = null
-) : ViewModel() {
+/**
+ * Sign in with username and password. Saving the session makes RootNavHost
+ * switch to the shell of the user's role, so no navigation is needed here.
+ */
+class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(
-        LoginUiState(
-            appVersionName = try {
-                BuildConfig.VERSION_NAME
-            } catch (_: Exception) {
-                "1.0"
-            },
-            selectedLanguage = detectCurrentLanguage()
-        )
-    )
+    private val authRepository: AuthRepository = FakeAuthRepository.instance
+    private val sessionRepository: SessionRepository = DataStoreSessionRepository.getInstance(application)
+
+    private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private fun detectCurrentLanguage(): AppLanguage {
-        val currentLocales = AppCompatDelegate.getApplicationLocales()
-        if (!currentLocales.isEmpty) {
-            val firstLocale = currentLocales.get(0)
-            if (firstLocale != null && firstLocale.language.equals("en", ignoreCase = true)) {
-                return AppLanguage.EN
-            }
-        }
-        val defaultLang = Locale.getDefault().language
-        return if (defaultLang.equals("en", ignoreCase = true)) AppLanguage.EN else AppLanguage.ES
-    }
-
-    fun onUsernameChange(username: String) {
-        // Sin mayúsculas automáticas ni espacios
-        val cleaned = username.replace(" ", "").lowercase()
+    fun onUsernameChange(value: String) {
+        // Usernames are lowercase without spaces
         _uiState.update {
-            it.copy(
-                username = cleaned,
-                usernameError = null,
-                generalError = null,
-                hasCredentialsError = false
-            )
+            it.copy(username = value.replace(" ", "").lowercase(), usernameError = null, generalError = null)
         }
     }
 
-    fun onPasswordChange(password: String) {
-        _uiState.update {
-            it.copy(
-                password = password,
-                passwordError = null,
-                generalError = null,
-                hasCredentialsError = false
-            )
-        }
+    fun onPasswordChange(value: String) {
+        _uiState.update { it.copy(password = value, passwordError = null, generalError = null) }
     }
 
     fun onTogglePasswordVisibility() {
         _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
     }
 
-    fun onRememberDeviceChange(remember: Boolean) {
-        _uiState.update { it.copy(rememberDevice = remember) }
+    fun onKeepSignedInChange(value: Boolean) {
+        _uiState.update { it.copy(keepSignedIn = value) }
     }
 
-    fun onLanguageSelected(language: AppLanguage) {
-        _uiState.update { it.copy(selectedLanguage = language) }
-        val localeTag = when (language) {
-            AppLanguage.ES -> "es"
-            AppLanguage.EN -> "en"
-        }
-        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(localeTag))
+    fun onForgotPassword() {
+        _uiState.update { it.copy(infoMessage = R.string.login_forgot_soon) }
     }
 
-    fun onForgotPasswordClick() {
-        _uiState.update { it.copy(snackbarMessage = "Próximamente disponible") }
+    fun onInfoShown() {
+        _uiState.update { it.copy(infoMessage = null) }
     }
 
-    fun onBiometricClick() {
-        _uiState.update { it.copy(snackbarMessage = "Autenticación biométrica próximamente") }
-    }
-
-    fun onSnackbarDismissed() {
-        _uiState.update { it.copy(snackbarMessage = null) }
-    }
-
-    fun onLoginClick(targetSessionRepo: SessionRepository? = sessionRepository) {
+    fun signIn() {
         val state = _uiState.value
+        if (state.isLoading) return
         val username = state.username.trim()
-        val password = state.password
-
-        var hasError = false
-        var uError: String? = null
-        var pError: String? = null
-
-        if (username.isEmpty()) {
-            uError = "Ingresa tu usuario"
-            hasError = true
-        }
-
-        if (password.isEmpty()) {
-            pError = "Ingresa tu contraseña"
-            hasError = true
-        }
-
-        if (hasError) {
-            _uiState.update {
-                it.copy(
-                    usernameError = uError,
-                    passwordError = pError,
-                    generalError = null,
-                    hasCredentialsError = false
-                )
-            }
+        val usernameError = if (username.isEmpty()) R.string.login_error_username_empty else null
+        val passwordError = if (state.password.isEmpty()) R.string.login_error_password_empty else null
+        if (usernameError != null || passwordError != null) {
+            _uiState.update { it.copy(usernameError = usernameError, passwordError = passwordError, generalError = null) }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, generalError = null, hasCredentialsError = false) }
-
-            when (val result = authRepository.signIn(username, password)) {
+            _uiState.update { it.copy(isLoading = true, generalError = null) }
+            when (val result = authRepository.signIn(username, state.password)) {
                 is AuthResult.Success -> {
+                    sessionRepository.save(result.session, remember = state.keepSignedIn)
                     _uiState.update { it.copy(isLoading = false) }
-                    targetSessionRepo?.save(result.session, remember = state.rememberDevice)
                 }
-                is AuthResult.Failure -> {
-                    val errorMsg = when (result.error) {
-                        is AuthError.Network -> "Sin conexión. Revisa tu internet e inténtalo de nuevo."
-                        else -> "Usuario o contraseña incorrectos. Verifica tus datos."
-                    }
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            password = "", // Se limpia solo la contraseña según 16.4
-                            generalError = errorMsg,
-                            hasCredentialsError = true
-                        )
-                    }
+                is AuthResult.Failure -> _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        // Only the password is cleared; the username stays so it is not typed again
+                        password = "",
+                        generalError = when (result.error) {
+                            AuthError.Network -> R.string.iam_error_network
+                            AuthError.InvalidCredentials -> R.string.login_error_credentials
+                            else -> R.string.iam_error_unknown
+                        }
+                    )
                 }
             }
         }

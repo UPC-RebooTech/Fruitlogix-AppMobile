@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Distributor Home -->
+    <string name="dist_home_greeting_morning">Good morning, %1$s</string>
+    <string name="dist_home_greeting_afternoon">Good afternoon, %1$s</string>
+    <string name="dist_home_greeting_evening">Good evening, %1$s</string>
+    <string name="dist_home_greeting_morning_plain">Good morning</string>
+    <string name="dist_home_greeting_afternoon_plain">Good afternoon</string>
+    <string name="dist_home_greeting_evening_plain">Good evening</string>
+    <string name="dist_home_date_pattern">EEEE, MMMM d</string>
+
+    <!-- Temperature risk (highlighted card) -->
+    <string name="dist_home_alert_label">Temperature risk</string>
+    <string name="dist_home_alert_title">%1$s will pass %2$s in about %3$d min</string>
+    <string name="dist_home_alert_rate">Rising %1$s per minute · now %2$s</string>
+    <string name="dist_home_alert_breached_label">Temperature out of range</string>
+    <string name="dist_home_alert_breached_title">%1$s is above %2$s</string>
+    <string name="dist_home_alert_breached_detail">Now %1$s. Act now to protect the cargo.</string>
+    <string name="dist_home_alert_ok">All reefers are within range</string>
+    <string name="dist_home_alert_review">Review unit</string>
+    <string name="dist_home_chart_now">Now %1$s</string>
+    <string name="dist_home_chart_now_caption">Now</string>
+    <string name="dist_home_chart_limit">Limit %1$s</string>
+    <string name="dist_home_chart_minus">-%1$d min</string>
+    <string name="dist_home_chart_plus">+%1$d min</string>
+    <string name="dist_home_chart_cd">Reefer temperature in the last %1$d minutes, rising toward the %2$s limit</string>
+
+    <!-- Quick actions -->
+    <string name="dist_home_qa_scan">Scan reception</string>
+    <string name="dist_home_qa_new_order">New order</string>
+    <string name="dist_home_qa_fleet">Track fleet</string>
+    <string name="dist_home_qa_sensors">Sensors</string>
+
+    <!-- Tasks -->
+    <string name="dist_home_tasks_title">To do today</string>
+    <string name="dist_home_task_guide_title">Approve the SUNAT dispatch guide</string>
+    <string name="dist_home_task_guide_detail">Order %1$s · %2$s · required to export</string>
+    <string name="dist_home_task_intake_title">Receive %1$s at dock %2$s</string>
+    <string name="dist_home_task_intake_detail">%1$d pallets of %2$s waiting at the gate</string>
+    <string name="dist_home_task_urgent">Urgent</string>
+
+    <!-- KPIs -->
+    <string name="dist_home_kpi_active_orders">Active orders</string>
+    <string name="dist_home_kpi_pending">%1$d waiting for a producer</string>
+    <string name="dist_home_kpi_deliveries">Deliveries today</string>
+    <string name="dist_home_kpi_avg_eta">Average ETA %1$d min</string>
+    <string name="dist_home_kpi_quality">Quality approved</string>
+    <string name="dist_home_kpi_lots">Last %1$d lots</string>
+    <string name="dist_home_kpi_alerts">IoT alerts</string>
+    <string name="dist_home_kpi_alerts_detail">%1$d critical · %2$d warning</string>
+
+    <!-- Fleet -->
+    <string name="dist_home_fleet_title">Fleet on the road</string>
+    <string name="dist_home_fleet_subtitle">%1$d trucks in transit</string>
+    <string name="dist_home_fleet_see_all">See fleet</string>
+    <string name="dist_home_fleet_on_time">On time</string>
+    <string name="dist_home_fleet_delayed">Delayed</string>
+    <string name="dist_home_fleet_watch">Watch</string>
+    <string name="dist_home_fleet_eta">Arrives %1$s</string>
+    <string name="dist_home_fleet_delay">Delay %1$s</string>
+    <string name="dist_home_fleet_reefer">Reefer %1$s</string>
+</resources>

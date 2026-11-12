@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="drv_title">Conductores y vehículos</string>
+    <string name="drv_subtitle">Quién maneja cada camión y quién está libre para salir.</string>
+    <string name="drv_assign">Asignar conductor y vehículo</string>
+    <string name="drv_assign_pending">%1$d pedidos esperan camión</string>
+    <string name="drv_tab_drivers">Conductores (%1$d)</string>
+    <string name="drv_tab_vehicles">Vehículos (%1$d)</string>
+    <string name="drv_filter_all">Todos</string>
+    <string name="drv_status_available">Disponible</string>
+    <string name="drv_status_on_route">En ruta</string>
+    <string name="drv_status_off_duty">Descansando</string>
+    <string name="drv_status_maintenance">Mantenimiento</string>
+    <string name="drv_license">Licencia %1$s</string>
+    <string name="drv_license_expires">Vence en %1$d días</string>
+    <string name="drv_license_expired">Licencia vencida el %1$s: no se puede asignar</string>
+    <string name="drv_cold_chain">Certificado en cadena de frío</string>
+    <string name="drv_assignment">%1$s · %2$s · pedido %3$s</string>
+    <string name="drv_rest_until">Descansa hasta %1$s</string>
+    <string name="drv_call">Llamar</string>
+    <string name="drv_empty">No hay conductores con este estado.</string>
+
+    <string name="veh_capacity">%1$s t</string>
+    <string name="veh_range">%1$s a %2$s</string>
+    <string name="veh_driven_by">Lo maneja %1$s</string>
+    <string name="veh_at_hub">Esperando en Lima Central Hub</string>
+    <string name="veh_in_workshop">En el taller</string>
+    <string name="veh_type_heavy">Camión frigorífico pesado</string>
+    <string name="veh_type_truck">Camión frigorífico</string>
+    <string name="veh_type_van">Furgón refrigerado mediano</string>
+    <string name="veh_type_light">Camión refrigerado ligero</string>
+
+    <!-- US79 -->
+    <string name="asg_message">Elige el pedido, luego un conductor libre y un camión libre con capacidad para la carga.</string>
+    <string name="asg_order">Pedido</string>
+    <string name="asg_order_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_no_orders">Todos los pedidos listos para salir ya tienen camión.</string>
+    <string name="asg_driver">Conductor</string>
+    <string name="asg_vehicle">Vehículo</string>
+    <string name="asg_vehicle_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_confirm">Asignar</string>
+    <string name="asg_error_order">Elige un pedido</string>
+    <string name="asg_error_driver">Elige un conductor</string>
+    <string name="asg_error_vehicle">Elige un vehículo</string>
+    <string name="asg_error_driver_busy">Ese conductor no está disponible</string>
+    <string name="asg_error_license">La licencia de ese conductor está vencida</string>
+    <string name="asg_error_vehicle_busy">Ese vehículo no está disponible</string>
+    <string name="asg_error_capacity">La carga (%1$s t) supera lo que el camión puede llevar (%2$s t)</string>
+    <string name="asg_done">Pedido %1$s asignado a %2$s con %3$s</string>
+</resources>

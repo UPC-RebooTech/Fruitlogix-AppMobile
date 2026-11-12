@@ -8,24 +8,23 @@ import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -37,19 +36,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanStatus
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanResult
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import com.rebootech.fruitlogix.shared.ui.components.BackHeader
+import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
+import com.rebootech.fruitlogix.shared.ui.components.whiteCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
+/** The truck arrives: read the lot label, check it against the order and confirm the reception. */
 @Composable
 fun ScanReceptionScreen(
     onBackClick: () -> Unit,
@@ -57,142 +68,96 @@ fun ScanReceptionScreen(
     viewModel: ScanReceptionViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        )
+    var hasCamera by remember {
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
-
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestPermission()
-        ) { granted ->
-            hasCameraPermission = granted
-        }
-
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCamera = it }
+    // Ask once when the screen opens: the user came here to scan
     LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
-            permissionLauncher.launch(
-                Manifest.permission.CAMERA
-            )
-        }
+        if (!hasCamera) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(FruitLogixTheme.colors.bg)
+            .background(scheme.background)
+            .imePadding()
             .verticalScroll(rememberScrollState())
-            .padding(FruitLogixTheme.spacing.sm)
+            .padding(spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm)
     ) {
-        TextButton(
-            onClick = onBackClick
-        ) {
-            Text(
-                text = stringResource(R.string.scan_reception_back),
-                color = FruitLogixTheme.colors.textOnLight
-            )
+        BackHeader(
+            title = stringResource(R.string.dist_scan_title),
+            subtitle = stringResource(R.string.dist_scan_subtitle),
+            onBack = onBackClick
+        )
+
+        val received = state.receivedOrderId
+        if (received != null) {
+            ReceivedContent(orderId = received, onScanAnother = viewModel::reset)
+            return@Column
         }
 
-        Text(
-            text = stringResource(R.string.scan_reception_title),
-            style = FruitLogixTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            color = FruitLogixTheme.colors.textOnLight
-        )
-
-        Text(
-            text = stringResource(R.string.scan_reception_subtitle),
-            style = FruitLogixTheme.typography.bodyMedium,
-            color = FruitLogixTheme.colors.textOnLight.copy(
-                alpha = 0.7f
-            )
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        if (hasCameraPermission) {
+        if (hasCamera) {
             CameraPreview()
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             Text(
-                text = stringResource(R.string.scan_reception_camera_hint),
-                color = FruitLogixTheme.colors.textOnLight.copy(
-                    alpha = 0.7f
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PrimaryButton(
-                text = stringResource(R.string.scan_reception_demo_valid),
-                onClick = viewModel::simulateSuccessfulScan,
+                text = stringResource(R.string.dist_scan_camera_hint),
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedButton(
-                onClick = viewModel::simulateInvalidScan,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.scan_reception_demo_invalid
-                    ),
-                    color = FruitLogixTheme.colors.textOnLight
-                )
-            }
         } else {
-            CameraPermissionCard(
-                onRequestPermission = {
-                    permissionLauncher.launch(
-                        Manifest.permission.CAMERA
-                    )
-                },
-                onManualEntry = viewModel::showManualEntry
-            )
+            PermissionCard(onAllow = { permissionLauncher.launch(Manifest.permission.CAMERA) })
         }
 
-        state.scanResult?.let { result ->
-            Spacer(modifier = Modifier.height(20.dp))
-
-            when (result.status) {
-                LotScanStatus.MATCHED -> {
-                    MatchConfirmedCard(
-                        orderId = result.orderId.orEmpty(),
-                        productName = result.productName.orEmpty(),
-                        quantityLabel = result.quantityLabel.orEmpty(),
-                        onScanAgain = viewModel::resetScan
-                    )
-                }
-
-                LotScanStatus.NOT_RECOGNIZED -> {
-                    ScanErrorCard(
-                        onManualEntry = viewModel::showManualEntry
-                    )
-                }
-            }
+        state.result?.let { result ->
+            ResultCard(
+                result = result,
+                isConfirming = state.isConfirming,
+                onConfirm = viewModel::confirmReception,
+                onScanAgain = viewModel::reset
+            )
         }
 
         if (state.showManualEntry) {
-            Spacer(modifier = Modifier.height(20.dp))
-
-            ManualCodeEntry(
+            LabeledTextField(
+                label = stringResource(R.string.dist_scan_code_label),
                 value = state.manualCode,
                 onValueChange = viewModel::onManualCodeChange,
-                onValidate = viewModel::validateManualCode
+                placeholder = stringResource(R.string.dist_scan_code_placeholder),
+                leadingIconRes = R.drawable.ic_receipt,
+                keyboardType = KeyboardType.Ascii,
+                capitalization = KeyboardCapitalization.Characters,
+                imeAction = ImeAction.Done,
+                onImeAction = {
+                    focusManager.clearFocus()
+                    viewModel.checkManualCode()
+                }
+            )
+            SecondaryButton(
+                text = stringResource(R.string.dist_scan_check_code),
+                onClick = {
+                    focusManager.clearFocus()
+                    viewModel.checkManualCode()
+                },
+                enabled = state.manualCode.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            TextActionButton(
+                text = stringResource(R.string.dist_scan_type_code),
+                onClick = viewModel::showManualEntry,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
 
-        Spacer(modifier = Modifier.height(96.dp))
+        DemoSection(onValid = viewModel::simulateValidScan, onDamaged = viewModel::simulateDamagedScan)
     }
 }
 
@@ -200,287 +165,178 @@ fun ScanReceptionScreen(
 private fun CameraPreview() {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
-    val cameraController = remember {
-        LifecycleCameraController(context)
-    }
+    val controller = remember { LifecycleCameraController(context) }
+    val frameColor = MaterialTheme.colorScheme.primaryContainer
 
     DisposableEffect(lifecycleOwner) {
-        cameraController.bindToLifecycle(lifecycleOwner)
-
-        onDispose {
-            cameraController.unbind()
-        }
+        controller.bindToLifecycle(lifecycleOwner)
+        onDispose { controller.unbind() }
     }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(FruitLogixTheme.colors.surfaceDark)
+            .height(280.dp)
+            .clip(FruitLogixTheme.shapes.HeroCard)
+            .background(MaterialTheme.colorScheme.inverseSurface)
     ) {
         AndroidView(
             factory = { ctx ->
                 PreviewView(ctx).apply {
-                    controller = cameraController
-
-                    scaleType =
-                        PreviewView.ScaleType.FILL_CENTER
-
-                    implementationMode =
-                        PreviewView.ImplementationMode.COMPATIBLE
+                    this.controller = controller
+                    scaleType = PreviewView.ScaleType.FILL_CENTER
+                    implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
-
+        // Frame where the label has to fit
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(
-                    width = 250.dp,
-                    height = 150.dp
-                )
-                .border(
-                    width = 3.dp,
-                    color = FruitLogixTheme.colors.primary,
-                    shape = RoundedCornerShape(20.dp)
-                )
+                .size(width = 250.dp, height = 140.dp)
+                .border(3.dp, frameColor, FruitLogixTheme.shapes.Card)
         )
     }
 }
 
 @Composable
-private fun CameraPermissionCard(
-    onRequestPermission: () -> Unit,
-    onManualEntry: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = FruitLogixTheme.shapes.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = FruitLogixTheme.colors.surfaceDark
-        )
+private fun PermissionCard(onAllow: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .whiteCard(FruitLogixTheme.shapes.Card)
+            .padding(FruitLogixTheme.spacing.sm)
     ) {
-        Column(
-            modifier = Modifier.padding(
-                FruitLogixTheme.spacing.sm
-            )
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_permission_title
-                ),
-                color = FruitLogixTheme.colors.textOnDark,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_permission_message
-                ),
-                color = FruitLogixTheme.colors.textMuted
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PrimaryButton(
-                text = stringResource(
-                    R.string.scan_reception_permission_button
-                ),
-                onClick = onRequestPermission,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            TextButton(
-                onClick = onManualEntry,
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.scan_reception_manual_option
-                    ),
-                    color = FruitLogixTheme.colors.primary
-                )
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AppIcon(id = R.drawable.ic_camera, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(FruitLogixTheme.sizing.icon))
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+            Text(stringResource(R.string.dist_scan_permission_title), style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface)
         }
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
+        Text(stringResource(R.string.dist_scan_permission_message), style = FruitLogixTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+        PrimaryButton(text = stringResource(R.string.dist_scan_permission_allow), onClick = onAllow, modifier = Modifier.fillMaxWidth())
     }
 }
 
 @Composable
-private fun MatchConfirmedCard(
-    orderId: String,
-    productName: String,
-    quantityLabel: String,
+private fun ResultCard(
+    result: LotScanResult,
+    isConfirming: Boolean,
+    onConfirm: () -> Unit,
     onScanAgain: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = FruitLogixTheme.shapes.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = FruitLogixTheme.colors.surfaceDark
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(
-                FruitLogixTheme.spacing.sm
-            )
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_match_title
-                ),
-                color = FruitLogixTheme.colors.success,
-                style = FruitLogixTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_order,
-                    orderId
-                ),
-                color = FruitLogixTheme.colors.textOnDark
-            )
-
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_product,
-                    productName
-                ),
-                color = FruitLogixTheme.colors.textMuted
-            )
-
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_quantity,
-                    quantityLabel
-                ),
-                color = FruitLogixTheme.colors.textMuted
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            PrimaryButton(
-                text = stringResource(
-                    R.string.scan_reception_scan_again
-                ),
-                onClick = onScanAgain,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    val (container, content, icon) = when (result) {
+        is LotScanResult.Matched -> Triple(colors.successContainer, colors.onSuccessContainer, R.drawable.ic_verified)
+        is LotScanResult.NotOnRoute -> Triple(colors.attentionContainer, colors.onAttentionContainer, R.drawable.ic_warning)
+        is LotScanResult.NotRecognized -> Triple(scheme.errorContainer, scheme.onErrorContainer, R.drawable.ic_alert)
     }
-}
-
-@Composable
-private fun ScanErrorCard(
-    onManualEntry: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = FruitLogixTheme.shapes.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = FruitLogixTheme.colors.danger
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(
-                FruitLogixTheme.spacing.sm
-            )
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_error_title
-                ),
-                color = FruitLogixTheme.colors.textOnDark,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(
-                    R.string.scan_reception_error_message
-                ),
-                color = FruitLogixTheme.colors.textOnDark
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TextButton(
-                onClick = onManualEntry
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.scan_reception_manual_option
-                    ),
-                    color = FruitLogixTheme.colors.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ManualCodeEntry(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onValidate: () -> Unit
-) {
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = FruitLogixTheme.colors.textOnLight,
-        unfocusedTextColor = FruitLogixTheme.colors.textOnLight,
-        focusedLabelColor = FruitLogixTheme.colors.primary,
-        unfocusedLabelColor =
-            FruitLogixTheme.colors.textOnLight.copy(alpha = 0.65f),
-        focusedBorderColor = FruitLogixTheme.colors.primary,
-        cursorColor = FruitLogixTheme.colors.primary
-    )
 
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(FruitLogixTheme.shapes.Card)
+            .background(container)
+            .padding(FruitLogixTheme.spacing.sm)
     ) {
-        Text(
-            text = stringResource(
-                R.string.scan_reception_manual_title
-            ),
-            color = FruitLogixTheme.colors.textOnLight,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AppIcon(id = icon, contentDescription = null, tint = content, modifier = Modifier.size(FruitLogixTheme.sizing.icon))
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+            Text(
+                text = when (result) {
+                    is LotScanResult.Matched -> stringResource(R.string.dist_scan_matched_title, result.order.id)
+                    is LotScanResult.NotOnRoute -> stringResource(R.string.dist_scan_not_on_route_title, result.order.id)
+                    is LotScanResult.NotRecognized -> stringResource(R.string.dist_scan_unknown_title)
+                },
+                style = FruitLogixTheme.typography.titleMedium,
+                color = content
+            )
+        }
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+        when (result) {
+            is LotScanResult.Matched -> {
+                val order = result.order
+                Text(stringResource(R.string.dist_scan_for_client, order.clientName), style = FruitLogixTheme.typography.bodyLarge, color = content)
                 Text(
-                    stringResource(
-                        R.string.scan_reception_manual_label
-                    )
+                    text = "${order.productName} · ${formatQuantity(order.quantityTons, order.pallets)}",
+                    style = FruitLogixTheme.typography.bodyMedium,
+                    color = content
                 )
-            },
-            placeholder = {
-                Text("LOT-FX-1040-FRESA")
-            },
-            colors = fieldColors,
-            singleLine = true
-        )
+                Text(result.code, style = FruitLogixTheme.extraTypography.dataMonoSmall, color = content)
+                Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+                PrimaryButton(
+                    text = stringResource(R.string.dist_scan_confirm),
+                    onClick = onConfirm,
+                    enabled = !isConfirming,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            is LotScanResult.NotOnRoute -> Text(
+                text = stringResource(R.string.dist_scan_not_on_route_message, stringResource(orderStatusLabel(result.order.status)).lowercase()),
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = content
+            )
+            is LotScanResult.NotRecognized -> Text(
+                text = stringResource(R.string.dist_scan_unknown_message),
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = content
+            )
+        }
+        TextActionButton(text = stringResource(R.string.dist_scan_again), onClick = onScanAgain, enabled = !isConfirming)
+    }
+}
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        PrimaryButton(
-            text = stringResource(
-                R.string.scan_reception_validate
-            ),
-            onClick = onValidate,
-            modifier = Modifier.fillMaxWidth()
+@Composable
+private fun ReceivedContent(orderId: String, onScanAnother: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = FruitLogixTheme.spacing.lg),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(colors.successContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            AppIcon(id = R.drawable.ic_check, contentDescription = null, tint = colors.onSuccessContainer, modifier = Modifier.size(36.dp))
+        }
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+        Text(stringResource(R.string.dist_scan_received_title), style = FruitLogixTheme.typography.headlineSmall, color = scheme.onSurface)
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
+        Text(
+            text = stringResource(R.string.dist_scan_received_message, orderId),
+            style = FruitLogixTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.md))
+        PrimaryButton(text = stringResource(R.string.dist_scan_another), onClick = onScanAnother, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+/** Kept visible but secondary: lets the team test the flow until the camera decodes labels. */
+@Composable
+private fun DemoSection(onValid: () -> Unit, onDamaged: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(Color.Transparent)
+            .border(1.dp, scheme.outlineVariant, FruitLogixTheme.shapes.Button)
+            .padding(FruitLogixTheme.spacing.inner)
+    ) {
+        Text(stringResource(R.string.dist_scan_demo_title), style = FruitLogixTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
+        TextActionButton(text = stringResource(R.string.dist_scan_demo_valid), onClick = onValid)
+        TextActionButton(text = stringResource(R.string.dist_scan_demo_invalid), onClick = onDamaged)
     }
 }

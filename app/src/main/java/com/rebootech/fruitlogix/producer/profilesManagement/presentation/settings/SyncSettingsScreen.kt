@@ -33,9 +33,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.profilesManagement.data.PrefsSettingsRepository
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsDivider
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsGroup
-import com.rebootech.fruitlogix.producer.profilesManagement.presentation.components.SettingsSwitchRow
+import com.rebootech.fruitlogix.shared.ui.components.SettingsDivider
+import com.rebootech.fruitlogix.shared.ui.components.SettingsGroup
+import com.rebootech.fruitlogix.shared.ui.components.SettingsSwitchRow
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.BackHeader
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant

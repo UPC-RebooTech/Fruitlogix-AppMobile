@@ -92,14 +92,14 @@ class FakeAuthRepository : AuthRepository {
         }
     }
 
-    fun isUsernameTaken(username: String): Boolean {
+    override suspend fun isUsernameTaken(username: String): Boolean {
         val normalized = username.trim().lowercase()
         return synchronized(users) {
             users.any { it.username.lowercase() == normalized }
         }
     }
 
-    fun isEmailTaken(email: String): Boolean {
+    override suspend fun isEmailTaken(email: String): Boolean {
         val normalized = email.trim().lowercase()
         return synchronized(users) {
             users.any { it.email.lowercase() == normalized }

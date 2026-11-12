@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producers network -->
+    <string name="prod_title">Producers</string>
+    <string name="prod_subtitle">The farms that supply your hub.</string>
+    <string name="prod_kpi_total">Producers</string>
+    <string name="prod_kpi_quality">Average quality</string>
+    <string name="prod_kpi_tons">Weekly production</string>
+    <string name="prod_kpi_incidents">Incidents (30 days)</string>
+    <string name="prod_kpi_tons_value">%1$s t</string>
+    <string name="prod_kpi_quality_value">%1$s / 5</string>
+    <string name="prod_register">Register producer</string>
+    <string name="prod_invite">Invite</string>
+    <string name="prod_search">Search by name, farm, place or crop</string>
+    <string name="prod_company">Company</string>
+    <string name="prod_individual">Individual</string>
+    <string name="prod_invited">Invitation sent</string>
+    <string name="prod_farm_place">%1$s · %2$s</string>
+    <string name="prod_crop_rating">%1$s · ★ %2$s</string>
+    <string name="prod_stock_orders">%1$s kg in stock · %2$d active orders</string>
+    <string name="prod_waiting">Waiting for the producer to finish signing up</string>
+    <string name="prod_call">Call</string>
+    <string name="prod_call_cd">Call %1$s</string>
+    <string name="prod_edit">Edit</string>
+    <string name="prod_delete">Remove</string>
+    <string name="prod_empty_title">No producers found</string>
+    <string name="prod_empty_message">Try another word or register a new producer.</string>
+
+    <!-- Register / edit (US05, US39) -->
+    <string name="prod_form_register_title">Register producer</string>
+    <string name="prod_form_edit_title">Edit %1$s</string>
+    <string name="prod_form_type">Type</string>
+    <string name="prod_form_name">Name or company</string>
+    <string name="prod_form_name_placeholder">e.g. Fundo Santa Rosa</string>
+    <string name="prod_form_farm">Farm</string>
+    <string name="prod_form_location">Location</string>
+    <string name="prod_form_location_placeholder">e.g. Huaraz, Áncash</string>
+    <string name="prod_form_crop">Main crop</string>
+    <string name="prod_form_email">Email (optional)</string>
+    <string name="prod_form_phone">Phone (optional)</string>
+    <string name="prod_form_save_register">Register</string>
+    <string name="prod_form_save_edit">Save changes</string>
+    <string name="prod_error_name">Enter the name</string>
+    <string name="prod_error_farm">Enter the farm</string>
+    <string name="prod_error_location">Enter the location</string>
+    <string name="prod_error_crop">Enter the main crop</string>
+    <string name="prod_error_email">Enter a valid email</string>
+    <string name="prod_error_email_taken">This email already belongs to a producer in your network</string>
+    <string name="prod_error_phone">Enter at least 9 digits</string>
+    <string name="prod_registered">%1$s added to your network</string>
+    <string name="prod_updated">%1$s updated</string>
+
+    <!-- Invite (US41) -->
+    <string name="prod_invite_title">Invite a producer</string>
+    <string name="prod_invite_message">They get a link to join your network. You can send it by WhatsApp, email or SMS.</string>
+    <string name="prod_invite_name">Name</string>
+    <string name="prod_invite_contact">Email or phone</string>
+    <string name="prod_invite_contact_placeholder">e.g. 912 345 678</string>
+    <string name="prod_invite_send">Create invitation</string>
+    <string name="prod_invite_error_contact">Enter a valid email or a phone with at least 9 digits</string>
+    <string name="prod_invite_error_member">This producer is already in your network</string>
+    <string name="prod_invite_share_title">Send the invitation</string>
+    <string name="prod_invite_text">Hi %1$s! %2$s invites you to join their FruitLogix supply network for %3$s. Sign up here: %4$s</string>
+    <string name="prod_invite_any_crop">your fruit</string>
+    <string name="prod_invited_msg">Invitation for %1$s ready to send</string>
+
+    <!-- Delete (US40) -->
+    <string name="prod_delete_title">Remove %1$s?</string>
+    <string name="prod_delete_message">They leave your network. Their past orders and invoices are kept.</string>
+    <string name="prod_delete_confirm">Remove</string>
+    <string name="prod_deleted">%1$s removed from your network</string>
+
+    <!-- Distributor profile -->
+    <string name="dprof_role">Distributor</string>
+    <string name="dprof_section_business">Business data</string>
+    <string name="dprof_role_title">Role</string>
+    <string name="dprof_hub">Hub</string>
+    <string name="dprof_email">Email</string>
+    <string name="dprof_phone">Phone</string>
+    <string name="dprof_ruc">RUC</string>
+    <string name="dprof_full_name">Full name</string>
+    <string name="dprof_save">Save changes</string>
+    <string name="dprof_saved">Profile updated</string>
+    <string name="dprof_error_name">Enter your name</string>
+    <string name="dprof_error_email">Enter a valid email</string>
+    <string name="dprof_error_phone">Enter at least 9 digits</string>
+    <string name="dprof_error_ruc">The RUC has 11 digits</string>
+</resources>

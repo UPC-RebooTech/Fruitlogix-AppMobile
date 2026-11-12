@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- IAM: shared -->
+    <string name="iam_brand_cd">FruitLogix logo</string>
+    <string name="iam_version">Version %1$s</string>
+    <string name="iam_language_es">Español</string>
+    <string name="iam_language_en">English</string>
+    <string name="iam_show_password">Show password</string>
+    <string name="iam_hide_password">Hide password</string>
+    <string name="iam_error_network">No connection. Check your internet and try again.</string>
+    <string name="iam_error_unknown">Something went wrong. Please try again.</string>
+
+    <!-- IAM: sign in -->
+    <string name="login_welcome">Welcome back</string>
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="login_username">Username</string>
+    <string name="login_username_placeholder">e.g. rosa.quispe</string>
+    <string name="login_password">Password</string>
+    <string name="login_keep_signed_in">Keep me signed in</string>
+    <string name="login_submit">Sign in</string>
+    <string name="login_forgot">Forgot your password?</string>
+    <string name="login_forgot_soon">Password recovery will be available soon.</string>
+    <string name="login_new_here">New to FruitLogix?</string>
+    <string name="login_create_account">Create account</string>
+    <string name="login_error_username_empty">Enter your username</string>
+    <string name="login_error_password_empty">Enter your password</string>
+    <string name="login_error_credentials">Wrong username or password. Check them and try again.</string>
+
+    <!-- IAM: sign up -->
+    <string name="signup_step">Step %1$d of %2$d</string>
+    <string name="signup_role_title">How will you use FruitLogix?</string>
+    <string name="signup_role_subtitle">Choose your role. It can\'t be changed later.</string>
+    <string name="signup_role_producer">Producer</string>
+    <string name="signup_role_producer_desc">I grow fruit: I receive orders, inspect quality and manage my stock.</string>
+    <string name="signup_role_distributor">Distributor</string>
+    <string name="signup_role_distributor_desc">I buy and move fruit: I manage orders, producers and my fleet.</string>
+    <string name="signup_role_chip">Account: %1$s</string>
+
+    <string name="signup_about_title">About you</string>
+    <string name="signup_about_subtitle">This is how your clients and partners will see you.</string>
+    <string name="signup_full_name">Full name</string>
+    <string name="signup_full_name_placeholder">e.g. Rosa Quispe</string>
+    <string name="signup_farm_name">Farm name</string>
+    <string name="signup_farm_name_placeholder">e.g. Fundo Santa Rosa</string>
+    <string name="signup_company_name">Company name</string>
+    <string name="signup_company_name_placeholder">e.g. Frutas del Norte S.A.C.</string>
+    <string name="signup_email">Email</string>
+    <string name="signup_email_placeholder">e.g. rosa@fundo.pe</string>
+    <string name="signup_next">Continue</string>
+
+    <string name="signup_account_title">Create your access</string>
+    <string name="signup_account_subtitle">You will use these to sign in.</string>
+    <string name="signup_username">Username</string>
+    <string name="signup_username_help">Lowercase letters, numbers, dot or underscore. 4 to 20 characters.</string>
+    <string name="signup_password">Password</string>
+    <string name="signup_req_length">At least 8 characters</string>
+    <string name="signup_req_letter">At least one letter</string>
+    <string name="signup_req_number">At least one number</string>
+    <string name="signup_invitation_toggle">I have an invitation code</string>
+    <string name="signup_invitation_label">Invitation code (optional)</string>
+    <string name="signup_invitation_help">Your distributor gives you this code to link your accounts.</string>
+    <string name="signup_terms">I accept the Terms of Service and the Privacy Policy</string>
+    <string name="signup_submit">Create account</string>
+    <string name="signup_have_account">Already have an account?</string>
+    <string name="signup_sign_in">Sign in</string>
+
+    <string name="signup_error_full_name">Enter your full name (2 to 60 characters)</string>
+    <string name="signup_error_farm">Enter your farm name</string>
+    <string name="signup_error_company">Enter your company name</string>
+    <string name="signup_error_email">Enter a valid email</string>
+    <string name="signup_error_email_taken">This email is already registered</string>
+    <string name="signup_error_username">Use 4 to 20 characters and start with a letter</string>
+    <string name="signup_error_username_taken">This username is taken. Try another one.</string>
+    <string name="signup_error_password">Your password does not meet the requirements</string>
+    <string name="signup_error_terms">Accept the terms to continue</string>
+</resources>

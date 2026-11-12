@@ -7,6 +7,6 @@ import com.rebootech.fruitlogix.distributor.fleetManagement.presentation.Drivers
 
 fun NavGraphBuilder.fleetManagementGraph(navController: NavHostController) {
     composable(FleetManagementRoutes.FleetResources) {
-        DriversVehiclesScreen()
+        DriversVehiclesScreen(onBack = { navController.popBackStack() })
     }
 }

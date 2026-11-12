@@ -1,6 +1,7 @@
 ﻿package com.rebootech.fruitlogix.distributor.orderManagement.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,29 +11,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryItem
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryStatus
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import com.rebootech.fruitlogix.shared.ui.components.BackHeader
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
+import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
+import com.rebootech.fruitlogix.shared.ui.components.SelectableChip
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.format.formatRelativeDateTime
+import com.rebootech.fruitlogix.shared.ui.components.whiteCard
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
 @Composable
@@ -42,404 +48,115 @@ fun OrderHistoryScreen(
     viewModel: OrderHistoryViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(FruitLogixTheme.colors.bg),
-        contentPadding = PaddingValues(
-            horizontal = FruitLogixTheme.spacing.sm,
-            vertical = FruitLogixTheme.spacing.sm
-        )
+            .background(scheme.background),
+        contentPadding = PaddingValues(start = spacing.sm, end = spacing.sm, top = spacing.sm, bottom = spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(spacing.inner)
     ) {
         item {
-            TextButton(
-                onClick = onBackClick
-            ) {
-                Text(
-                    text = stringResource(R.string.order_history_back),
-                    color = FruitLogixTheme.colors.textOnLight
-                )
-            }
-
-            Text(
-                text = stringResource(R.string.order_history_title),
-                style = FruitLogixTheme.typography.displayLarge,
-                fontWeight = FontWeight.Bold,
-                color = FruitLogixTheme.colors.textOnLight
+            BackHeader(
+                title = stringResource(R.string.dist_history_title),
+                subtitle = stringResource(R.string.dist_history_subtitle),
+                onBack = onBackClick
             )
-
-            Text(
-                text = stringResource(R.string.order_history_subtitle),
-                style = FruitLogixTheme.typography.bodyMedium,
-                color = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            HistoryFilters(
-                searchQuery = state.searchQuery,
-                dateFilter = state.dateFilter,
-                producerFilter = state.producerFilter,
-                statusFilter = state.statusFilter,
-                onSearchChange = viewModel::onSearchQueryChange,
-                onDateChange = viewModel::onDateFilterChange,
-                onProducerChange = viewModel::onProducerFilterChange,
-                onStatusChange = viewModel::onStatusFilterChange,
-                onClearFilters = viewModel::clearFilters
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
+        if (state.all.isNotEmpty()) {
+            item {
+                LabeledTextField(
+                    label = stringResource(R.string.dist_history_search),
+                    value = state.query,
+                    onValueChange = viewModel::onQueryChange,
+                    leadingIconRes = R.drawable.ic_search,
+                    imeAction = ImeAction.Search
+                )
+            }
+            item {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.xs)
+                ) {
+                    SelectableChip(
+                        label = stringResource(R.string.dist_orders_filter_all),
+                        selected = state.status == null,
+                        onClick = { viewModel.onStatusChange(null) }
+                    )
+                    SelectableChip(
+                        label = stringResource(R.string.dist_history_delivered),
+                        selected = state.status == OrderHistoryStatus.DELIVERED,
+                        onClick = { viewModel.onStatusChange(OrderHistoryStatus.DELIVERED) }
+                    )
+                    SelectableChip(
+                        label = stringResource(R.string.dist_history_cancelled),
+                        selected = state.status == OrderHistoryStatus.CANCELLED,
+                        onClick = { viewModel.onStatusChange(OrderHistoryStatus.CANCELLED) }
+                    )
+                }
+            }
+        }
+
+        val visible = state.visible
         when {
-            state.isEmpty -> {
-                item {
-                    EmptyOrderHistory()
-                }
-            }
-
-            state.hasNoResults -> {
-                item {
-                    NoFilteredResults()
-                }
-            }
-
-            else -> {
-                items(
-                    items = state.orders,
-                    key = { order -> order.id }
-                ) { order ->
-                    OrderHistoryCard(order = order)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoryFilters(
-    searchQuery: String,
-    dateFilter: String,
-    producerFilter: String,
-    statusFilter: OrderHistoryStatus?,
-    onSearchChange: (String) -> Unit,
-    onDateChange: (String) -> Unit,
-    onProducerChange: (String) -> Unit,
-    onStatusChange: (OrderHistoryStatus?) -> Unit,
-    onClearFilters: () -> Unit
-) {
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = FruitLogixTheme.colors.textOnDark,
-        unfocusedTextColor = FruitLogixTheme.colors.textOnDark,
-
-        focusedLabelColor = FruitLogixTheme.colors.primary,
-        unfocusedLabelColor = FruitLogixTheme.colors.textMuted,
-
-        focusedPlaceholderColor = FruitLogixTheme.colors.textMuted,
-        unfocusedPlaceholderColor = FruitLogixTheme.colors.textMuted,
-
-        cursorColor = FruitLogixTheme.colors.primary,
-
-        focusedBorderColor = FruitLogixTheme.colors.primary,
-        unfocusedBorderColor = FruitLogixTheme.colors.textMuted.copy(alpha = 0.65f),
-
-        focusedContainerColor = FruitLogixTheme.colors.surfaceDark,
-        unfocusedContainerColor = FruitLogixTheme.colors.surfaceDark
-    )
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = FruitLogixTheme.shapes.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = FruitLogixTheme.colors.surfaceDark
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(FruitLogixTheme.spacing.sm)
-        ) {
-            Text(
-                text = stringResource(R.string.order_history_filters_title),
-                style = FruitLogixTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = FruitLogixTheme.colors.textOnDark
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.order_history_search))
-                },
-                placeholder = {
-                    Text(stringResource(R.string.order_history_search_example))
-                },
-                colors = fieldColors,
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = dateFilter,
-                onValueChange = onDateChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.order_history_filter_date))
-                },
-                placeholder = {
-                    Text(stringResource(R.string.order_history_filter_date_example))
-                },
-                colors = fieldColors,
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = producerFilter,
-                onValueChange = onProducerChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = {
-                    Text(stringResource(R.string.order_history_filter_producer))
-                },
-                placeholder = {
-                    Text(stringResource(R.string.order_history_filter_producer_example))
-                },
-                colors = fieldColors,
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = stringResource(R.string.order_history_filter_status),
-                style = FruitLogixTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = FruitLogixTheme.colors.textOnDark
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                TextButton(
-                    onClick = {
-                        onStatusChange(null)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.order_history_filter_all),
-                        color = if (statusFilter == null) {
-                            FruitLogixTheme.colors.primary
-                        } else {
-                            FruitLogixTheme.colors.textMuted
-                        },
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                TextButton(
-                    onClick = {
-                        onStatusChange(OrderHistoryStatus.DELIVERED)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.order_history_delivered),
-                        color = if (statusFilter == OrderHistoryStatus.DELIVERED) {
-                            FruitLogixTheme.colors.primary
-                        } else {
-                            FruitLogixTheme.colors.textMuted
-                        },
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                TextButton(
-                    onClick = {
-                        onStatusChange(OrderHistoryStatus.CANCELLED)
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.order_history_cancelled),
-                        color = if (statusFilter == OrderHistoryStatus.CANCELLED) {
-                            FruitLogixTheme.colors.primary
-                        } else {
-                            FruitLogixTheme.colors.textMuted
-                        },
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
-
-            TextButton(
-                onClick = onClearFilters,
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(
-                    text = stringResource(R.string.order_history_clear_filters),
-                    color = FruitLogixTheme.colors.primary,
-                    fontWeight = FontWeight.SemiBold
+            state.all.isEmpty() -> item {
+                EmptyState(
+                    title = stringResource(R.string.dist_history_empty_title),
+                    message = stringResource(R.string.dist_history_empty_message),
+                    icon = { AppIcon(id = R.drawable.ic_schedule, contentDescription = null, tint = scheme.primary, modifier = Modifier.size(FruitLogixTheme.sizing.iconBox)) }
                 )
             }
+            visible.isEmpty() -> item {
+                EmptyState(
+                    title = stringResource(R.string.dist_history_no_results),
+                    message = "",
+                    actionText = stringResource(R.string.dist_history_clear),
+                    onAction = viewModel::clearFilters
+                )
+            }
+            else -> items(visible, key = { it.id }) { HistoryCard(it) }
         }
     }
 }
 
 @Composable
-private fun OrderHistoryCard(
-    order: OrderHistoryItem
-) {
-    Card(
+private fun HistoryCard(item: OrderHistoryItem) {
+    val scheme = MaterialTheme.colorScheme
+    val delivered = item.status == OrderHistoryStatus.DELIVERED
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        shape = FruitLogixTheme.shapes.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = FruitLogixTheme.colors.surfaceDark
-        )
+            .whiteCard(FruitLogixTheme.shapes.Card)
+            .padding(FruitLogixTheme.spacing.inner)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(FruitLogixTheme.spacing.sm)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "#${order.id}",
-                    style = FruitLogixTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = FruitLogixTheme.colors.textOnDark
-                )
-
-                StatusBadge(
-                    text = when (order.status) {
-                        OrderHistoryStatus.DELIVERED ->
-                            stringResource(R.string.order_history_delivered)
-
-                        OrderHistoryStatus.CANCELLED ->
-                            stringResource(R.string.order_history_cancelled)
-                    },
-                    type = when (order.status) {
-                        OrderHistoryStatus.DELIVERED ->
-                            StatusBadgeType.SUCCESS
-
-                        OrderHistoryStatus.CANCELLED ->
-                            StatusBadgeType.NEUTRAL
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = order.clientName,
-                style = FruitLogixTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = FruitLogixTheme.colors.textOnDark
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = stringResource(
-                    R.string.order_history_producer,
-                    order.producerName
-                ),
-                style = FruitLogixTheme.typography.bodyMedium,
-                color = FruitLogixTheme.colors.textMuted
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AppIcon(
-                    id = R.drawable.ic_schedule,
-                    contentDescription = null,
-                    tint = FruitLogixTheme.colors.primary
-                )
-
-                Text(
-                    text = stringResource(
-                        R.string.order_history_date,
-                        order.completedDateLabel
-                    ),
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = FruitLogixTheme.typography.bodyMedium,
-                    color = FruitLogixTheme.colors.textMuted
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyOrderHistory() {
-    HistoryMessageCard(
-        title = stringResource(R.string.order_history_empty_title),
-        message = stringResource(R.string.order_history_empty_message)
-    )
-}
-
-@Composable
-private fun NoFilteredResults() {
-    HistoryMessageCard(
-        title = stringResource(R.string.order_history_no_results_title),
-        message = stringResource(R.string.order_history_no_results_message)
-    )
-}
-
-@Composable
-private fun HistoryMessageCard(
-    title: String,
-    message: String
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = FruitLogixTheme.shapes.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = FruitLogixTheme.colors.surfaceDark
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AppIcon(
-                id = R.drawable.ic_orders,
-                contentDescription = null,
-                tint = FruitLogixTheme.colors.primary
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = title,
-                style = FruitLogixTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = FruitLogixTheme.colors.textOnDark
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = message,
-                style = FruitLogixTheme.typography.bodyMedium,
-                color = FruitLogixTheme.colors.textMuted
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(item.id, style = FruitLogixTheme.extraTypography.dataMono, color = scheme.onSurface)
+            Spacer(modifier = Modifier.weight(1f))
+            StatusBadge(
+                text = stringResource(if (delivered) R.string.dist_history_delivered else R.string.dist_history_cancelled),
+                type = if (delivered) StatusBadgeType.SUCCESS else StatusBadgeType.NEUTRAL,
+                maxLines = 1,
+                softWrap = false
             )
         }
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+        Text(item.clientName, style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = stringResource(R.string.dist_history_product_producer, item.productName, item.producerName),
+            style = FruitLogixTheme.typography.bodyMedium,
+            color = scheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
+        Text(
+            text = stringResource(
+                if (delivered) R.string.dist_history_delivered_at else R.string.dist_history_cancelled_at,
+                formatRelativeDateTime(item.completedAt)
+            ),
+            style = FruitLogixTheme.typography.labelLarge,
+            color = scheme.onSurface
+        )
     }
 }

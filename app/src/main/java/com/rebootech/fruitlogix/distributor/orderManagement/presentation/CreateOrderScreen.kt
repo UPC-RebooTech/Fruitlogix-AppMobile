@@ -1,35 +1,40 @@
 package com.rebootech.fruitlogix.distributor.orderManagement.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.res.stringResource
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
+import com.rebootech.fruitlogix.distributor.orderManagement.presentation.components.OrderFormFields
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
+import com.rebootech.fruitlogix.shared.ui.components.BackHeader
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
+import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
 @Composable
 fun CreateOrderScreen(
@@ -39,177 +44,105 @@ fun CreateOrderScreen(
     viewModel: CreateOrderViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedTextColor = FruitLogixTheme.colors.textOnLight,
-        unfocusedTextColor = FruitLogixTheme.colors.textOnLight,
-        focusedLabelColor = FruitLogixTheme.colors.primary,
-        unfocusedLabelColor = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.65f),
-        focusedPlaceholderColor = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.45f),
-        unfocusedPlaceholderColor = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.45f),
-        cursorColor = FruitLogixTheme.colors.primary,
-        focusedBorderColor = FruitLogixTheme.colors.primary,
-        unfocusedBorderColor = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.35f),
-        errorTextColor = FruitLogixTheme.colors.textOnLight
-    )
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(FruitLogixTheme.colors.bg)
+            .background(scheme.background)
+            .imePadding()
             .verticalScroll(rememberScrollState())
-            .padding(FruitLogixTheme.spacing.sm)
+            .padding(spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(spacing.sm)
     ) {
-        TextButton(
-            onClick = onBackClick
-        ) {
-            Text(
-                text = stringResource(R.string.create_order_back),
-                color = FruitLogixTheme.colors.textOnLight
-            )
+        val created = state.created
+        if (created != null) {
+            CreatedContent(order = created, onBackToOrders = onOrderRegistered, onCreateAnother = viewModel::createAnother)
+            return@Column
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(R.string.create_order_title),
-            style = FruitLogixTheme.typography.displayLarge,
-            fontWeight = FontWeight.Bold,
-            color = FruitLogixTheme.colors.textOnLight
+        BackHeader(
+            title = stringResource(R.string.dist_order_create_title),
+            subtitle = stringResource(R.string.dist_order_create_subtitle),
+            onBack = onBackClick
         )
-
-        Text(
-            text = stringResource(R.string.create_order_subtitle),
-            style = FruitLogixTheme.typography.bodyMedium,
-            color = FruitLogixTheme.colors.textOnLight.copy(alpha = 0.7f)
+        OrderFormFields(
+            form = state.form,
+            onClientChange = viewModel::onClientChange,
+            onProductChange = viewModel::onProductChange,
+            onQuantityChange = viewModel::onQuantityChange,
+            onDateChange = viewModel::onDateChange,
+            enabled = !state.isSaving
         )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = state.productName,
-            onValueChange = viewModel::onProductChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(stringResource(R.string.create_order_product))
+        Spacer(modifier = Modifier.height(spacing.xs))
+        PrimaryButton(
+            text = stringResource(R.string.dist_order_create_submit),
+            onClick = {
+                focusManager.clearFocus()
+                viewModel.submit()
             },
-            placeholder = {
-                Text(stringResource(R.string.create_order_product_example))
-            },
-            isError = state.productError,
-            supportingText = {
-                if (state.productError) {
-                    Text(stringResource(R.string.create_order_product_error))
-                }
-            },
-            colors = fieldColors,
-            singleLine = true
+            enabled = !state.isSaving,
+            modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.quantity,
-            onValueChange = viewModel::onQuantityChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(stringResource(R.string.create_order_quantity))
-            },
-            placeholder = {
-                Text(stringResource(R.string.create_order_quantity_example))
-            },
-            suffix = {
-                Text(
-                    text = "t",
-                    color = FruitLogixTheme.colors.textOnLight
-                )
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Decimal
-            ),
-            isError = state.quantityError,
-            supportingText = {
-                if (state.quantityError) {
-                    Text(stringResource(R.string.create_order_quantity_error))
-                }
-            },
-            colors = fieldColors,
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.requiredDate,
-            onValueChange = viewModel::onRequiredDateChange,
-            modifier = Modifier.fillMaxWidth(),
-            label = {
-                Text(stringResource(R.string.create_order_date))
-            },
-            placeholder = {
-                Text(stringResource(R.string.create_order_date_example))
-            },
-            isError = state.requiredDateError,
-            supportingText = {
-                if (state.requiredDateError) {
-                    Text(stringResource(R.string.create_order_date_error))
-                }
-            },
-            colors = fieldColors,
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = viewModel::registerOrder,
-            modifier = Modifier.fillMaxWidth(),
-            shape = FruitLogixTheme.shapes.Pill,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = FruitLogixTheme.colors.primary,
-                contentColor = FruitLogixTheme.colors.onPrimary
-            )
-        ) {
-            Text(
-                text = "Registrar pedido",
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
+}
 
-    if (state.isSuccess) {
-        AlertDialog(
-            onDismissRequest = {},
-            shape = FruitLogixTheme.shapes.Card,
-            containerColor = FruitLogixTheme.colors.surfaceDark,
-            titleContentColor = FruitLogixTheme.colors.textOnDark,
-            textContentColor = FruitLogixTheme.colors.textMuted,
-            title = {
-                Text(
-                    text = stringResource(R.string.create_order_success_title),
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(
-                        R.string.create_order_success_message,
-                        state.registeredOrder?.id.orEmpty()
-                    )
-                )
-            },
-            confirmButton = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    PrimaryButton(
-                        text = stringResource(R.string.create_order_success_button),
-                        onClick = onOrderRegistered,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
+@Composable
+private fun CreatedContent(order: DistributorOrder, onBackToOrders: () -> Unit, onCreateAnother: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = FruitLogixTheme.spacing.xl),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(colors.successContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            AppIcon(id = R.drawable.ic_check, contentDescription = null, tint = colors.onSuccessContainer, modifier = Modifier.size(36.dp))
+        }
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+        Text(
+            text = stringResource(R.string.dist_order_created_title, order.id),
+            style = FruitLogixTheme.typography.headlineSmall,
+            color = scheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
+        Text(
+            text = "${order.clientName} · ${order.productName} · ${formatQuantity(order.quantityTons, order.pallets)}",
+            style = FruitLogixTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = stringResource(R.string.dist_orders_delivery, formatDeliveryDate(order.deliveryDate)),
+            style = FruitLogixTheme.typography.bodyLarge,
+            color = scheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
+        Text(
+            text = stringResource(R.string.dist_order_created_message),
+            style = FruitLogixTheme.typography.bodyMedium,
+            color = scheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.md))
+        PrimaryButton(
+            text = stringResource(R.string.dist_order_back_to_orders),
+            onClick = onBackToOrders,
+            modifier = Modifier.fillMaxWidth()
+        )
+        TextActionButton(
+            text = stringResource(R.string.dist_order_create_another),
+            onClick = onCreateAnother
         )
     }
 }

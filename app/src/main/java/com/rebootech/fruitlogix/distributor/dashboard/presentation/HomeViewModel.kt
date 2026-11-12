@@ -1,43 +1,32 @@
 package com.rebootech.fruitlogix.distributor.dashboard.presentation
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.rebootech.fruitlogix.auth.data.DataStoreSessionRepository
 import com.rebootech.fruitlogix.distributor.dashboard.data.FakeDashboardRepository
-import com.rebootech.fruitlogix.shared.ui.components.AppLanguage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = FakeDashboardRepository()
+    private val dashboardRepository = FakeDashboardRepository()
+    private val sessionRepository = DataStoreSessionRepository.getInstance(application)
 
-    private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
+    private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadDashboard()
-    }
-
-    private fun loadDashboard() {
-        val data = repository.getDashboardData()
-        _uiState.update {
-            it.copy(
-                isLoading = false,
-                greeting = data.greeting,
-                priorityActions = data.priorityActions,
-                priorityReadyCount = data.priorityActions.size,
-                predictiveAlert = data.predictiveAlert,
-                kpis = data.kpis,
-                actionItems = data.actionItems,
-                fleetUnits = data.fleetUnits,
-                fleetInTransitCount = data.fleetInTransitCount,
-                complianceSummary = data.complianceSummary
-            )
+        viewModelScope.launch {
+            combine(dashboardRepository.observeDashboard(), sessionRepository.session) { data, session ->
+                data to session?.displayName.orEmpty().trim().substringBefore(' ')
+            }.collect { (data, firstName) ->
+                _uiState.update { it.copy(isLoading = false, data = data, userName = firstName) }
+            }
         }
-    }
-
-    fun onLanguageSelected(language: AppLanguage) {
-        _uiState.update { it.copy(selectedLanguage = language) }
     }
 }

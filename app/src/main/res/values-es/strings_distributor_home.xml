@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Inicio del distribuidor -->
+    <string name="dist_home_greeting_morning">Buenos días, %1$s</string>
+    <string name="dist_home_greeting_afternoon">Buenas tardes, %1$s</string>
+    <string name="dist_home_greeting_evening">Buenas noches, %1$s</string>
+    <string name="dist_home_greeting_morning_plain">Buenos días</string>
+    <string name="dist_home_greeting_afternoon_plain">Buenas tardes</string>
+    <string name="dist_home_greeting_evening_plain">Buenas noches</string>
+    <string name="dist_home_date_pattern">EEEE d \'de\' MMMM</string>
+
+    <!-- Riesgo de temperatura (tarjeta destacada) -->
+    <string name="dist_home_alert_label">Riesgo de temperatura</string>
+    <string name="dist_home_alert_title">%1$s superará %2$s en unos %3$d min</string>
+    <string name="dist_home_alert_rate">Sube %1$s por minuto · ahora %2$s</string>
+    <string name="dist_home_alert_breached_label">Temperatura fuera de rango</string>
+    <string name="dist_home_alert_breached_title">%1$s está sobre %2$s</string>
+    <string name="dist_home_alert_breached_detail">Ahora %1$s. Actúa ya para proteger la carga.</string>
+    <string name="dist_home_alert_ok">Todas las cámaras de frío están en rango</string>
+    <string name="dist_home_alert_review">Revisar unidad</string>
+    <string name="dist_home_chart_now">Ahora %1$s</string>
+    <string name="dist_home_chart_now_caption">Ahora</string>
+    <string name="dist_home_chart_limit">Límite %1$s</string>
+    <string name="dist_home_chart_minus">-%1$d min</string>
+    <string name="dist_home_chart_plus">+%1$d min</string>
+    <string name="dist_home_chart_cd">Temperatura de la cámara en los últimos %1$d minutos, subiendo hacia el límite de %2$s</string>
+
+    <!-- Accesos rápidos -->
+    <string name="dist_home_qa_scan">Escanear recepción</string>
+    <string name="dist_home_qa_new_order">Nuevo pedido</string>
+    <string name="dist_home_qa_fleet">Ver flota</string>
+    <string name="dist_home_qa_sensors">Sensores</string>
+
+    <!-- Pendientes -->
+    <string name="dist_home_tasks_title">Pendientes de hoy</string>
+    <string name="dist_home_task_guide_title">Aprobar la guía de remisión SUNAT</string>
+    <string name="dist_home_task_guide_detail">Pedido %1$s · %2$s · necesaria para exportar</string>
+    <string name="dist_home_task_intake_title">Recibir %1$s en el muelle %2$s</string>
+    <string name="dist_home_task_intake_detail">%1$d pallets de %2$s esperan en la puerta</string>
+    <string name="dist_home_task_urgent">Urgente</string>
+
+    <!-- KPIs -->
+    <string name="dist_home_kpi_active_orders">Pedidos activos</string>
+    <string name="dist_home_kpi_pending">%1$d esperan productor</string>
+    <string name="dist_home_kpi_deliveries">Entregas de hoy</string>
+    <string name="dist_home_kpi_avg_eta">Llegada promedio %1$d min</string>
+    <string name="dist_home_kpi_quality">Calidad aprobada</string>
+    <string name="dist_home_kpi_lots">Últimos %1$d lotes</string>
+    <string name="dist_home_kpi_alerts">Alertas IoT</string>
+    <string name="dist_home_kpi_alerts_detail">%1$d críticas · %2$d de aviso</string>
+
+    <!-- Flota -->
+    <string name="dist_home_fleet_title">Flota en ruta</string>
+    <string name="dist_home_fleet_subtitle">%1$d camiones en tránsito</string>
+    <string name="dist_home_fleet_see_all">Ver flota</string>
+    <string name="dist_home_fleet_on_time">A tiempo</string>
+    <string name="dist_home_fleet_delayed">Retrasado</string>
+    <string name="dist_home_fleet_watch">En observación</string>
+    <string name="dist_home_fleet_eta">Llega %1$s</string>
+    <string name="dist_home_fleet_delay">Retraso %1$s</string>
+    <string name="dist_home_fleet_reefer">Cámara %1$s</string>
+</resources>

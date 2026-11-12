@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pedidos del distribuidor: lista -->
+    <string name="dist_orders_title">Pedidos</string>
+    <plurals name="dist_orders_active_count">
+        <item quantity="one">%d pedido activo</item>
+        <item quantity="many">%d pedidos activos</item>
+        <item quantity="other">%d pedidos activos</item>
+    </plurals>
+    <string name="dist_orders_new">Nuevo pedido</string>
+    <string name="dist_orders_scan">Escanear recepción</string>
+    <string name="dist_orders_history">Historial</string>
+    <string name="dist_orders_filter_all">Todos</string>
+    <string name="dist_orders_filter_count">%1$s (%2$d)</string>
+    <string name="dist_order_status_pending">Pendiente</string>
+    <string name="dist_order_status_in_preparation">En preparación</string>
+    <string name="dist_order_status_on_route">En ruta</string>
+    <string name="dist_orders_quantity">%1$s t · %2$d pallets</string>
+    <string name="dist_orders_delivery">Entrega %1$s</string>
+    <string name="dist_orders_today">hoy</string>
+    <string name="dist_orders_tomorrow">mañana</string>
+    <string name="dist_orders_empty_title">No hay pedidos activos</string>
+    <string name="dist_orders_empty_message">Crea un pedido para enviarlo a un productor.</string>
+    <string name="dist_orders_empty_filter">No hay pedidos con este estado.</string>
+    <string name="dist_orders_deleted">Pedido %1$s eliminado</string>
+
+    <!-- Formulario de pedido (crear y editar) -->
+    <string name="dist_order_create_title">Nuevo pedido</string>
+    <string name="dist_order_create_subtitle">Para quién, qué y cuándo.</string>
+    <string name="dist_order_edit_title">Editar pedido %1$s</string>
+    <string name="dist_order_client">Cliente</string>
+    <string name="dist_order_client_placeholder">ej. Supermercados Lima Norte</string>
+    <string name="dist_order_product">Producto</string>
+    <string name="dist_order_product_placeholder">ej. Palta Hass</string>
+    <string name="dist_order_product_suggestions">O elige uno:</string>
+    <string name="dist_order_quantity">Cantidad (toneladas)</string>
+    <string name="dist_order_quantity_placeholder">ej. 12,5</string>
+    <string name="dist_order_quantity_pallets">Aprox. %1$d pallets</string>
+    <string name="dist_order_date">Fecha de entrega</string>
+    <string name="dist_order_date_placeholder">Elige una fecha</string>
+    <string name="dist_order_date_cd">Abrir el calendario para elegir la fecha de entrega</string>
+    <string name="dist_order_date_ok">Aceptar</string>
+    <string name="dist_order_error_client">Ingresa el nombre del cliente</string>
+    <string name="dist_order_error_product">Escribe o elige un producto</string>
+    <string name="dist_order_error_quantity">Ingresa una cantidad entre 0,1 y 100 t</string>
+    <string name="dist_order_error_date">Elige hoy o una fecha posterior</string>
+    <string name="dist_order_create_submit">Crear pedido</string>
+    <string name="dist_order_edit_submit">Guardar cambios</string>
+    <string name="dist_order_created_title">Pedido %1$s creado</string>
+    <string name="dist_order_created_message">Queda pendiente hasta que un productor lo acepte.</string>
+    <string name="dist_order_back_to_orders">Volver a pedidos</string>
+    <string name="dist_order_create_another">Crear otro</string>
+    <string name="dist_order_saved">Cambios guardados</string>
+    <string name="dist_order_locked_title">Este pedido ya no se puede editar</string>
+    <string name="dist_order_locked_message">Estado: %1$s. Solo se pueden cambiar los pedidos pendientes.</string>
+    <string name="dist_order_not_found">No encontramos este pedido.</string>
+    <string name="dist_order_delete">Eliminar pedido</string>
+    <string name="dist_order_delete_title">¿Eliminar el pedido %1$s?</string>
+    <string name="dist_order_delete_message">No se puede deshacer.</string>
+    <string name="dist_order_delete_confirm">Eliminar</string>
+    <string name="dist_order_delete_expired">Los pedidos solo se pueden eliminar durante sus primeras 24 horas.</string>
+
+    <!-- Historial -->
+    <string name="dist_history_title">Historial de pedidos</string>
+    <string name="dist_history_subtitle">Pedidos entregados y cancelados</string>
+    <string name="dist_history_search">Busca por pedido, cliente o productor</string>
+    <string name="dist_history_delivered">Entregado</string>
+    <string name="dist_history_cancelled">Cancelado</string>
+    <string name="dist_history_product_producer">%1$s · %2$s</string>
+    <string name="dist_history_delivered_at">Entregado %1$s</string>
+    <string name="dist_history_cancelled_at">Cancelado %1$s</string>
+    <string name="dist_history_empty_title">Aún no hay pedidos finalizados</string>
+    <string name="dist_history_empty_message">Aquí aparecerán los pedidos entregados.</string>
+    <string name="dist_history_no_results">Ningún pedido coincide con tu búsqueda.</string>
+    <string name="dist_history_clear">Limpiar búsqueda</string>
+
+    <!-- Escanear recepción -->
+    <string name="dist_scan_title">Escanear recepción</string>
+    <string name="dist_scan_subtitle">Apunta la cámara a la etiqueta del lote cuando llegue el camión.</string>
+    <string name="dist_scan_camera_hint">Centra la etiqueta dentro del recuadro</string>
+    <string name="dist_scan_permission_title">Se necesita la cámara</string>
+    <string name="dist_scan_permission_message">Permite el uso de la cámara para leer las etiquetas, o escribe el código.</string>
+    <string name="dist_scan_permission_allow">Permitir cámara</string>
+    <string name="dist_scan_type_code">Escribir el código</string>
+    <string name="dist_scan_code_label">Código del lote</string>
+    <string name="dist_scan_code_placeholder">ej. LOT-FX-1041-UVA</string>
+    <string name="dist_scan_check_code">Verificar código</string>
+    <string name="dist_scan_demo_title">Demo: la cámara aún no lee etiquetas</string>
+    <string name="dist_scan_demo_valid">Simular etiqueta válida</string>
+    <string name="dist_scan_demo_invalid">Simular etiqueta dañada</string>
+    <string name="dist_scan_matched_title">El lote coincide con el pedido %1$s</string>
+    <string name="dist_scan_for_client">Para %1$s</string>
+    <string name="dist_scan_confirm">Confirmar recepción</string>
+    <string name="dist_scan_not_on_route_title">El pedido %1$s no está en camino</string>
+    <string name="dist_scan_not_on_route_message">Su estado es %1$s. Revisa la etiqueta con el conductor.</string>
+    <string name="dist_scan_unknown_title">No pudimos leer esta etiqueta</string>
+    <string name="dist_scan_unknown_message">Inténtalo otra vez o escribe el código impreso bajo el código de barras.</string>
+    <string name="dist_scan_received_title">Recepción confirmada</string>
+    <string name="dist_scan_received_message">El pedido %1$s quedó como entregado y ya está en el historial.</string>
+    <string name="dist_scan_another">Escanear otro lote</string>
+    <string name="dist_scan_again">Escanear otra vez</string>
+</resources>

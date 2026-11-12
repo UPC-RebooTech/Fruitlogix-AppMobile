@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Invoices list -->
+    <string name="inv_title">Invoices</string>
+    <string name="inv_subtitle">What you collect from clients and pay to producers.</string>
+    <string name="inv_to_collect">To collect</string>
+    <string name="inv_to_pay">To pay</string>
+    <plurals name="inv_overdue_count">
+        <item quantity="one">%d overdue</item>
+        <item quantity="other">%d overdue</item>
+    </plurals>
+    <string name="inv_up_to_date">Up to date</string>
+    <string name="inv_tab_collect">To collect (%1$d)</string>
+    <string name="inv_tab_pay">To pay (%1$d)</string>
+    <string name="inv_filter_all">All</string>
+    <string name="inv_status_pending">Pending</string>
+    <string name="inv_status_overdue">Overdue</string>
+    <string name="inv_status_paid">Paid</string>
+    <string name="inv_export">Export PDF report</string>
+    <string name="inv_issued">Issued %1$s</string>
+    <string name="inv_due">Due %1$s</string>
+    <plurals name="inv_days_overdue">
+        <item quantity="one">%d day overdue</item>
+        <item quantity="other">%d days overdue</item>
+    </plurals>
+    <string name="inv_order">Order %1$s</string>
+    <string name="inv_empty">There are no invoices with this status.</string>
+
+    <!-- Billing tools -->
+    <string name="inv_tools_title">Billing tools</string>
+    <string name="inv_tool_auto">Invoice a reception</string>
+    <string name="inv_tool_auto_sub">Kilos received × agreed price</string>
+    <string name="inv_tool_credit">Proposed credit notes</string>
+    <string name="inv_tool_credit_sub">%1$d to review</string>
+    <string name="inv_tool_credit_done">All reviewed</string>
+    <string name="inv_tool_prices">Price per kilo</string>
+    <string name="inv_tool_prices_sub">History by product and client</string>
+    <string name="inv_tool_purchases">Purchases by client</string>
+    <string name="inv_tool_purchases_sub">Weekly or monthly summary</string>
+    <string name="inv_close">Close</string>
+
+    <!-- US66 -->
+    <string name="inv_auto_message">When a reception is confirmed, the invoice is the kilos received × the agreed price.</string>
+    <string name="inv_auto_client">Client</string>
+    <string name="inv_auto_client_placeholder">e.g. Supermercados Lima Norte</string>
+    <string name="inv_auto_kilos">Kilos received</string>
+    <string name="inv_auto_price">Agreed price per kilo (S/)</string>
+    <string name="inv_auto_price_help">Leave it empty if there is no agreed price yet.</string>
+    <string name="inv_auto_total">Total: %1$s</string>
+    <string name="inv_auto_issue">Issue invoice</string>
+    <string name="inv_auto_error_client">Enter the client</string>
+    <string name="inv_auto_error_kilos">Enter the kilos received</string>
+    <string name="inv_auto_pending">There is no agreed price for %1$s. The order stays as \"billing pending\".</string>
+    <string name="inv_auto_issued">Invoice %1$s issued for %2$s</string>
+
+    <!-- US67 -->
+    <string name="inv_credit_for">Invoice %1$s · %2$s</string>
+    <string name="inv_credit_thermal">Thermal excursion: %1$s for %2$d min · %3$d kg of %4$s</string>
+    <string name="inv_credit_rejected">%1$d kg of %2$s rejected</string>
+    <string name="inv_credit_damaged">%1$d kg of %2$s damaged at reception</string>
+    <string name="inv_credit_suggested">Suggested: %1$s</string>
+    <string name="inv_credit_approved">Approved: %1$s</string>
+    <string name="inv_credit_approve">Approve</string>
+    <string name="inv_credit_badge_approved">Approved</string>
+    <string name="inv_credit_adjust">Adjust amount</string>
+    <string name="inv_credit_amount">Credit amount (S/)</string>
+    <string name="inv_credit_save">Approve with this amount</string>
+    <string name="inv_credit_error_number">Enter an amount</string>
+    <string name="inv_credit_error_positive">The amount must be greater than 0</string>
+    <string name="inv_credit_error_above">It can\'t be more than the invoice (%1$s)</string>
+    <string name="inv_credit_none">No credit notes to review: recent orders had no rejections or excursions.</string>
+    <string name="inv_credit_done">Credit note %1$s approved for %2$s</string>
+
+    <!-- US68 -->
+    <string name="inv_prices_product">Product</string>
+    <string name="inv_prices_client">Client</string>
+    <string name="inv_prices_now">Now %1$s per kg</string>
+    <string name="inv_prices_change">%1$s in %2$d months</string>
+    <string name="inv_prices_none">No price history for %1$s with %2$s.</string>
+    <string name="inv_prices_chart_cd">Price per kilo over the last %1$d months, from %2$s to %3$s</string>
+
+    <!-- US69 -->
+    <string name="inv_purchases_client">Client</string>
+    <string name="inv_purchases_week">This week</string>
+    <string name="inv_purchases_month">This month</string>
+    <string name="inv_purchases_kilos">Kilos bought</string>
+    <string name="inv_purchases_amount">Amount</string>
+    <string name="inv_purchases_orders">Orders</string>
+    <string name="inv_purchases_kg">%1$s kg</string>
+    <string name="inv_purchases_none">%1$s has no finished purchases in this period.</string>
+
+    <!-- Invoice detail -->
+    <string name="inv_detail_from">To collect from</string>
+    <string name="inv_detail_to">To pay to</string>
+    <string name="inv_detail_issued">Issued</string>
+    <string name="inv_detail_due">Due</string>
+    <string name="inv_detail_order">Order</string>
+    <string name="inv_detail_credit_notes">Credit notes</string>
+    <string name="inv_detail_not_found">We could not find this invoice.</string>
+
+    <!-- PDF report -->
+    <string name="inv_pdf_title">Financial report</string>
+    <string name="inv_pdf_generated">Generated %1$s</string>
+    <string name="inv_pdf_filter">Status: %1$s</string>
+    <string name="inv_pdf_total">Total %1$s</string>
+    <string name="inv_pdf_subject">FruitLogix financial report</string>
+    <string name="inv_pdf_share">Share the report</string>
+</resources>
