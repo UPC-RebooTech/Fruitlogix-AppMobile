@@ -7,7 +7,7 @@
     <string name="iam_language_en">English</string>
     <string name="iam_show_password">Mostrar contraseña</string>
     <string name="iam_hide_password">Ocultar contraseña</string>
-    <string name="iam_error_network">Sin conexión. Revisa tu internet e inténtalo de nuevo.</string>
+    <string name="iam_error_network">No se pudo conectar con el servidor de FruitLogix. Revisa tu internet e inténtalo de nuevo.</string>
     <string name="iam_error_unknown">Algo salió mal. Inténtalo de nuevo.</string>
 
     <!-- IAM: iniciar sesión -->
@@ -73,4 +73,10 @@
     <string name="signup_error_username_taken">Este usuario ya existe. Prueba con otro.</string>
     <string name="signup_error_password">Tu contraseña no cumple los requisitos</string>
     <string name="signup_error_terms">Acepta los términos para continuar</string>
+    <!-- Servidor -->
+    <string name="iam_server_waking">Despertando el servidor… El primer ingreso del día puede tardar hasta un minuto.</string>
+
+    <!-- Rol en un teléfono nuevo -->
+    <string name="login_role_title">Un paso más</string>
+    <string name="login_role_subtitle">Este teléfono aún no conoce tu cuenta. ¿Cómo usas FruitLogix?</string>
 </resources>

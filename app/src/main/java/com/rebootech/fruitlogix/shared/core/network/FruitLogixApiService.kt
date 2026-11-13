@@ -1,5 +1,7 @@
 package com.rebootech.fruitlogix.shared.core.network
 
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -14,23 +16,58 @@ data class SignInRequestDto(
     val password: String
 )
 
-data class AuthenticatedUserDto(
-    val id: Int,
+data class SignUpRequestDto(
     val username: String,
-    val token: String
+    val password: String
 )
 
-// ─── DTOs de Productores (US05, US06, US39, US40) ──────────
-data class ProducerDto(
-    val id: Int? = null,
-    val name: String? = null,
-    val rucOrDni: String? = null,
-    val type: String? = null, // "Individual" o "Company"
-    val location: String? = null,
-    val specialty: String? = null,
+data class AuthenticatedUserDto(
+    val id: Int,
+    val username: String?,
+    val token: String?
+)
+
+// ─── Producers (/api/v1/producers) ─── same field names as the server ─────
+/** ProducerResource returned by GET, POST and PUT. */
+data class ProducerResourceDto(
+    val id: Int,
+    val producerType: String? = null, // "Individual" or "Company"
+    val fullName: String? = null,
+    val taxId: String? = null,
+    val legalName: String? = null,
     val email: String? = null,
     val phone: String? = null,
-    val rating: Double? = null
+    val country: String? = null,
+    val region: String? = null,
+    val city: String? = null,
+    val address: String? = null,
+    val crop: String? = null,
+    val cultivatedHectares: Double? = null,
+    val monthlyProduction: String? = null,
+    val operationsStartDate: String? = null,
+    val rating: Double? = null,
+    val certifications: String? = null,
+    val photo: String? = null
+)
+
+/** Body of POST and PUT. The server requires producerType, fullName, an 11-digit taxId, email, phone and crop. */
+data class SaveProducerRequestDto(
+    val producerType: String,
+    val fullName: String,
+    val taxId: String,
+    val legalName: String,
+    val email: String,
+    val phone: String,
+    val country: String,
+    val region: String,
+    val city: String,
+    val address: String,
+    val crop: String,
+    val cultivatedHectares: Double = 0.0,
+    val monthlyProduction: String = "",
+    val operationsStartDate: String? = null,
+    val certifications: String = "",
+    val photo: String = ""
 )
 
 // ─── DTOs de Pedidos (US01, US02, US03, US04) ──────────────
@@ -80,18 +117,25 @@ interface FruitLogixApiService {
     @POST("authentication/sign-in")
     suspend fun signIn(@Body request: SignInRequestDto): AuthenticatedUserDto
 
-    // Productores
+    /**
+     * 200 when created, 409 when the username is taken. Only the status code is read: the body's
+     * "message" comes as an object (untranslated server text), which a String field cannot parse.
+     */
+    @POST("authentication/sign-up")
+    suspend fun signUp(@Body request: SignUpRequestDto): Response<ResponseBody>
+
+    // Producers: 409 when the RUC is taken, 400 when a field is invalid, 404 when the id does not exist
     @GET("producers")
-    suspend fun getProducers(): List<ProducerDto>
+    suspend fun getProducers(): List<ProducerResourceDto>
 
     @POST("producers")
-    suspend fun createProducer(@Body producer: ProducerDto): ProducerDto
+    suspend fun createProducer(@Body producer: SaveProducerRequestDto): ProducerResourceDto
 
     @PUT("producers/{id}")
-    suspend fun updateProducer(@Path("id") id: String, @Body producer: ProducerDto): ProducerDto
+    suspend fun updateProducer(@Path("id") id: Int, @Body producer: SaveProducerRequestDto): ProducerResourceDto
 
     @DELETE("producers/{id}")
-    suspend fun deleteProducer(@Path("id") id: String)
+    suspend fun deleteProducer(@Path("id") id: Int): Response<Unit>
 
     // Pedidos
     @GET("orders")

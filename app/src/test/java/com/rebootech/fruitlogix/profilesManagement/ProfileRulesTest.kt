@@ -17,25 +17,41 @@ class ProfileRulesTest {
     private val existing = Producer(
         "P1", "Fundo Santa Rosa", "Fundo Santa Rosa", "Huaraz", "Palta Hass",
         "contacto@fundosantarosa.pe", "+51 956 410 228", ProducerEntityType.COMPANY,
-        qualityRating = 4.8, weeklyTons = 4.2, stockKg = 570, activeOrders = 1, incidents30d = 0
+        qualityRating = 4.8, weeklyTons = 4.2, stockKg = 570, activeOrders = 1, incidents30d = 0, ruc = "20481234561"
     )
 
-    private fun draft(email: String = "", phone: String = "", name: String = "Viñedos de Ica") =
-        ProducerDraft(name, "Viñedos de Ica", "Ica", "Uva Red Globe", email, phone, ProducerEntityType.COMPANY)
+    private fun draft(
+        email: String = "ventas@vinedosdeica.pe",
+        phone: String = "+51 987 112 340",
+        name: String = "Viñedos de Ica",
+        ruc: String = "20512345672"
+    ) = ProducerDraft(name, "Viñedos de Ica", "Ica", "Uva Red Globe", email, phone, ProducerEntityType.COMPANY, ruc)
 
     // US05 / US39 -----------------------------------------------------------------
 
     @Test
     fun register_requiredFields() {
         val errors = ProducerRules.validate(ProducerDraft("", " ", "", "", "", "", ProducerEntityType.INDIVIDUAL), emptyList())
-        assertEquals(setOf(ProducerRules.Error.NAME, ProducerRules.Error.FARM, ProducerRules.Error.LOCATION, ProducerRules.Error.CROP), errors)
+        assertEquals(
+            setOf(
+                ProducerRules.Error.NAME, ProducerRules.Error.FARM, ProducerRules.Error.LOCATION, ProducerRules.Error.CROP,
+                ProducerRules.Error.EMAIL_FORMAT, ProducerRules.Error.PHONE_FORMAT, ProducerRules.Error.RUC_FORMAT
+            ),
+            errors
+        )
     }
 
     @Test
-    fun register_contactIsOptional_butMustBeValid() {
+    fun register_contactAndRucMustBeValid() {
         assertTrue(ProducerRules.validate(draft(), listOf(existing)).isEmpty())
         assertEquals(setOf(ProducerRules.Error.EMAIL_FORMAT), ProducerRules.validate(draft(email = "ventas@"), emptyList()))
         assertEquals(setOf(ProducerRules.Error.PHONE_FORMAT), ProducerRules.validate(draft(phone = "1234"), emptyList()))
+        assertEquals(setOf(ProducerRules.Error.RUC_FORMAT), ProducerRules.validate(draft(ruc = "1234567890"), emptyList()))
+    }
+
+    @Test
+    fun register_rucAlreadyInTheNetwork() {
+        assertEquals(setOf(ProducerRules.Error.RUC_TAKEN), ProducerRules.validate(draft(ruc = "20481234561"), listOf(existing)))
     }
 
     @Test

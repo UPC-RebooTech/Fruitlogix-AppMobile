@@ -36,8 +36,8 @@
     <string name="prod_form_location">Ubicación</string>
     <string name="prod_form_location_placeholder">ej. Huaraz, Áncash</string>
     <string name="prod_form_crop">Cultivo principal</string>
-    <string name="prod_form_email">Correo (opcional)</string>
-    <string name="prod_form_phone">Teléfono (opcional)</string>
+    <string name="prod_form_email">Correo</string>
+    <string name="prod_form_phone">Teléfono</string>
     <string name="prod_form_save_register">Registrar</string>
     <string name="prod_form_save_edit">Guardar cambios</string>
     <string name="prod_error_name">Ingresa el nombre</string>
@@ -69,6 +69,12 @@
     <string name="prod_delete_message">Sale de tu red. Sus pedidos y facturas anteriores se conservan.</string>
     <string name="prod_delete_confirm">Quitar</string>
     <string name="prod_deleted">%1$s salió de tu red</string>
+    <string name="prod_form_ruc">RUC</string>
+    <string name="prod_error_ruc">El RUC tiene 11 dígitos</string>
+    <string name="prod_error_ruc_taken">Ya hay un productor registrado con este RUC</string>
+    <string name="prod_saved_phone_only">%1$s se guardó solo en este teléfono: el servidor no respondió</string>
+    <string name="prod_server_rejected">El servidor no aceptó los datos. Revisa el RUC, el correo y el teléfono.</string>
+    <string name="prod_delete_failed">No se pudo quitar a %1$s: el servidor no respondió. Inténtalo de nuevo.</string>
 
     <!-- Perfil del distribuidor -->
     <string name="dprof_role">Distribuidor</string>

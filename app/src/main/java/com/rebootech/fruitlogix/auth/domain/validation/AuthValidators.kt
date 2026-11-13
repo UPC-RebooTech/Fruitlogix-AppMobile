@@ -50,6 +50,14 @@ object AuthValidators {
         return suggestion.takeIf { isValidUsername(it) }
     }
 
+    /** Name to show when only the username is known: "rosa.quispe" → "Rosa Quispe". */
+    fun nameFromUsername(username: String): String =
+        username.split('.', '_')
+            .filter { it.isNotBlank() }
+            .joinToString(" ") { part -> part.filter { !it.isDigit() }.replaceFirstChar { it.uppercase() } }
+            .trim()
+            .ifBlank { username }
+
     private fun stripAccents(text: String): String =
         java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
             .replace(Regex("\\p{Mn}+"), "")

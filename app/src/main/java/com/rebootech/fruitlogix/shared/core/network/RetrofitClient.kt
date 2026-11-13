@@ -1,6 +1,7 @@
 package com.rebootech.fruitlogix.shared.core.network
 
 import android.util.Log
+import com.rebootech.fruitlogix.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,16 +12,21 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-enum class BackendSyncStatus(val label: String) {
-    CONNECTING("Sincronizando con Render API..."),
-    ONLINE("Conectado a Render API (En vivo)"),
-    OFFLINE_FALLBACK("Modo Local Activo (Render en reposo / Offline)")
+enum class BackendSyncStatus {
+    CONNECTING,
+    ONLINE,
+    OFFLINE_FALLBACK
 }
 
 object RetrofitClient {
 
-    const val BASE_URL = "https://fruitlogix-platform.onrender.com/api/v1/"
+    /** FruitLogix platform on Render (MySQL on filess.io). */
+    const val BASE_URL = "https://rebootech-fruitlogix-api.onrender.com/api/v1/"
 
+    /**
+     * JWT of the signed-in user, sent on every request. The session repository sets it
+     * when a session is restored, saved or closed.
+     */
     @Volatile
     var jwtToken: String? = null
 
@@ -32,30 +38,27 @@ object RetrofitClient {
     }
 
     private val authInterceptor = Interceptor { chain ->
-        val original = chain.request()
-        val builder = original.newBuilder()
-            .header("Content-Type", "application/json")
+        val builder = chain.request().newBuilder()
             .header("Accept", "application/json")
-
-        jwtToken?.let { token ->
-            builder.header("Authorization", "Bearer $token")
-        }
-
+        jwtToken?.let { builder.header("Authorization", "Bearer $it") }
         chain.proceed(builder.build())
     }
 
+    // Only the request line and status in debug builds: bodies would print passwords and tokens
     private val loggingInterceptor = HttpLoggingInterceptor { message ->
         Log.d("FruitLogix-API", message)
     }.apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC else HttpLoggingInterceptor.Level.NONE
+        redactHeader("Authorization")
     }
 
+    // Render's free plan sleeps after a while without traffic and takes up to a minute to wake up
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     val api: FruitLogixApiService by lazy {

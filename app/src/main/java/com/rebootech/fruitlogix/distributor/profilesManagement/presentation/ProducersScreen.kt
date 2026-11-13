@@ -279,8 +279,8 @@ private fun ProducerSheetHost(sheet: ProducerSheet, state: ProducersUiState, vie
             Text(title, style = FruitLogixTheme.typography.titleLarge, color = scheme.onSurface)
             Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
             when (sheet) {
-                ProducerSheet.Register -> ProducerFormSheet(producer = null, errors = state.formErrors, onSave = viewModel::save)
-                is ProducerSheet.Edit -> ProducerFormSheet(producer = sheet.producer, errors = state.formErrors, onSave = viewModel::save)
+                ProducerSheet.Register -> ProducerFormSheet(producer = null, errors = state.formErrors, onSave = viewModel::save, serverError = state.sheetError?.let { stringResource(it) }, saving = state.saving)
+                is ProducerSheet.Edit -> ProducerFormSheet(producer = sheet.producer, errors = state.formErrors, onSave = viewModel::save, serverError = state.sheetError?.let { stringResource(it) }, saving = state.saving)
                 ProducerSheet.Invite -> InviteProducerSheet(error = state.inviteError?.let { stringResource(it) }, onInvite = viewModel::invite)
             }
         }

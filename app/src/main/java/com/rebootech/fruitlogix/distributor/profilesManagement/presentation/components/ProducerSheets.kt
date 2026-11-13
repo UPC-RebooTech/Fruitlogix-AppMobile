@@ -59,7 +59,9 @@ fun ProfileSheetError(text: String?) {
 fun ProducerFormSheet(
     producer: Producer?,
     errors: Set<ProducerRules.Error>,
-    onSave: (ProducerDraft) -> Unit
+    onSave: (ProducerDraft) -> Unit,
+    serverError: String? = null,
+    saving: Boolean = false
 ) {
     val key = producer?.id ?: "new"
     var type by rememberSaveable(key) { mutableStateOf(producer?.entityType ?: ProducerEntityType.COMPANY) }
@@ -69,6 +71,7 @@ fun ProducerFormSheet(
     var crop by rememberSaveable(key) { mutableStateOf(producer?.cropType.orEmpty()) }
     var email by rememberSaveable(key) { mutableStateOf(producer?.email.orEmpty()) }
     var phone by rememberSaveable(key) { mutableStateOf(producer?.phone.orEmpty()) }
+    var ruc by rememberSaveable(key) { mutableStateOf(producer?.ruc.orEmpty()) }
 
     @Composable
     fun err(e: ProducerRules.Error, res: Int) = if (e in errors) stringResource(res) else null
@@ -93,6 +96,12 @@ fun ProducerFormSheet(
             capitalization = KeyboardCapitalization.Words
         )
         LabeledTextField(
+            label = stringResource(R.string.prod_form_ruc), value = ruc, onValueChange = { ruc = it.filter { c -> c.isDigit() }.take(11) },
+            leadingIconRes = R.drawable.ic_id,
+            error = err(ProducerRules.Error.RUC_FORMAT, R.string.prod_error_ruc) ?: err(ProducerRules.Error.RUC_TAKEN, R.string.prod_error_ruc_taken),
+            keyboardType = KeyboardType.Number
+        )
+        LabeledTextField(
             label = stringResource(R.string.prod_form_location), value = location, onValueChange = { location = it },
             placeholder = stringResource(R.string.prod_form_location_placeholder), leadingIconRes = R.drawable.ic_gps,
             error = err(ProducerRules.Error.LOCATION, R.string.prod_error_location), capitalization = KeyboardCapitalization.Words
@@ -113,9 +122,11 @@ fun ProducerFormSheet(
             leadingIconRes = R.drawable.ic_call, error = err(ProducerRules.Error.PHONE_FORMAT, R.string.prod_error_phone),
             keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done
         )
+        ProfileSheetError(serverError)
         PrimaryButton(
             text = stringResource(if (producer == null) R.string.prod_form_save_register else R.string.prod_form_save_edit),
-            onClick = { onSave(ProducerDraft(name, farm, location, crop, email, phone, type)) },
+            onClick = { onSave(ProducerDraft(name, farm, location, crop, email, phone, type, ruc)) },
+            enabled = !saving,
             modifier = Modifier.fillMaxWidth()
         )
     }

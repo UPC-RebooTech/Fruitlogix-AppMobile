@@ -27,6 +27,8 @@ data class SignUpUiState(
     val termsAccepted: Boolean = false,
 
     val isLoading: Boolean = false,
+    /** The server is taking long (Render waking up): show a hint so the person waits. */
+    val slowServer: Boolean = false,
     @field:StringRes val fullNameError: Int? = null,
     @field:StringRes val organizationError: Int? = null,
     @field:StringRes val emailError: Int? = null,

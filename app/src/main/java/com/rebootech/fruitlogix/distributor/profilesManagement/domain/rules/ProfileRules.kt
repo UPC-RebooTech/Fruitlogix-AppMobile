@@ -22,23 +22,26 @@ object ContactRules {
 
 /** Register / edit a producer (US05, US39). */
 object ProducerRules {
-    enum class Error { NAME, FARM, LOCATION, CROP, EMAIL_FORMAT, EMAIL_TAKEN, PHONE_FORMAT }
+    enum class Error { NAME, FARM, LOCATION, CROP, EMAIL_FORMAT, EMAIL_TAKEN, PHONE_FORMAT, RUC_FORMAT, RUC_TAKEN }
 
     /**
      * @param others producers already in the network (excluding the one being edited).
-     * Email and phone are optional, but when present they must be valid.
+     * Email, phone and RUC are required: the FruitLogix server does not accept a producer without them.
      */
     fun validate(draft: ProducerDraft, others: List<Producer>): Set<Error> = buildSet {
         if (draft.name.isBlank()) add(Error.NAME)
         if (draft.farmName.isBlank()) add(Error.FARM)
         if (draft.location.isBlank()) add(Error.LOCATION)
         if (draft.cropType.isBlank()) add(Error.CROP)
-        if (draft.email.isNotBlank()) {
-            if (!ContactRules.isEmail(draft.email)) add(Error.EMAIL_FORMAT)
-            else if (others.any { it.email.equals(draft.email.trim(), ignoreCase = true) }) add(Error.EMAIL_TAKEN)
-        }
-        if (draft.phone.isNotBlank() && !ContactRules.isPhone(draft.phone)) add(Error.PHONE_FORMAT)
+        if (!ContactRules.isEmail(draft.email)) add(Error.EMAIL_FORMAT)
+        else if (others.any { it.email.equals(draft.email.trim(), ignoreCase = true) }) add(Error.EMAIL_TAKEN)
+        if (!ContactRules.isPhone(draft.phone)) add(Error.PHONE_FORMAT)
+        if (!isRuc(draft.ruc)) add(Error.RUC_FORMAT)
+        else if (others.any { it.ruc == draft.ruc.trim() }) add(Error.RUC_TAKEN)
     }
+
+    /** Peruvian RUC: exactly 11 digits. */
+    fun isRuc(text: String): Boolean = text.trim().length == 11 && text.trim().all { it.isDigit() }
 
     fun kpis(producers: List<Producer>): ProducerKpis {
         fun oneDecimal(v: Double) = round(v * 10) / 10

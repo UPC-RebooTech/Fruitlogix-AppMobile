@@ -12,26 +12,22 @@ import com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository.
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
 import com.rebootech.fruitlogix.shared.core.network.InvoiceDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.YearMonth
 
 /**
  * Sample invoices with the same clients and producers as Orders and Fleet. When the Render
- * backend answers (/api/v1/invoices), its invoices are merged in; new invoices are also sent
- * there. Without connection the sample data keeps the screen usable.
+ * backend answers (/api/v1/invoices), its invoices are merged in. New invoices stay on the
+ * phone until the fields match the server. Without connection the sample data keeps the screen usable.
  */
 class FakeBillingRepository private constructor() : BillingRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var nextNumber = 1050
 
     private val _invoices = MutableStateFlow(initialInvoices())
@@ -45,22 +41,8 @@ class FakeBillingRepository private constructor() : BillingRepository {
 
     override suspend fun addInvoice(invoice: Invoice) {
         _invoices.update { listOf(invoice) + it }
-        // Best effort: the invoice stays locally even if the server does not answer
-        scope.launch {
-            runCatching {
-                RetrofitClient.api.createInvoice(
-                    InvoiceDto(
-                        invoiceNumber = invoice.id,
-                        clientName = invoice.counterpartyName,
-                        amount = invoice.amount,
-                        issueDate = invoice.issuedOn.toString(),
-                        dueDate = invoice.dueOn.toString(),
-                        type = invoice.type.name,
-                        status = invoice.status.name
-                    )
-                )
-            }
-        }
+        // Not sent to the server yet: the app's invoice fields do not match CreateInvoiceResource
+        // (clientId, orderId, currency, invoiceType…), and sending them would store incomplete rows.
     }
 
     override suspend fun approveCreditNote(noteId: String, amount: Double) {

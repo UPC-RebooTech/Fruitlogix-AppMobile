@@ -12,5 +12,10 @@ sealed interface AuthError {
 sealed interface AuthResult {
     data class Success(val session: Session) : AuthResult
     data class Failure(val error: AuthError) : AuthResult
-}
 
+    /**
+     * The password is right, but this phone does not know the account's role yet
+     * (the server only stores username and password). The person picks it once.
+     */
+    data class NeedsRole(val username: String, val token: String) : AuthResult
+}

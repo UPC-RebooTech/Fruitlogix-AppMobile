@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.auth.data.DataStoreSessionRepository
-import com.rebootech.fruitlogix.auth.data.FakeAuthRepository
+import com.rebootech.fruitlogix.auth.data.RemoteAuthRepository
 import com.rebootech.fruitlogix.auth.domain.model.AuthError
 import com.rebootech.fruitlogix.auth.domain.model.AuthResult
 import com.rebootech.fruitlogix.auth.domain.model.SignUpRequest
@@ -13,6 +13,7 @@ import com.rebootech.fruitlogix.auth.domain.model.UserRole
 import com.rebootech.fruitlogix.auth.domain.repository.AuthRepository
 import com.rebootech.fruitlogix.auth.domain.repository.SessionRepository
 import com.rebootech.fruitlogix.auth.domain.validation.AuthValidators
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
  */
 class SignUpViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val authRepository: AuthRepository = FakeAuthRepository.instance
+    private val authRepository: AuthRepository = RemoteAuthRepository.getInstance(application)
     private val sessionRepository: SessionRepository = DataStoreSessionRepository.getInstance(application)
 
     private val _uiState = MutableStateFlow(SignUpUiState())
@@ -136,7 +137,11 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, generalError = null) }
+            _uiState.update { it.copy(isLoading = true, slowServer = false, generalError = null) }
+            val slowHint = launch {
+                delay(SLOW_SERVER_MS)
+                _uiState.update { it.copy(slowServer = true) }
+            }
             val request = SignUpRequest(
                 role = role,
                 fullName = state.fullName.trim(),
@@ -147,12 +152,17 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                 password = state.password,
                 invitationCode = state.invitationCode.takeIf { role == UserRole.PRODUCER && it.isNotBlank() }
             )
-            when (val result = authRepository.signUp(request)) {
+            val result = authRepository.signUp(request)
+            slowHint.cancel()
+            _uiState.update { it.copy(slowServer = false) }
+            when (result) {
                 is AuthResult.Success -> {
                     // Just created the account: keep it signed in, like "Keep me signed in" on sign in
                     sessionRepository.save(result.session, remember = true)
                     _uiState.update { it.copy(isLoading = false) }
                 }
+                // Not expected: the role was saved right before signing in
+                is AuthResult.NeedsRole -> _uiState.update { it.copy(isLoading = false, generalError = R.string.iam_error_unknown) }
                 is AuthResult.Failure -> _uiState.update {
                     when (result.error) {
                         AuthError.UsernameTaken -> it.copy(isLoading = false, usernameError = R.string.signup_error_username_taken)
@@ -169,5 +179,9 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
         }
+    }
+
+    private companion object {
+        const val SLOW_SERVER_MS = 4_000L
     }
 }
