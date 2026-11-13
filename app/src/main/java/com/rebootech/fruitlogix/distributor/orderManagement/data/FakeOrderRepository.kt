@@ -55,30 +55,36 @@ class FakeOrderRepository private constructor() : OrderRepository {
 
     override suspend fun createOrder(draft: OrderDraft): DistributorOrder = withContext(Dispatchers.IO) {
         val requestDto = draft.toCreateRequestDto()
-        val remoteResult = runCatching { RetrofitClient.api.createOrder(requestDto) }
-
-        var assignedCode = "FX-${nextOrderNumber++}"
-        remoteResult.onSuccess { response ->
-            if (response.isSuccessful) {
-                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-                val body = response.body()
-                val realId = body?.id
-                val serverCode = body?.orderNumber?.takeIf { it.isNotBlank() }
-                    ?: realId?.let { "FX-$it" }
-                if (serverCode != null) assignedCode = serverCode
-                if (realId != null) backendIds[assignedCode.uppercase()] = realId
-            } else {
-                RetrofitClient.updateSyncStatus(
-                    BackendSyncStatus.OFFLINE_FALLBACK,
-                    "POST /orders rechazado (HTTP ${response.code()})"
-                )
-            }
-        }.onFailure { err ->
+        val response = try {
+            RetrofitClient.api.createOrder(requestDto)
+        } catch (err: Exception) {
+            if (err is kotlinx.coroutines.CancellationException) throw err
             RetrofitClient.updateSyncStatus(
                 BackendSyncStatus.OFFLINE_FALLBACK,
                 "POST /orders sin conexión: ${err.message}"
             )
+            throw java.io.IOException("No se pudo confirmar el registro. Verifica la lista de pedidos antes de reintentar.", err)
         }
+
+        if (!response.isSuccessful) {
+            // El cuerpo de error ayuda a localizar el fallo real en Render/Logcat.
+            val details = runCatching { response.errorBody()?.string() }.getOrNull().orEmpty()
+            Log.e("FruitLogix-API", "POST /orders HTTP ${response.code()}: ${details.take(1000)}")
+            RetrofitClient.updateSyncStatus(
+                BackendSyncStatus.OFFLINE_FALLBACK,
+                "POST /orders rechazado (HTTP ${response.code()})"
+            )
+            // No simular éxito: un HTTP 500 no confirma si la transacción se persistió.
+            throw java.io.IOException("El servidor devolvió HTTP ${response.code()}. Comprueba si el pedido se guardó antes de volver a enviarlo.")
+        }
+
+        val realId = response.body()?.id ?: run {
+            Log.e("FruitLogix-API", "POST /orders respondió ${response.code()} sin ID de pedido")
+            throw java.io.IOException("El servidor no devolvió un ID. Verifica si guardó el pedido antes de reintentar.")
+        }
+        RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+        val assignedCode = response.body()?.orderNumber?.takeIf { it.isNotBlank() } ?: "FX-$realId"
+        backendIds[assignedCode.uppercase()] = realId
 
         val createdOrder = DistributorOrder(
             id = assignedCode,
@@ -246,7 +252,7 @@ class FakeOrderRepository private constructor() : OrderRepository {
 
         return CreateOrderRequestDto(
             commercialClientId = resolveClientId(clientNameClean),
-            deliveryDueDate = deliveryDate.atTime(14, 0).toString(),
+            deliveryDueDate = deliveryDate.toString(), // ASP.NET Core DateOnly: yyyy-MM-dd
             deliveryAddress = ADDRESS_BY_CLIENT[clientNameClean] ?: "Lima Central Hub - Av. Argentina 3090, Callao",
             totalAmount = subtotal,
             notes = "Cliente: $clientNameClean | Pallets estimados: ${OrderValidator.estimatePallets(quantityTons)}",

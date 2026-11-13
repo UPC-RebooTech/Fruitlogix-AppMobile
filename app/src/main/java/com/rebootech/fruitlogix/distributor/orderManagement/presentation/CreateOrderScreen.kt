@@ -77,6 +77,14 @@ fun CreateOrderScreen(
             enabled = !state.isSaving
         )
         Spacer(modifier = Modifier.height(spacing.xs))
+        state.errorMessage?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = scheme.error,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         PrimaryButton(
             text = stringResource(R.string.dist_order_create_submit),
             onClick = {
