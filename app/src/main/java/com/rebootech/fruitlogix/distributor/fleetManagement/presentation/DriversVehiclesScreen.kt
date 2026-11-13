@@ -62,14 +62,19 @@ import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.BackHeader
 import com.rebootech.fruitlogix.shared.ui.components.EmptyState
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.rebootech.fruitlogix.shared.ui.components.SegmentedTabs
 import com.rebootech.fruitlogix.shared.ui.components.SelectableChip
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.components.whiteCard
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
+import com.rebootech.fruitlogix.shared.ui.format.formatKg
 import com.rebootech.fruitlogix.shared.ui.format.formatRelativeDateTime
 import com.rebootech.fruitlogix.shared.ui.format.initialsOf
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
@@ -131,6 +136,21 @@ fun DriversVehiclesScreen(
                     onSelect = viewModel::onTabChange
                 )
             }
+            item {
+                val addingDrivers = state.tab == ResourcesTab.DRIVERS
+                SecondaryButton(
+                    text = stringResource(if (addingDrivers) R.string.drv_add else R.string.veh_add),
+                    onClick = if (addingDrivers) viewModel::openAddDriver else viewModel::openAddVehicle,
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        AppIcon(
+                            id = if (addingDrivers) R.drawable.ic_fleet_driver else R.drawable.ic_fleet_truck,
+                            contentDescription = null,
+                            modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                        )
+                    }
+                )
+            }
             when (state.tab) {
                 ResourcesTab.DRIVERS -> {
                     item {
@@ -156,14 +176,20 @@ fun DriversVehiclesScreen(
                         item { EmptyState(title = stringResource(R.string.drv_empty), message = "") }
                     } else {
                         items(state.visibleDrivers, key = { it.id }) { driver ->
-                            DriverCard(driver) {
-                                val number = driver.phone.filter { it.isDigit() || it == '+' }
-                                context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")))
-                            }
+                            DriverCard(
+                                driver = driver,
+                                onMarkAvailable = { viewModel.markDriverAvailable(driver) },
+                                onCall = {
+                                    val number = driver.phone.filter { it.isDigit() || it == '+' }
+                                    context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")))
+                                }
+                            )
                         }
                     }
                 }
-                ResourcesTab.VEHICLES -> items(state.vehicles.sortedBy { it.status.ordinal }, key = { it.id }) { VehicleCard(it) }
+                ResourcesTab.VEHICLES -> items(state.vehicles.sortedBy { it.status.ordinal }, key = { it.id }) { vehicle ->
+                    VehicleCard(vehicle, onMarkAvailable = { viewModel.markVehicleAvailable(vehicle) })
+                }
             }
         }
         SnackbarHost(
@@ -176,6 +202,8 @@ fun DriversVehiclesScreen(
     }
 
     if (state.assigning) AssignSheet(state, viewModel)
+    if (state.addingDriver) AddDriverSheet(errors = state.driverErrors, onSave = viewModel::addDriver, onDismiss = viewModel::closeAddForms)
+    if (state.addingVehicle) AddVehicleSheet(errors = state.vehicleErrors, onSave = viewModel::addVehicle, onDismiss = viewModel::closeAddForms)
 }
 
 private fun driverStatusLabel(status: DriverStatus) = when (status) {
@@ -184,7 +212,7 @@ private fun driverStatusLabel(status: DriverStatus) = when (status) {
     DriverStatus.OFF_DUTY -> R.string.drv_status_off_duty
 }
 
-private fun vehicleTypeLabel(type: VehicleType) = when (type) {
+internal fun vehicleTypeLabel(type: VehicleType) = when (type) {
     VehicleType.HEAVY_REEFER -> R.string.veh_type_heavy
     VehicleType.REEFER_TRUCK -> R.string.veh_type_truck
     VehicleType.MEDIUM_REEFER_VAN -> R.string.veh_type_van
@@ -192,7 +220,7 @@ private fun vehicleTypeLabel(type: VehicleType) = when (type) {
 }
 
 @Composable
-private fun DriverCard(driver: Driver, onCall: () -> Unit) {
+private fun DriverCard(driver: Driver, onMarkAvailable: () -> Unit, onCall: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val colors = FruitLogixTheme.colors
     val license = LicenseValidity.checkValidity(driver.licenseExpiry)
@@ -254,13 +282,16 @@ private fun DriverCard(driver: Driver, onCall: () -> Unit) {
                 Text(stringResource(R.string.drv_cold_chain), style = FruitLogixTheme.typography.labelMedium, color = colors.coldContent)
             }
             Spacer(modifier = Modifier.weight(1f))
+            if (driver.status != DriverStatus.AVAILABLE) {
+                TextActionButton(text = stringResource(R.string.drv_mark_available), onClick = onMarkAvailable)
+            }
             TextActionButton(text = stringResource(R.string.drv_call), onClick = onCall)
         }
     }
 }
 
 @Composable
-private fun VehicleCard(vehicle: Vehicle) {
+private fun VehicleCard(vehicle: Vehicle, onMarkAvailable: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val (badgeType, badgeRes) = when (vehicle.status) {
         VehicleStatus.AVAILABLE -> StatusBadgeType.SUCCESS to R.string.drv_status_available
@@ -285,7 +316,7 @@ private fun VehicleCard(vehicle: Vehicle) {
         Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
         Text(stringResource(vehicleTypeLabel(vehicle.type)), style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface)
         Text(
-            text = "${stringResource(R.string.veh_capacity, formatDecimal(vehicle.capacityTons))} · " +
+            text = "${stringResource(R.string.veh_capacity, formatKg(vehicle.capacityKg))} · " +
                 stringResource(R.string.veh_range, "${formatDecimal(vehicle.minCelsius)} °C", "${formatDecimal(vehicle.maxCelsius)} °C"),
             style = FruitLogixTheme.extraTypography.dataMonoSmall,
             color = scheme.onSurfaceVariant
@@ -299,6 +330,13 @@ private fun VehicleCard(vehicle: Vehicle) {
             style = FruitLogixTheme.typography.bodyMedium,
             color = scheme.onSurfaceVariant
         )
+        if (vehicle.status != VehicleStatus.AVAILABLE) {
+            TextActionButton(
+                text = stringResource(R.string.drv_mark_available),
+                onClick = onMarkAvailable,
+                modifier = Modifier.align(Alignment.End)
+            )
+        }
     }
 }
 
@@ -311,6 +349,7 @@ private fun AssignSheet(state: DriversVehiclesUiState, viewModel: DriversVehicle
     var orderId by rememberSaveable { mutableStateOf(state.pending.singleOrNull()?.orderId) }
     var driverId by rememberSaveable { mutableStateOf<String?>(null) }
     var vehicleId by rememberSaveable { mutableStateOf<String?>(null) }
+    var routeKm by rememberSaveable { mutableStateOf("") }
     val error = state.assignError?.let { res ->
         if (state.assignErrorArgs.isEmpty()) stringResource(res) else stringResource(res, *state.assignErrorArgs.toTypedArray())
     }
@@ -355,7 +394,7 @@ private fun AssignSheet(state: DriversVehiclesUiState, viewModel: DriversVehicle
             state.pending.forEach { order ->
                 ChoiceRow(
                     title = "${order.orderId} · ${order.clientName}",
-                    detail = stringResource(R.string.asg_order_line, order.productName, order.clientName, formatDecimal(order.quantityTons)),
+                    detail = stringResource(R.string.asg_order_line, order.productName, order.clientName, formatKg(order.quantityKg)),
                     selected = orderId == order.orderId,
                     enabled = true,
                     onSelect = { orderId = order.orderId }
@@ -378,17 +417,29 @@ private fun AssignSheet(state: DriversVehiclesUiState, viewModel: DriversVehicle
             vehicles.forEach { vehicle ->
                 ChoiceRow(
                     title = "${vehicle.unitCode} · ${vehicle.plate}",
-                    detail = stringResource(R.string.asg_vehicle_line, stringResource(vehicleTypeLabel(vehicle.type)), "${formatDecimal(vehicle.minCelsius)}–${formatDecimal(vehicle.maxCelsius)} °C", formatDecimal(vehicle.capacityTons)),
+                    detail = stringResource(R.string.asg_vehicle_line, stringResource(vehicleTypeLabel(vehicle.type)), "${formatDecimal(vehicle.minCelsius)}–${formatDecimal(vehicle.maxCelsius)} °C", formatKg(vehicle.capacityKg)),
                     selected = vehicleId == vehicle.id,
                     enabled = true,
                     onSelect = { vehicleId = vehicle.id }
                 )
             }
 
+            SheetLabel(stringResource(R.string.asg_route))
+            LabeledTextField(
+                label = stringResource(R.string.asg_route_km),
+                value = routeKm,
+                onValueChange = { value -> routeKm = value.filter { it.isDigit() || it == '.' || it == ',' }.take(7) },
+                placeholder = stringResource(R.string.asg_route_km_placeholder),
+                leadingIconRes = R.drawable.ic_logistics_route,
+                helper = stringResource(R.string.asg_route_km_helper),
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done
+            )
+
             Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
             PrimaryButton(
                 text = stringResource(R.string.asg_confirm),
-                onClick = { viewModel.assign(orderId, driverId, vehicleId) },
+                onClick = { viewModel.assign(orderId, driverId, vehicleId, routeKm) },
                 enabled = state.pending.isNotEmpty(),
                 modifier = Modifier.fillMaxWidth()
             )

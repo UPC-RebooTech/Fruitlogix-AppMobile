@@ -32,7 +32,8 @@ data class Vehicle(
     val unitCode: String,
     val plate: String,
     val type: VehicleType,
-    val capacityTons: Double,
+    /** Load capacity in kg (same unit as orders). */
+    val capacityKg: Double,
     val minCelsius: Double,
     val maxCelsius: Double,
     val status: VehicleStatus,
@@ -45,5 +46,24 @@ data class PendingDispatch(
     val orderId: String,
     val clientName: String,
     val productName: String,
-    val quantityTons: Double
+    val quantityKg: Double
+)
+
+/** What the distributor fills in to add a driver. */
+data class DriverDraft(
+    val name: String,
+    val phone: String,
+    val licenseClass: String,
+    val licenseExpiry: LocalDate?,
+    val coldChainCertified: Boolean
+)
+
+/** What the distributor fills in to add a vehicle. Capacity in kg, like orders. */
+data class VehicleDraft(
+    val unitCode: String,
+    val plate: String,
+    val type: VehicleType,
+    val capacityKg: Double?,
+    val minCelsius: Double?,
+    val maxCelsius: Double?
 )

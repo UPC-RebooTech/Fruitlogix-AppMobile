@@ -161,9 +161,9 @@ private fun OrderCard(order: DistributorOrder, onClick: () -> Unit) {
             )
         }
         Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
-        Text(order.clientName, style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(clientLabel(order), style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
-            text = "${order.productName} · ${formatQuantity(order.quantityTons, order.pallets)}",
+            text = "${productLabel(order.productName)} · ${formatQuantity(order.quantityKg, order.pallets)}",
             style = FruitLogixTheme.typography.bodyMedium,
             color = scheme.onSurfaceVariant
         )

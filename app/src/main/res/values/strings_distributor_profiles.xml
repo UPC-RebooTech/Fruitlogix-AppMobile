@@ -7,7 +7,6 @@
     <string name="prod_kpi_quality">Average quality</string>
     <string name="prod_kpi_tons">Weekly production</string>
     <string name="prod_kpi_incidents">Incidents (30 days)</string>
-    <string name="prod_kpi_tons_value">%1$s t</string>
     <string name="prod_kpi_quality_value">%1$s / 5</string>
     <string name="prod_register">Register producer</string>
     <string name="prod_invite">Invite</string>

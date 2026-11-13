@@ -1,18 +1,19 @@
-﻿package com.rebootech.fruitlogix.distributor.orderManagement.data
+package com.rebootech.fruitlogix.distributor.orderManagement.data
 
 import android.util.Log
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DeleteOrderResult
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanResult
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderCatalog
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDraft
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryItem
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryStatus
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderSaveException
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
+import com.rebootech.fruitlogix.shared.core.network.AssignProducerRequestDto
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
-import com.rebootech.fruitlogix.shared.core.network.CreateOrderRequestDto
-import com.rebootech.fruitlogix.shared.core.network.OrderItemRequestDto
 import com.rebootech.fruitlogix.shared.core.network.OrderResponseDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
 import com.rebootech.fruitlogix.shared.core.network.UpdateOrderRequestDto
@@ -28,21 +29,27 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * Distributor orders.
+ * - Server orders (/api/v1/orders) are shown as "FX-<id>". Creating, changing the delivery date,
+ *   deleting and assigning a producer are sent to the server.
+ * - Sample orders (FX-1038…FX-1042) only live on this phone, so Fleet, Home and Invoices keep
+ *   their sample trips with or without connection.
+ */
 class FakeOrderRepository private constructor() : OrderRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private var nextOrderNumber = 1043
-
-    // Mapa real entre el código visual ("FX-1043") y el ID primario (Int) de PostgreSQL en Render
-    private val backendIds = ConcurrentHashMap<String, Int>()
-    private val deliveryIdByOrderCode = ConcurrentHashMap<String, Int>()
 
     private val _orders = MutableStateFlow(initialOrders())
     override val orders: StateFlow<List<DistributorOrder>> = _orders.asStateFlow()
 
     private val _history = MutableStateFlow(initialHistory())
     override val history: StateFlow<List<OrderHistoryItem>> = _history.asStateFlow()
+
+    /** Last server copy of each order, so an update keeps the address, total and notes. */
+    private val serverCopies = ConcurrentHashMap<Int, OrderResponseDto>()
 
     init {
         scope.launch { refresh() }
@@ -51,110 +58,131 @@ class FakeOrderRepository private constructor() : OrderRepository {
     override fun orderById(orderId: String): DistributorOrder? =
         _orders.value.firstOrNull { it.id.equals(orderId, ignoreCase = true) }
 
-    override fun backendIdFor(orderId: String): Int? = backendIds[orderId.uppercase()]
+    override fun backendIdFor(orderId: String): Int? = orderById(orderId)?.remoteId
 
-    override suspend fun createOrder(draft: OrderDraft): DistributorOrder = withContext(Dispatchers.IO) {
-        val requestDto = draft.toCreateRequestDto()
-        val response = try {
-            RetrofitClient.api.createOrder(requestDto)
-        } catch (err: Exception) {
-            if (err is kotlinx.coroutines.CancellationException) throw err
-            RetrofitClient.updateSyncStatus(
-                BackendSyncStatus.OFFLINE_FALLBACK,
-                "POST /orders sin conexión: ${err.message}"
-            )
-            throw java.io.IOException("No se pudo confirmar el registro. Verifica la lista de pedidos antes de reintentar.", err)
+    override fun orderCodeFor(backendId: Int): String? =
+        _orders.value.firstOrNull { it.remoteId == backendId }?.id
+            ?: _history.value.firstOrNull { it.id == OrderMapper.codeFor(backendId) }?.id
+
+    override suspend fun createOrder(draft: OrderDraft): DistributorOrder {
+        val request = OrderMapper.toCreateRequest(draft) ?: throw OrderSaveException(OrderSaveException.Reason.REJECTED)
+        val response = withContext(Dispatchers.IO) {
+            try {
+                RetrofitClient.api.createOrder(request)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Log.w(TAG, "POST orders failed: ${e.javaClass.simpleName}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, "POST /orders: ${e.javaClass.simpleName}")
+                throw OrderSaveException(OrderSaveException.Reason.NO_CONNECTION, e)
+            }
         }
-
-        if (!response.isSuccessful) {
-            // El cuerpo de error ayuda a localizar el fallo real en Render/Logcat.
-            val details = runCatching { response.errorBody()?.string() }.getOrNull().orEmpty()
-            Log.e("FruitLogix-API", "POST /orders HTTP ${response.code()}: ${details.take(1000)}")
-            RetrofitClient.updateSyncStatus(
-                BackendSyncStatus.OFFLINE_FALLBACK,
-                "POST /orders rechazado (HTTP ${response.code()})"
-            )
-            // No simular éxito: un HTTP 500 no confirma si la transacción se persistió.
-            throw java.io.IOException("El servidor devolvió HTTP ${response.code()}. Comprueba si el pedido se guardó antes de volver a enviarlo.")
-        }
-
-        val realId = response.body()?.id ?: run {
-            Log.e("FruitLogix-API", "POST /orders respondió ${response.code()} sin ID de pedido")
-            throw java.io.IOException("El servidor no devolvió un ID. Verifica si guardó el pedido antes de reintentar.")
+        val dto = response.body()
+        if (!response.isSuccessful || dto?.id == null) {
+            Log.w(TAG, "POST orders answered ${response.code()}")
+            throw OrderSaveException(OrderSaveException.Reason.REJECTED)
         }
         RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-        val assignedCode = response.body()?.orderNumber?.takeIf { it.isNotBlank() } ?: "FX-$realId"
-        backendIds[assignedCode.uppercase()] = realId
+        serverCopies[dto.id] = dto
+        val created = (OrderMapper.map(dto) as? OrderMapper.Mapped.Active)?.order
+            ?: throw OrderSaveException(OrderSaveException.Reason.REJECTED)
+        _orders.update { listOf(created) + it.filterNot { existing -> existing.id == created.id } }
 
-        val createdOrder = DistributorOrder(
-            id = assignedCode,
-            clientName = draft.clientName.trim(),
-            productName = draft.productName.trim(),
-            quantityTons = draft.quantityTons,
-            pallets = OrderValidator.estimatePallets(draft.quantityTons),
-            deliveryDate = draft.deliveryDate,
-            status = OrderStatus.PENDING,
-            createdAt = LocalDateTime.now()
-        )
-        _orders.update { listOf(createdOrder) + it.filterNot { existing -> existing.id == createdOrder.id } }
-        createdOrder
+        // Picking a producer in the form moves the new order to "in preparation"
+        draft.producerId?.let { assignProducer(created.id, it) }
+        return orderById(created.id) ?: created
     }
 
-    override suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean = withContext(Dispatchers.IO) {
-        val current = orderById(orderId) ?: return@withContext false
-        if (!current.isEditable) return@withContext false
+    override suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean {
+        val current = orderById(orderId) ?: return false
+        if (!current.isEditable) return false
+        val remoteId = current.remoteId
 
-        val realId = backendIds[current.id.uppercase()]
-        if (realId != null) {
-            val responseResult = runCatching {
-                RetrofitClient.api.updateOrder(realId, draft.toUpdateRequestDto(current.id))
+        if (remoteId != null) {
+            // The server only changes the delivery date (and keeps address, total and notes)
+            val copy = serverCopies[remoteId]
+            val request = UpdateOrderRequestDto(
+                deliveryDueDate = draft.deliveryDate.toString(),
+                deliveryAddress = copy?.deliveryAddress ?: OrderCatalog.client(current.clientId)?.deliveryAddress.orEmpty(),
+                totalAmount = copy?.totalAmount ?: 0.0,
+                notes = copy?.notes
+            )
+            val ok = withContext(Dispatchers.IO) {
+                try {
+                    val response = RetrofitClient.api.updateOrder(remoteId, request)
+                    if (!response.isSuccessful) Log.w(TAG, "PUT orders/$remoteId answered ${response.code()}")
+                    response.isSuccessful
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    Log.w(TAG, "PUT orders/$remoteId failed: ${e.javaClass.simpleName}")
+                    false
+                }
             }
-            val response = responseResult.getOrNull()
-            if (response != null && !response.isSuccessful) {
-                // El servidor rechazó explícitamente la edición: no fingir éxito
-                RetrofitClient.updateSyncStatus(
-                    BackendSyncStatus.ONLINE,
-                    "PUT /orders/$realId rechazado (HTTP ${response.code()})"
-                )
-                return@withContext false
-            }
-        } else {
-            Log.w("FruitLogix-API", "Orden ${current.id} es sólo local (sin ID en BD); actualizando en memoria.")
+            if (!ok) return false
+            replace(current.id) { it.copy(deliveryDate = draft.deliveryDate) }
+            return true
         }
 
-        _orders.update { list ->
-            list.map {
-                if (it.id == current.id) {
-                    it.copy(
-                        clientName = draft.clientName.trim(),
-                        productName = draft.productName.trim(),
-                        quantityTons = draft.quantityTons,
-                        pallets = OrderValidator.estimatePallets(draft.quantityTons),
-                        deliveryDate = draft.deliveryDate
-                    )
-                } else it
-            }
+        // Sample orders: everything can change on this phone
+        replace(current.id) {
+            it.copy(
+                clientName = OrderCatalog.client(draft.clientId)?.name ?: it.clientName,
+                clientId = draft.clientId,
+                productName = draft.productName.trim(),
+                quantityKg = draft.quantityKg,
+                pallets = OrderValidator.estimatePallets(draft.quantityKg),
+                deliveryDate = draft.deliveryDate
+            )
         }
-        true
+        return true
     }
 
-    override suspend fun deleteOrder(orderId: String): DeleteOrderResult = withContext(Dispatchers.IO) {
-        val order = orderById(orderId) ?: return@withContext DeleteOrderResult.NOT_FOUND
-        if (!order.canBeDeleted()) return@withContext DeleteOrderResult.WINDOW_EXPIRED
-
-        val realId = backendIds[order.id.uppercase()]
-        if (realId != null) {
-            val responseResult = runCatching { RetrofitClient.api.deleteOrder(realId) }
-            val response = responseResult.getOrNull()
-            if (response != null && !response.isSuccessful && response.code() != 404) {
-                Log.e("FruitLogix-API", "DELETE /orders/$realId falló con HTTP ${response.code()}")
-                return@withContext DeleteOrderResult.NOT_FOUND
+    override suspend fun deleteOrder(orderId: String): DeleteOrderResult {
+        val order = orderById(orderId) ?: return DeleteOrderResult.NOT_FOUND
+        if (!order.canBeDeleted()) return DeleteOrderResult.WINDOW_EXPIRED
+        val remoteId = order.remoteId
+        if (remoteId != null) {
+            val removed = withContext(Dispatchers.IO) {
+                try {
+                    val response = RetrofitClient.api.deleteOrder(remoteId)
+                    // 404: someone else already removed it
+                    response.isSuccessful || response.code() == 404
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    Log.w(TAG, "DELETE orders/$remoteId failed: ${e.javaClass.simpleName}")
+                    false
+                }
             }
-            backendIds.remove(order.id.uppercase())
+            if (!removed) return DeleteOrderResult.NOT_FOUND
+            serverCopies.remove(remoteId)
         }
-
         _orders.update { list -> list.filterNot { it.id == order.id } }
-        DeleteOrderResult.SUCCESS
+        return DeleteOrderResult.SUCCESS
+    }
+
+    override suspend fun assignProducer(orderId: String, producerId: Int): Boolean {
+        val order = orderById(orderId) ?: return false
+        if (order.status != OrderStatus.PENDING && order.status != OrderStatus.IN_PREPARATION) return false
+        val remoteId = order.remoteId
+        if (remoteId != null) {
+            val dto = withContext(Dispatchers.IO) {
+                try {
+                    val response = RetrofitClient.api.assignProducer(remoteId, AssignProducerRequestDto(producerId))
+                    if (!response.isSuccessful) Log.w(TAG, "PATCH orders/$remoteId/assign-producer answered ${response.code()}")
+                    if (response.isSuccessful) response.body() else null
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    Log.w(TAG, "PATCH assign-producer failed: ${e.javaClass.simpleName}")
+                    null
+                }
+            } ?: return false
+            serverCopies[remoteId] = dto
+        }
+        replace(order.id) { it.copy(producerId = producerId, status = OrderStatus.IN_PREPARATION) }
+        return true
     }
 
     override fun validateLotCode(code: String): LotScanResult {
@@ -162,235 +190,81 @@ class FakeOrderRepository private constructor() : OrderRepository {
         val orderId = LOT_REGEX.find(clean)?.groupValues?.get(1)
             ?: return LotScanResult.NotRecognized(code)
         val order = orderById(orderId) ?: return LotScanResult.NotRecognized(code)
-        return if (order.status == OrderStatus.ON_ROUTE) {
-            LotScanResult.Matched(code, order)
-        } else {
-            LotScanResult.NotOnRoute(code, order)
-        }
+        return if (order.status == OrderStatus.ON_ROUTE) LotScanResult.Matched(code, order) else LotScanResult.NotOnRoute(code, order)
     }
 
-    override suspend fun confirmReception(orderId: String): Boolean = withContext(Dispatchers.IO) {
-        val order = orderById(orderId) ?: return@withContext false
-        if (order.status != OrderStatus.ON_ROUTE) return@withContext false
-
-        // Utilizar el endpoint de completado de entrega en Deliveries (no un PUT genérico a orders)
-        val realOrderId = backendIds[order.id.uppercase()]
-        val knownDeliveryId = deliveryIdByOrderCode[order.id.uppercase()] ?: realOrderId
-        if (knownDeliveryId != null) {
-            runCatching {
-                RetrofitClient.api.completeDelivery(knownDeliveryId)
-            }.onSuccess { response ->
-                if (!response.isSuccessful) {
-                    Log.w("FruitLogix-API", "POST /deliveries/$knownDeliveryId/complete devolvió HTTP ${response.code()}")
-                }
-            }.onFailure { err ->
-                Log.w("FruitLogix-API", "No se pudo sincronizar recepción remota: ${err.message}")
-            }
-        }
-
+    override suspend fun confirmReception(orderId: String): Boolean {
+        val order = orderById(orderId) ?: return false
+        if (order.status != OrderStatus.ON_ROUTE) return false
+        // Kept on this phone for now. The server has POST /orders/{id}/reception, but it only accepts
+        // orders in InTransit and no endpoint moves an order to InTransit yet (backend gap).
         _orders.update { list -> list.filterNot { it.id == order.id } }
         _history.update {
             listOf(
                 OrderHistoryItem(
                     id = order.id,
                     clientName = order.clientName,
-                    producerName = PRODUCER_BY_ORDER[order.id] ?: "Fundo Santa Rosa",
+                    clientId = order.clientId,
+                    producerName = PRODUCER_BY_ORDER[order.id].orEmpty(),
                     productName = order.productName,
                     completedAt = LocalDateTime.now(),
                     status = OrderHistoryStatus.DELIVERED
                 )
             ) + it
         }
-        true
+        return true
     }
 
     override suspend fun refresh() {
-        val remote = withContext(Dispatchers.IO) { runCatching { RetrofitClient.api.getOrders() } }
-        remote.onSuccess { response ->
-            if (response.isSuccessful) {
-                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-                val dtos = response.body().orEmpty()
-                val mappedActive = mutableListOf<DistributorOrder>()
-                val mappedHistory = mutableListOf<OrderHistoryItem>()
-
-                dtos.forEachIndexed { index, dto ->
-                    val statusUpper = dto.status?.uppercase().orEmpty()
-                    if (statusUpper == "DELIVERED" || statusUpper == "COMPLETED" || statusUpper == "CANCELLED") {
-                        dto.toHistoryItem(index)?.let { mappedHistory.add(it) }
-                    } else {
-                        dto.toDomainOrder(index)?.let { mappedActive.add(it) }
-                    }
-                }
-
-                if (mappedActive.isNotEmpty()) {
-                    _orders.update { local ->
-                        (mappedActive + local).distinctBy { it.id.uppercase() }
-                    }
-                }
-                if (mappedHistory.isNotEmpty()) {
-                    _history.update { local ->
-                        (mappedHistory + local).distinctBy { it.id.uppercase() }
-                    }
-                }
-            } else {
-                RetrofitClient.updateSyncStatus(
-                    BackendSyncStatus.OFFLINE_FALLBACK,
-                    "GET /orders devolvió HTTP ${response.code()}"
-                )
+        val response = withContext(Dispatchers.IO) {
+            try {
+                RetrofitClient.api.getOrders()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Log.w(TAG, "GET orders failed: ${e.javaClass.simpleName}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, "GET /orders: ${e.javaClass.simpleName}")
+                null
             }
-        }.onFailure { err ->
-            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, err.message)
+        } ?: return
+        if (!response.isSuccessful) {
+            Log.w(TAG, "GET orders answered ${response.code()}")
+            return
         }
-    }
-
-    private fun OrderDraft.toCreateRequestDto(): CreateOrderRequestDto {
-        val clientNameClean = clientName.trim()
-        val prodNameClean = productName.trim()
-        val kg = (quantityTons * 1000.0).coerceAtLeast(1.0)
-        val unitPrice = UNIT_PRICE_BY_PRODUCT[prodNameClean] ?: 8.50
-        val subtotal = kg * unitPrice
-
-        return CreateOrderRequestDto(
-            commercialClientId = resolveClientId(clientNameClean),
-            deliveryDueDate = deliveryDate.toString(), // ASP.NET Core DateOnly: yyyy-MM-dd
-            deliveryAddress = ADDRESS_BY_CLIENT[clientNameClean] ?: "Lima Central Hub - Av. Argentina 3090, Callao",
-            totalAmount = subtotal,
-            notes = "Cliente: $clientNameClean | Pallets estimados: ${OrderValidator.estimatePallets(quantityTons)}",
-            items = listOf(
-                OrderItemRequestDto(
-                    productId = resolveProductId(prodNameClean),
-                    productName = prodNameClean,
-                    quantityKg = kg,
-                    unitPrice = unitPrice,
-                    subtotal = subtotal
-                )
-            )
-        )
-    }
-
-    private fun OrderDraft.toUpdateRequestDto(orderCode: String): UpdateOrderRequestDto {
-        val createDto = toCreateRequestDto()
-        return UpdateOrderRequestDto(
-            commercialClientId = createDto.commercialClientId,
-            deliveryDueDate = createDto.deliveryDueDate,
-            deliveryAddress = createDto.deliveryAddress,
-            totalAmount = createDto.totalAmount,
-            notes = "Orden $orderCode | ${createDto.notes.orEmpty()}",
-            items = createDto.items
-        )
-    }
-
-    private fun OrderResponseDto.toDomainOrder(index: Int): DistributorOrder? {
-        val realId = id
-        val code = orderNumber?.takeIf { it.isNotBlank() }
-            ?: realId?.let { "FX-$it" }
-            ?: "FX-${1100 + index}"
-
-        if (realId != null) {
-            backendIds[code.uppercase()] = realId
+        RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+        val dtos = response.body().orEmpty()
+        serverCopies.clear()
+        val active = mutableListOf<DistributorOrder>()
+        val finished = mutableListOf<OrderHistoryItem>()
+        dtos.forEach { dto ->
+            dto.id?.let { serverCopies[it] = dto }
+            when (val mapped = OrderMapper.map(dto)) {
+                is OrderMapper.Mapped.Active -> active += mapped.order
+                is OrderMapper.Mapped.Finished -> finished += mapped.item
+                null -> Unit
+            }
         }
-
-        val firstItem = items?.firstOrNull()
-        val prodName = firstItem?.productName?.takeIf { it.isNotBlank() } ?: "Palta Hass"
-        val kg = firstItem?.quantityKg ?: 10000.0
-        val tons = (kg / 1000.0).coerceAtLeast(0.5)
-
-        val resolvedClient = clientName?.takeIf { it.isNotBlank() }
-            ?: notes?.substringAfter("Cliente: ", "")?.substringBefore("|")?.trim()?.takeIf { it.isNotBlank() }
-            ?: CLIENT_BY_ID[commercialClientId]
-            ?: "Supermercados Lima Norte"
-
-        val parsedDueDate = deliveryDueDate?.take(10)?.let {
-            runCatching { LocalDate.parse(it) }.getOrNull()
-        } ?: LocalDate.now().plusDays(2)
-
-        val parsedCreatedAt = createdAt?.take(19)?.let {
-            runCatching { LocalDateTime.parse(it) }.getOrNull()
-        } ?: LocalDateTime.now().minusHours(1)
-
-        val mappedStatus = when (status?.uppercase()) {
-            "ON_ROUTE", "IN_TRANSIT", "DISPATCHED" -> OrderStatus.ON_ROUTE
-            "IN_PREPARATION", "PREPARING", "ASSIGNED" -> OrderStatus.IN_PREPARATION
-            else -> OrderStatus.PENDING
-        }
-
-        return DistributorOrder(
-            id = code,
-            clientName = resolvedClient,
-            productName = prodName,
-            quantityTons = tons,
-            pallets = OrderValidator.estimatePallets(tons),
-            deliveryDate = parsedDueDate,
-            status = mappedStatus,
-            createdAt = parsedCreatedAt
-        )
+        val serverCodes = (active.map { it.id } + finished.map { it.id }).toSet()
+        // The server list replaces the previous server copy; sample orders stay
+        _orders.update { local -> active + local.filter { it.remoteId == null && it.id !in serverCodes } }
+        _history.update { local -> finished + local.filter { it.id !in serverCodes && isSampleCode(it.id) } }
     }
 
-    private fun OrderResponseDto.toHistoryItem(index: Int): OrderHistoryItem? {
-        val domain = toDomainOrder(index) ?: return null
-        val histStatus = if (status?.uppercase() == "CANCELLED") {
-            OrderHistoryStatus.CANCELLED
-        } else {
-            OrderHistoryStatus.DELIVERED
-        }
-        return OrderHistoryItem(
-            id = domain.id,
-            clientName = domain.clientName,
-            producerName = producerId?.let { "Productor #$it" } ?: (PRODUCER_BY_ORDER[domain.id] ?: "Fundo Santa Rosa"),
-            productName = domain.productName,
-            completedAt = domain.createdAt,
-            status = histStatus
-        )
-    }
+    /** Sample orders and their history live only on this phone. */
+    private fun isSampleCode(code: String) = code in SAMPLE_HISTORY_CODES || code in PRODUCER_BY_ORDER.keys
+
+    private fun replace(orderId: String, block: (DistributorOrder) -> DistributorOrder) =
+        _orders.update { list -> list.map { if (it.id == orderId) block(it) else it } }
 
     companion object {
+        private const val TAG = "FruitLogix-Orders"
+
         val instance: FakeOrderRepository by lazy { FakeOrderRepository() }
 
         const val DEMO_VALID_CODE = "LOT-FX-1041-UVA"
         const val DEMO_INVALID_CODE = "DAMAGED-CODE"
 
         private val LOT_REGEX = Regex("^LOT-(FX-\\d+)")
-
-        private val CLIENT_ID_BY_NAME = mapOf(
-            "Supermercados Lima Norte" to 101,
-            "Supermercados Lima Centro" to 102,
-            "Mercados Lima Sur" to 103,
-            "Plaza Vea Callao" to 104,
-            "Distribuidora Andina" to 105,
-            "Distribuidora Pacífico" to 106
-        )
-
-        private val CLIENT_BY_ID = CLIENT_ID_BY_NAME.entries.associate { (k, v) -> v to k }
-
-        private val ADDRESS_BY_CLIENT = mapOf(
-            "Supermercados Lima Norte" to "Av. Alfredo Mendiola 3698, Independencia, Lima",
-            "Supermercados Lima Centro" to "Av. Alfonso Ugarte 1140, Breña, Lima",
-            "Mercados Lima Sur" to "Panamericana Sur Km 18.5, San Juan de Miraflores, Lima",
-            "Plaza Vea Callao" to "Av. Sáenz Peña 1250, Callao",
-            "Distribuidora Andina" to "Mercado Mayorista Santa Anita, Pabellón A, Lima"
-        )
-
-        private val PRODUCT_ID_BY_NAME = mapOf(
-            "Palta Hass" to 1,
-            "Uva Red Globe" to 2,
-            "Mango Kent" to 3,
-            "Arándano" to 4,
-            "Fresa" to 5
-        )
-
-        private val UNIT_PRICE_BY_PRODUCT = mapOf(
-            "Palta Hass" to 9.40,
-            "Uva Red Globe" to 8.60,
-            "Mango Kent" to 7.50,
-            "Arándano" to 18.50,
-            "Fresa" to 6.80
-        )
-
-        fun resolveClientId(clientName: String): Int =
-            CLIENT_ID_BY_NAME[clientName] ?: ((clientName.lowercase().hashCode() and 0x7FFFFFFF) % 900 + 100)
-
-        fun resolveProductId(productName: String): Int =
-            PRODUCT_ID_BY_NAME[productName] ?: ((productName.lowercase().hashCode() and 0x7FFFFFFF) % 50 + 1)
 
         private val PRODUCER_BY_ORDER = mapOf(
             "FX-1042" to "Fundo Santa Rosa",
@@ -400,90 +274,44 @@ class FakeOrderRepository private constructor() : OrderRepository {
             "FX-1039" to "Campos del Norte"
         )
 
+        private val SAMPLE_HISTORY_CODES = setOf("FX-1035", "FX-1032", "FX-1028")
+
+        private fun sample(
+            id: String, clientId: Int, product: String, kg: Double, pallets: Int,
+            delivery: LocalDate, status: OrderStatus, createdAt: LocalDateTime
+        ) = DistributorOrder(
+            id = id,
+            clientName = OrderCatalog.client(clientId)?.name.orEmpty(),
+            productName = product,
+            quantityKg = kg,
+            pallets = pallets,
+            deliveryDate = delivery,
+            status = status,
+            createdAt = createdAt,
+            clientId = clientId
+        )
+
         private fun initialOrders(): List<DistributorOrder> {
             val today = LocalDate.now()
             val now = LocalDateTime.now()
             return listOf(
-                DistributorOrder(
-                    id = "FX-1042",
-                    clientName = "Supermercados Lima Norte",
-                    productName = "Palta Hass",
-                    quantityTons = 12.0,
-                    pallets = 18,
-                    deliveryDate = today,
-                    status = OrderStatus.ON_ROUTE,
-                    createdAt = now.minusHours(40)
-                ),
-                DistributorOrder(
-                    id = "FX-1041",
-                    clientName = "Supermercados Lima Centro",
-                    productName = "Uva Red Globe",
-                    quantityTons = 10.4,
-                    pallets = 16,
-                    deliveryDate = today,
-                    status = OrderStatus.ON_ROUTE,
-                    createdAt = now.minusHours(52)
-                ),
-                DistributorOrder(
-                    id = "FX-1038",
-                    clientName = "Plaza Vea Callao",
-                    productName = "Mango Kent",
-                    quantityTons = 15.0,
-                    pallets = 20,
-                    deliveryDate = today.plusDays(1),
-                    status = OrderStatus.ON_ROUTE,
-                    createdAt = now.minusHours(70)
-                ),
-                DistributorOrder(
-                    id = "FX-1040",
-                    clientName = "Mercados Lima Sur",
-                    productName = "Fresa",
-                    quantityTons = 11.2,
-                    pallets = 14,
-                    deliveryDate = today.plusDays(1),
-                    status = OrderStatus.IN_PREPARATION,
-                    createdAt = now.minusHours(30)
-                ),
-                DistributorOrder(
-                    id = "FX-1039",
-                    clientName = "Distribuidora Andina",
-                    productName = "Mango Kent",
-                    quantityTons = 15.0,
-                    pallets = 20,
-                    deliveryDate = today.plusDays(4),
-                    status = OrderStatus.PENDING,
-                    createdAt = now.minusHours(8)
-                )
+                sample("FX-1042", 101, "Palta Hass", 12_000.0, 18, today, OrderStatus.ON_ROUTE, now.minusHours(40)),
+                sample("FX-1041", 102, "Uva Red Globe", 10_400.0, 16, today, OrderStatus.ON_ROUTE, now.minusHours(52)),
+                sample("FX-1038", 104, "Mango Kent", 15_000.0, 20, today.plusDays(1), OrderStatus.ON_ROUTE, now.minusHours(70)),
+                sample("FX-1040", 103, "Fresa", 11_200.0, 14, today.plusDays(1), OrderStatus.IN_PREPARATION, now.minusHours(30)),
+                sample("FX-1039", 105, "Mango Kent", 15_000.0, 20, today.plusDays(4), OrderStatus.PENDING, now.minusHours(8))
             )
         }
 
         private fun initialHistory(): List<OrderHistoryItem> {
             val now = LocalDateTime.now()
             return listOf(
-                OrderHistoryItem(
-                    id = "FX-1035",
-                    clientName = "Supermercados Lima Centro",
-                    producerName = "Finca Los Andes",
-                    productName = "Uva Red Globe",
-                    completedAt = now.minusDays(3).withHour(16).withMinute(20),
-                    status = OrderHistoryStatus.DELIVERED
-                ),
-                OrderHistoryItem(
-                    id = "FX-1032",
-                    clientName = "Distribuidora Pacífico",
-                    producerName = "Agro Valle Verde",
-                    productName = "Arándano",
-                    completedAt = now.minusDays(6).withHour(10).withMinute(45),
-                    status = OrderHistoryStatus.DELIVERED
-                ),
-                OrderHistoryItem(
-                    id = "FX-1028",
-                    clientName = "Mercados del Sur",
-                    producerName = "Campos del Norte",
-                    productName = "Mango Kent",
-                    completedAt = now.minusDays(10).withHour(9).withMinute(10),
-                    status = OrderHistoryStatus.CANCELLED
-                )
+                OrderHistoryItem("FX-1035", "Supermercados Lima Centro", 102, "Finca Los Andes", "Uva Red Globe",
+                    now.minusDays(3).withHour(16).withMinute(20), OrderHistoryStatus.DELIVERED),
+                OrderHistoryItem("FX-1032", "Distribuidora Pacífico", 106, "Agro Valle Verde", "Arándano",
+                    now.minusDays(6).withHour(10).withMinute(45), OrderHistoryStatus.DELIVERED),
+                OrderHistoryItem("FX-1028", "Mercados Lima Sur", 103, "Campos del Norte", "Mango Kent",
+                    now.minusDays(10).withHour(9).withMinute(10), OrderHistoryStatus.CANCELLED)
             )
         }
     }

@@ -3,12 +3,17 @@
 import android.util.Log
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Assignment
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Driver
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.DriverDraft
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.DriverStatus
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.PendingDispatch
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Vehicle
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.VehicleStatus
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.VehicleType
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.VehicleDraft
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.rules.FleetResourceRules
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.repository.DriverRepository
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.rules.AssignmentRules
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.repository.FleetRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.shared.core.network.CreateDeliveryRequestDto
@@ -26,37 +31,37 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 /**
- * Conductores y vehículos del Lima Central Hub.
- *
- * NOTA DE INTEGRACIÓN CON BACKEND:
- * El backend de FruitLogix no expone endpoints para un catálogo de conductores (/drivers) ni vehículos (/vehicles),
- * ni un endpoint específico para asignar conductor/vehículo a una orden (el endpoint PATCH /orders/{id}/assign-producer
- * es exclusivo para productores agrícolas y NO debe usarse aquí).
- * Cuando el distribuidor asigna un conductor y vehículo a una orden en preparación (US79), si la orden cuenta con un ID
- * real en la base de datos de Render, se crea la entrega correspondiente mediante POST /api/v1/deliveries.
+ * Drivers and vehicles of the Lima Central Hub.
+ * The server has no drivers or vehicles yet (a delivery only stores the driver's name and the plate as
+ * text), so they are kept on this phone ([PrefsFleetStore]); without a store they live in memory.
+ * Assigning a driver and a truck to a server order creates the delivery there (POST /api/v1/deliveries).
  */
 class FakeDriverRepository(
-    private val orderRepository: OrderRepository
+    private val orderRepository: OrderRepository,
+    /** Refreshed after a delivery is created on the server, so the new trip shows up in Fleet. */
+    private val fleetRepository: FleetRepository? = null,
+    private val store: PrefsFleetStore? = null
 ) : DriverRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val assignedOrders = MutableStateFlow(emptySet<String>())
+    private val assignedOrders = MutableStateFlow(store?.loadAssignedOrders().orEmpty())
 
-    private val _drivers = MutableStateFlow(initialDrivers())
+    private val _drivers = MutableStateFlow(store?.loadDrivers() ?: initialDrivers())
     override val drivers: StateFlow<List<Driver>> = _drivers.asStateFlow()
 
-    private val _vehicles = MutableStateFlow(initialVehicles())
+    private val _vehicles = MutableStateFlow(store?.loadVehicles() ?: initialVehicles())
     override val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
 
     override val pendingDispatches: StateFlow<List<PendingDispatch>> =
         combine(orderRepository.orders, assignedOrders) { orders, assigned ->
             orders.filter { it.status == OrderStatus.IN_PREPARATION && it.id !in assigned }
-                .map { PendingDispatch(it.id, it.clientName, it.productName, it.quantityTons) }
+                .map { PendingDispatch(it.id, it.clientName.ifBlank { "#${it.clientId ?: "?"}" }, it.productName, it.quantityKg) }
         }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    override suspend fun assign(orderId: String, driverId: String, vehicleId: String) {
+    override suspend fun assign(orderId: String, driverId: String, vehicleId: String, routeKm: Double) {
         val vehicle = _vehicles.value.firstOrNull { it.id == vehicleId } ?: return
         val driver = _drivers.value.firstOrNull { it.id == driverId } ?: return
         val order = pendingDispatches.value.firstOrNull { it.orderId == orderId } ?: return
@@ -75,38 +80,97 @@ class FakeDriverRepository(
             }
         }
         assignedOrders.update { it + orderId }
+        persist()
 
-        // Si la orden existe en la BD del backend, registramos el despacho en POST /api/v1/deliveries
+        // Orders that exist on the server get a delivery there (POST /api/v1/deliveries); sample orders stay local
         val realOrderId = orderRepository.backendIdFor(order.orderId)
-        if (realOrderId != null) {
-            scope.launch {
-                runCatching {
-                    RetrofitClient.api.createDelivery(
-                        CreateDeliveryRequestDto(
-                            orderId = realOrderId,
-                            originAddress = "Lima Central Hub, Callao",
-                            destinationAddress = order.clientName,
-                            estimatedArrival = LocalDateTime.now().plusHours(4).toString(),
-                            notes = "Unidad: ${vehicle.unitCode} (${vehicle.plate}) | Conductor: ${driver.name}"
-                        )
-                    )
-                }.onSuccess { response ->
-                    if (!response.isSuccessful) {
-                        Log.w("FruitLogix-API", "POST /deliveries devolvió HTTP ${response.code()} al asignar recursos")
-                    }
-                }.onFailure { err ->
-                    Log.w("FruitLogix-API", "Asignación guardada localmente; sin conexión a /deliveries: ${err.message}")
+        if (realOrderId == null) {
+            Log.i(TAG, "${order.orderId} is not on the server: assignment kept on this phone")
+            return
+        }
+        val departure = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+        val request = CreateDeliveryRequestDto(
+            orderId = realOrderId,
+            driverName = driver.name,
+            driverPhone = driver.phone,
+            vehiclePlate = vehicle.plate,
+            vehicleType = vehicle.type.name,
+            routeOrigin = HUB_NAME,
+            routeDestination = order.clientName,
+            routeDistanceKm = routeKm,
+            estimatedTimeOfArrival = AssignmentRules.estimatedArrival(departure, routeKm).toString()
+        )
+        scope.launch {
+            runCatching { RetrofitClient.api.createDelivery(request) }
+                .onSuccess { response ->
+                    if (response.isSuccessful) fleetRepository?.refresh()
+                    else Log.w(TAG, "POST deliveries answered ${response.code()}")
                 }
-            }
-        } else {
-            Log.i(
-                "FruitLogix-API",
-                "Asignación de conductor ${driver.name} y unidad ${vehicle.plate} para ${order.orderId} mantenida localmente (falta endpoint /assign-driver-vehicle en backend)."
-            )
+                .onFailure { Log.w(TAG, "POST deliveries failed: ${it.javaClass.simpleName}") }
         }
     }
 
+    override suspend fun addDriver(draft: DriverDraft): Driver {
+        val driver = Driver(
+            id = "d-${System.currentTimeMillis()}",
+            name = draft.name.trim(),
+            phone = draft.phone.trim(),
+            licenseClass = draft.licenseClass,
+            licenseExpiry = requireNotNull(draft.licenseExpiry),
+            coldChainCertified = draft.coldChainCertified,
+            status = DriverStatus.AVAILABLE
+        )
+        _drivers.update { it + driver }
+        persist()
+        return driver
+    }
+
+    override suspend fun addVehicle(draft: VehicleDraft): Vehicle {
+        val vehicle = Vehicle(
+            id = "v-${System.currentTimeMillis()}",
+            unitCode = draft.unitCode.trim().uppercase(),
+            plate = FleetResourceRules.normalizePlate(draft.plate),
+            type = draft.type,
+            capacityKg = requireNotNull(draft.capacityKg),
+            minCelsius = requireNotNull(draft.minCelsius),
+            maxCelsius = requireNotNull(draft.maxCelsius),
+            status = VehicleStatus.AVAILABLE
+        )
+        _vehicles.update { it + vehicle }
+        persist()
+        return vehicle
+    }
+
+    override suspend fun markDriverAvailable(driverId: String) {
+        val driver = _drivers.value.firstOrNull { it.id == driverId } ?: return
+        // The truck they were driving comes back with them
+        val plate = driver.assignment?.plate
+        _drivers.update { list ->
+            list.map { if (it.id == driverId) it.copy(status = DriverStatus.AVAILABLE, assignment = null, restUntil = null) else it }
+        }
+        if (plate != null) {
+            _vehicles.update { list ->
+                list.map { if (it.plate == plate && it.status == VehicleStatus.ON_ROUTE) it.copy(status = VehicleStatus.AVAILABLE, driverName = null) else it }
+            }
+        }
+        persist()
+    }
+
+    override suspend fun markVehicleAvailable(vehicleId: String) {
+        _vehicles.update { list ->
+            list.map { if (it.id == vehicleId) it.copy(status = VehicleStatus.AVAILABLE, driverName = null) else it }
+        }
+        persist()
+    }
+
+    private fun persist() {
+        store?.save(_drivers.value, _vehicles.value, assignedOrders.value)
+    }
+
     private companion object {
+        const val TAG = "FruitLogix-Drivers"
+        const val HUB_NAME = "Lima Central Hub"
+
         fun initialDrivers(): List<Driver> {
             val today = LocalDate.now()
             return listOf(
@@ -124,12 +188,12 @@ class FakeDriverRepository(
         }
 
         fun initialVehicles() = listOf(
-            Vehicle("v1", "FL-408", "C7X-915", VehicleType.HEAVY_REEFER, 12.0, 0.0, 8.0, VehicleStatus.ON_ROUTE, "Mateo Silva"),
-            Vehicle("v2", "FL-102", "BQK-482", VehicleType.REEFER_TRUCK, 12.0, -1.0, 8.0, VehicleStatus.ON_ROUTE, "Jorge Huamán"),
-            Vehicle("v3", "FL-219", "AFR-307", VehicleType.REEFER_TRUCK, 15.0, 2.0, 14.0, VehicleStatus.ON_ROUTE, "Luis Ramos"),
-            Vehicle("v4", "FL-510", "HJK-264", VehicleType.HEAVY_REEFER, 14.0, -1.0, 10.0, VehicleStatus.AVAILABLE),
-            Vehicle("v5", "FL-305", "CXP-112", VehicleType.MEDIUM_REEFER_VAN, 8.0, 2.0, 8.0, VehicleStatus.AVAILABLE),
-            Vehicle("v6", "FL-607", "FGH-887", VehicleType.LIGHT_REEFER, 3.5, 4.0, 10.0, VehicleStatus.MAINTENANCE)
+            Vehicle("v1", "FL-408", "C7X-915", VehicleType.HEAVY_REEFER, 12000.0, 0.0, 8.0, VehicleStatus.ON_ROUTE, "Mateo Silva"),
+            Vehicle("v2", "FL-102", "BQK-482", VehicleType.REEFER_TRUCK, 12000.0, -1.0, 8.0, VehicleStatus.ON_ROUTE, "Jorge Huamán"),
+            Vehicle("v3", "FL-219", "AFR-307", VehicleType.REEFER_TRUCK, 15000.0, 2.0, 14.0, VehicleStatus.ON_ROUTE, "Luis Ramos"),
+            Vehicle("v4", "FL-510", "HJK-264", VehicleType.HEAVY_REEFER, 14000.0, -1.0, 10.0, VehicleStatus.AVAILABLE),
+            Vehicle("v5", "FL-305", "CXP-112", VehicleType.MEDIUM_REEFER_VAN, 8000.0, 2.0, 8.0, VehicleStatus.AVAILABLE),
+            Vehicle("v6", "FL-607", "FGH-887", VehicleType.LIGHT_REEFER, 3500.0, 4.0, 10.0, VehicleStatus.MAINTENANCE)
         )
     }
 }

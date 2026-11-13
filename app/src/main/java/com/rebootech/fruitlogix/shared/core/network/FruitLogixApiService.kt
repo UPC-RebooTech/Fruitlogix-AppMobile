@@ -46,13 +46,12 @@ data class CreateOrderRequestDto(
     val items: List<OrderItemRequestDto>
 )
 
+/** UpdateOrderResource: the server only changes these fields (not client, items or quantity). */
 data class UpdateOrderRequestDto(
-    val commercialClientId: Int,
     val deliveryDueDate: String,
     val deliveryAddress: String,
     val totalAmount: Double,
-    val notes: String? = null,
-    val items: List<OrderItemRequestDto>
+    val notes: String? = null
 )
 
 data class OrderItemResponseDto(
@@ -75,6 +74,7 @@ data class OrderResponseDto(
     val totalAmount: Double? = null,
     val status: String? = null,
     val notes: String? = null,
+    val cancellationReason: String? = null,
     val createdAt: String? = null,
     val items: List<OrderItemResponseDto>? = null
 )
@@ -119,51 +119,59 @@ data class QualityInspectionResponseDto(
 )
 
 // ─── 4. Logistics & Deliveries ──────────────────────────────────────────────
+/** CreateDeliveryResource. The server requires driverName, vehiclePlate, routeOrigin, routeDestination and routeDistanceKm > 0. */
 data class CreateDeliveryRequestDto(
     val orderId: Int,
-    val originAddress: String,
-    val destinationAddress: String,
-    val estimatedArrival: String,
-    val notes: String? = null
+    val driverName: String,
+    val driverPhone: String,
+    val vehiclePlate: String,
+    val vehicleType: String,
+    val routeOrigin: String,
+    val routeDestination: String,
+    val routeDistanceKm: Double,
+    /** ISO date-time, e.g. 2026-11-13T15:30:00 */
+    val estimatedTimeOfArrival: String
 )
 
+/** ReportDelayResource: the server only stores the reason and sets the status to Delayed. */
 data class ReportDelayRequestDto(
-    val newEstimatedArrival: String,
-    val delayMinutes: Int,
     val reason: String
 )
 
+/** DeliveryResource. currentStatus: PendingDispatch, InTransit, Delayed, Delivered or Failed. */
 data class DeliveryResponseDto(
-    val id: Int? = null,
+    val id: Int,
     val orderId: Int? = null,
-    val unitCode: String? = null,
-    val vehiclePlate: String? = null,
     val driverName: String? = null,
-    val originAddress: String? = null,
-    val destinationAddress: String? = null,
-    val status: String? = null,
-    val estimatedArrival: String? = null,
-    val delayMinutes: Int? = null,
-    val delayReason: String? = null
+    val driverPhone: String? = null,
+    val vehiclePlate: String? = null,
+    val vehicleType: String? = null,
+    val routeOrigin: String? = null,
+    val routeDestination: String? = null,
+    val routeDistanceKm: Double? = null,
+    val estimatedTimeOfArrival: String? = null,
+    val currentStatus: String? = null
 )
 
+/** TrackingLogResource: GPS position and reefer readings of a delivery. */
 data class TrackingLogResponseDto(
     val id: Int? = null,
     val deliveryId: Int? = null,
-    val location: String? = null,
+    val timestamp: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val timestamp: String? = null,
-    val notes: String? = null
+    val temperature: Double? = null,
+    val humidity: Double? = null
 )
 
+/** AlertResource. type: Temperature, Humidity, Location or Delay; severity: Info, Warning or Critical. */
 data class LogisticsAlertResponseDto(
     val id: Int? = null,
     val deliveryId: Int? = null,
-    val deviceId: String? = null,
-    val alertType: String? = null,
+    val type: String? = null,
     val severity: String? = null,
     val message: String? = null,
+    val isResolved: Boolean? = null,
     val createdAt: String? = null
 )
 
@@ -348,10 +356,6 @@ interface FruitLogixApiService {
         @Path("id") id: Int,
         @Body request: ReportDelayRequestDto
     ): Response<DeliveryResponseDto>
-
-    // Not on the server yet (Swagger has no complete endpoint): it answers 404, the app keeps the local state
-    @POST("deliveries/{id}/complete")
-    suspend fun completeDelivery(@Path("id") id: Int): Response<DeliveryResponseDto>
 
     @GET("tracking-logs")
     suspend fun getTrackingLogs(

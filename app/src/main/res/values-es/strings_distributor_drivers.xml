@@ -20,7 +20,7 @@
     <string name="drv_call">Llamar</string>
     <string name="drv_empty">No hay conductores con este estado.</string>
 
-    <string name="veh_capacity">%1$s t</string>
+    <string name="veh_capacity">%1$s</string>
     <string name="veh_range">%1$s a %2$s</string>
     <string name="veh_driven_by">Lo maneja %1$s</string>
     <string name="veh_at_hub">Esperando en Lima Central Hub</string>
@@ -33,11 +33,11 @@
     <!-- US79 -->
     <string name="asg_message">Elige el pedido, luego un conductor libre y un camión libre con capacidad para la carga.</string>
     <string name="asg_order">Pedido</string>
-    <string name="asg_order_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_order_line">%1$s · %2$s · %3$s</string>
     <string name="asg_no_orders">Todos los pedidos listos para salir ya tienen camión.</string>
     <string name="asg_driver">Conductor</string>
     <string name="asg_vehicle">Vehículo</string>
-    <string name="asg_vehicle_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_vehicle_line">%1$s · %2$s · %3$s</string>
     <string name="asg_confirm">Asignar</string>
     <string name="asg_error_order">Elige un pedido</string>
     <string name="asg_error_driver">Elige un conductor</string>
@@ -45,6 +45,42 @@
     <string name="asg_error_driver_busy">Ese conductor no está disponible</string>
     <string name="asg_error_license">La licencia de ese conductor está vencida</string>
     <string name="asg_error_vehicle_busy">Ese vehículo no está disponible</string>
-    <string name="asg_error_capacity">La carga (%1$s t) supera lo que el camión puede llevar (%2$s t)</string>
+    <string name="asg_error_capacity">La carga (%1$s kg) supera lo que el camión puede llevar (%2$s kg)</string>
+    <string name="asg_error_route_km">Ingresa la distancia por carretera hasta el cliente, en km</string>
+    <string name="asg_route">Ruta</string>
+    <string name="asg_route_km">Distancia hasta el cliente (km)</string>
+    <string name="asg_route_km_placeholder">p. ej. 380</string>
+    <string name="asg_route_km_helper">Sirve para estimar la hora de llegada (unos 50 km/h)</string>
     <string name="asg_done">Pedido %1$s asignado a %2$s con %3$s</string>
+    <string name="drv_add">Agregar chofer</string>
+    <string name="drv_add_save">Guardar chofer</string>
+    <string name="drv_added">%1$s se agregó a tus choferes</string>
+    <string name="drv_mark_available">Marcar disponible</string>
+    <string name="drv_now_available">%1$s está disponible de nuevo</string>
+    <string name="drv_form_name">Nombre completo</string>
+    <string name="drv_form_phone">Teléfono</string>
+    <string name="drv_form_license">Categoría de licencia</string>
+    <string name="drv_form_license_expiry">Licencia vigente hasta</string>
+    <string name="drv_form_cold_chain">Capacitado en cadena de frío</string>
+    <string name="drv_error_name">Ingresa el nombre del chofer</string>
+    <string name="drv_error_phone">Ingresa un teléfono de 9 a 12 dígitos</string>
+    <string name="drv_error_phone_taken">Ya hay un chofer con este teléfono</string>
+    <string name="drv_error_license_class">Elige una categoría de licencia para camión</string>
+    <string name="drv_error_license_expiry">Elige una fecha desde hoy (con licencia vencida no puede manejar)</string>
+    <string name="veh_add">Agregar vehículo</string>
+    <string name="veh_add_save">Guardar vehículo</string>
+    <string name="veh_added">%1$s se agregó a tu flota</string>
+    <string name="veh_form_unit">Código de unidad</string>
+    <string name="veh_form_plate">Placa</string>
+    <string name="veh_form_type">Tipo</string>
+    <string name="veh_form_capacity">Capacidad (kg)</string>
+    <string name="veh_form_min">Mín. °C</string>
+    <string name="veh_form_max">Máx. °C</string>
+    <string name="veh_error_unit">Ingresa un código de unidad (ej. FL-610)</string>
+    <string name="veh_error_unit_taken">Ya hay un vehículo con este código</string>
+    <string name="veh_error_plate">Usa el formato de placa ABC-123</string>
+    <string name="veh_error_plate_taken">Ya hay un vehículo con esta placa</string>
+    <string name="veh_error_capacity">Ingresa entre 500 y 40 000 kg</string>
+    <string name="veh_error_temperature">El mínimo debe ser menor que el máximo, entre -30 y 30 °C</string>
+    <string name="fleet_resources_on_phone">Se guarda en este teléfono: el servidor aún no almacena choferes ni vehículos.</string>
 </resources>

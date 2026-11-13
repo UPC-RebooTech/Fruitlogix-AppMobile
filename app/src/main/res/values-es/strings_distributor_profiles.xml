@@ -7,7 +7,6 @@
     <string name="prod_kpi_quality">Calidad promedio</string>
     <string name="prod_kpi_tons">Producción semanal</string>
     <string name="prod_kpi_incidents">Incidencias (30 días)</string>
-    <string name="prod_kpi_tons_value">%1$s t</string>
     <string name="prod_kpi_quality_value">%1$s / 5</string>
     <string name="prod_register">Registrar productor</string>
     <string name="prod_invite">Invitar</string>

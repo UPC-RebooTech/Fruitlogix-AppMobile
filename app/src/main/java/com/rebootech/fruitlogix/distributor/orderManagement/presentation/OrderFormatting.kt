@@ -4,10 +4,12 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
+import com.rebootech.fruitlogix.shared.ui.format.formatKg
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -45,5 +47,19 @@ fun formatLongDate(date: LocalDate): String {
 }
 
 @Composable
-fun formatQuantity(tons: Double, pallets: Int): String =
-    stringResource(R.string.dist_orders_quantity, formatDecimal(tons), pallets)
+fun formatQuantity(kg: Double, pallets: Int): String =
+    if (pallets > 0) stringResource(R.string.dist_orders_quantity, formatKg(kg), pallets) else formatKg(kg)
+
+/** Client name, "Client #534" when it is not in the catalog, or "Unknown client". */
+@Composable
+fun clientLabel(name: String, clientId: Int?): String = when {
+    name.isNotBlank() -> name
+    clientId != null -> stringResource(R.string.dist_order_client_number, clientId)
+    else -> stringResource(R.string.dist_order_client_unknown)
+}
+
+@Composable
+fun clientLabel(order: DistributorOrder): String = clientLabel(order.clientName, order.clientId)
+
+@Composable
+fun productLabel(name: String): String = name.ifBlank { stringResource(R.string.dist_order_product_unknown) }

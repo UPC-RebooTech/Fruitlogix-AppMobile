@@ -260,9 +260,9 @@ private fun ResultCard(
         when (result) {
             is LotScanResult.Matched -> {
                 val order = result.order
-                Text(stringResource(R.string.dist_scan_for_client, order.clientName), style = FruitLogixTheme.typography.bodyLarge, color = content)
+                Text(stringResource(R.string.dist_scan_for_client, clientLabel(order)), style = FruitLogixTheme.typography.bodyLarge, color = content)
                 Text(
-                    text = "${order.productName} · ${formatQuantity(order.quantityTons, order.pallets)}",
+                    text = "${productLabel(order.productName)} · ${formatQuantity(order.quantityKg, order.pallets)}",
                     style = FruitLogixTheme.typography.bodyMedium,
                     color = content
                 )

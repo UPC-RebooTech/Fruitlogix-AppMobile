@@ -125,9 +125,9 @@ object LotTraceability {
     fun stages(dispatch: ActiveDispatch): List<LotStage> {
         val delivered = dispatch.deliveryState == DeliveryState.DELIVERED
         return listOf(
-            LotStage(LotStageType.HARVESTED, dispatch.harvestedAt, done = true),
-            LotStage(LotStageType.INSPECTED, dispatch.inspectedAt, done = true),
-            LotStage(LotStageType.LOADED, dispatch.departedAt, done = true),
+            LotStage(LotStageType.HARVESTED, dispatch.harvestedAt, done = dispatch.harvestedAt != null),
+            LotStage(LotStageType.INSPECTED, dispatch.inspectedAt, done = dispatch.inspectedAt != null),
+            LotStage(LotStageType.LOADED, dispatch.departedAt, done = dispatch.departedAt != null || dispatch.deliveryState != DeliveryState.PENDING),
             LotStage(LotStageType.RECEIVED, dispatch.deliveredAt, done = delivered),
             // Invoicing happens automatically when the delivery is confirmed
             LotStage(LotStageType.INVOICED, dispatch.deliveredAt, done = delivered)

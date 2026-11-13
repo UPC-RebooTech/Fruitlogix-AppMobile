@@ -40,4 +40,6 @@
         <item quantity="many">%1$d cambios pendientes de sincronizar</item>
         <item quantity="other">%1$d cambios pendientes de sincronizar</item>
     </plurals>
+    <string name="common_kg">%1$s kg</string>
+    <string name="common_kg_with_tonnes">%1$s kg · %2$s t</string>
 </resources>

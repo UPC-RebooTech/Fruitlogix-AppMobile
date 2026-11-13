@@ -20,7 +20,7 @@
     <string name="drv_call">Call</string>
     <string name="drv_empty">There are no drivers with this status.</string>
 
-    <string name="veh_capacity">%1$s t</string>
+    <string name="veh_capacity">%1$s</string>
     <string name="veh_range">%1$s to %2$s</string>
     <string name="veh_driven_by">Driven by %1$s</string>
     <string name="veh_at_hub">Waiting at Lima Central Hub</string>
@@ -33,11 +33,11 @@
     <!-- US79 -->
     <string name="asg_message">Pick the order, then a free driver and a free truck big enough for the load.</string>
     <string name="asg_order">Order</string>
-    <string name="asg_order_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_order_line">%1$s · %2$s · %3$s</string>
     <string name="asg_no_orders">Every order ready to leave already has a truck.</string>
     <string name="asg_driver">Driver</string>
     <string name="asg_vehicle">Vehicle</string>
-    <string name="asg_vehicle_line">%1$s · %2$s · %3$s t</string>
+    <string name="asg_vehicle_line">%1$s · %2$s · %3$s</string>
     <string name="asg_confirm">Assign</string>
     <string name="asg_error_order">Choose an order</string>
     <string name="asg_error_driver">Choose a driver</string>
@@ -45,6 +45,42 @@
     <string name="asg_error_driver_busy">That driver is not available</string>
     <string name="asg_error_license">That driver\'s license is expired</string>
     <string name="asg_error_vehicle_busy">That vehicle is not available</string>
-    <string name="asg_error_capacity">The load (%1$s t) is more than the truck can carry (%2$s t)</string>
+    <string name="asg_error_capacity">The load (%1$s kg) is more than the truck can carry (%2$s kg)</string>
+    <string name="asg_error_route_km">Enter the road distance to the client in km</string>
+    <string name="asg_route">Route</string>
+    <string name="asg_route_km">Distance to the client (km)</string>
+    <string name="asg_route_km_placeholder">e.g. 380</string>
+    <string name="asg_route_km_helper">Used to estimate the arrival time (about 50 km/h)</string>
     <string name="asg_done">Order %1$s assigned to %2$s with %3$s</string>
+    <string name="drv_add">Add driver</string>
+    <string name="drv_add_save">Save driver</string>
+    <string name="drv_added">%1$s added to your drivers</string>
+    <string name="drv_mark_available">Mark available</string>
+    <string name="drv_now_available">%1$s is available again</string>
+    <string name="drv_form_name">Full name</string>
+    <string name="drv_form_phone">Phone</string>
+    <string name="drv_form_license">License category</string>
+    <string name="drv_form_license_expiry">License valid until</string>
+    <string name="drv_form_cold_chain">Trained in cold-chain handling</string>
+    <string name="drv_error_name">Enter the driver\'s name</string>
+    <string name="drv_error_phone">Enter a phone with 9 to 12 digits</string>
+    <string name="drv_error_phone_taken">There is already a driver with this phone</string>
+    <string name="drv_error_license_class">Pick a truck license category</string>
+    <string name="drv_error_license_expiry">Pick a date from today on (an expired license cannot drive)</string>
+    <string name="veh_add">Add vehicle</string>
+    <string name="veh_add_save">Save vehicle</string>
+    <string name="veh_added">%1$s added to your fleet</string>
+    <string name="veh_form_unit">Unit code</string>
+    <string name="veh_form_plate">Plate</string>
+    <string name="veh_form_type">Type</string>
+    <string name="veh_form_capacity">Capacity (kg)</string>
+    <string name="veh_form_min">Min °C</string>
+    <string name="veh_form_max">Max °C</string>
+    <string name="veh_error_unit">Enter a unit code (e.g. FL-610)</string>
+    <string name="veh_error_unit_taken">There is already a vehicle with this code</string>
+    <string name="veh_error_plate">Use the plate format ABC-123</string>
+    <string name="veh_error_plate_taken">There is already a vehicle with this plate</string>
+    <string name="veh_error_capacity">Enter between 500 and 40 000 kg</string>
+    <string name="veh_error_temperature">Min must be lower than max, between -30 and 30 °C</string>
+    <string name="fleet_resources_on_phone">Saved on this phone: the server does not store drivers or vehicles yet.</string>
 </resources>

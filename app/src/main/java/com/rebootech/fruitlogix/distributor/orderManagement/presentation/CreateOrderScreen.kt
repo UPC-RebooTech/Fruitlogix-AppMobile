@@ -74,12 +74,14 @@ fun CreateOrderScreen(
             onProductChange = viewModel::onProductChange,
             onQuantityChange = viewModel::onQuantityChange,
             onDateChange = viewModel::onDateChange,
-            enabled = !state.isSaving
+            enabled = !state.isSaving,
+            producers = state.producers,
+            onProducerChange = viewModel::onProducerChange
         )
         Spacer(modifier = Modifier.height(spacing.xs))
-        state.errorMessage?.let { message ->
+        state.error?.let { message ->
             Text(
-                text = message,
+                text = stringResource(message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.error,
                 modifier = Modifier.fillMaxWidth()
@@ -125,7 +127,7 @@ private fun CreatedContent(order: DistributorOrder, onBackToOrders: () -> Unit, 
         )
         Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
         Text(
-            text = "${order.clientName} · ${order.productName} · ${formatQuantity(order.quantityTons, order.pallets)}",
+            text = "${clientLabel(order)} · ${productLabel(order.productName)} · ${formatQuantity(order.quantityKg, order.pallets)}",
             style = FruitLogixTheme.typography.bodyLarge,
             color = scheme.onSurfaceVariant,
             textAlign = TextAlign.Center
