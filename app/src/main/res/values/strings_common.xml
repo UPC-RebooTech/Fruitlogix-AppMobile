@@ -37,4 +37,6 @@
         <item quantity="one">%1$d change waiting to sync</item>
         <item quantity="other">%1$d changes waiting to sync</item>
     </plurals>
+    <string name="common_kg">%1$s kg</string>
+    <string name="common_kg_with_tonnes">%1$s kg · %2$s t</string>
 </resources>

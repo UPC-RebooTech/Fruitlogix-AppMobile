@@ -2,6 +2,7 @@ package com.rebootech.fruitlogix.distributor
 
 import android.content.Context
 import com.rebootech.fruitlogix.distributor.fleetManagement.data.FakeDriverRepository
+import com.rebootech.fruitlogix.distributor.fleetManagement.data.PrefsFleetStore
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.repository.DriverRepository
 import com.rebootech.fruitlogix.distributor.infrastructureIot.data.FakeIotRepository
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.repository.IotRepository
@@ -25,7 +26,15 @@ object DistributorDependencies {
     val billingRepository: BillingRepository by lazy { FakeBillingRepository.instance }
     val qualityRepository: QualityRepository by lazy { FakeQualityRepository() }
     val profilesRepository: ProfilesRepository by lazy { FakeProfilesRepository.instance }
-    val driverRepository: DriverRepository by lazy { FakeDriverRepository(orderRepository) }
+    @Volatile
+    private var drivers: DriverRepository? = null
+
+    /** Drivers and vehicles are saved on this phone, so they need a Context the first time. */
+    fun driverRepository(context: Context): DriverRepository =
+        drivers ?: synchronized(this) {
+            drivers ?: FakeDriverRepository(orderRepository, fleetRepository, PrefsFleetStore(context.applicationContext))
+                .also { drivers = it }
+        }
 
     @Volatile
     private var settings: DistributorSettingsRepository? = null

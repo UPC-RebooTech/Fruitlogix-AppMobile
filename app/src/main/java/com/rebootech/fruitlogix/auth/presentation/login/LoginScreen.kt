@@ -44,6 +44,13 @@ import com.rebootech.fruitlogix.auth.presentation.components.AuthBrand
 import com.rebootech.fruitlogix.auth.presentation.components.AuthCheckRow
 import com.rebootech.fruitlogix.auth.presentation.components.AuthErrorBanner
 import com.rebootech.fruitlogix.auth.presentation.components.AuthLanguageSwitch
+import com.rebootech.fruitlogix.auth.presentation.components.ServerWakingHint
+import com.rebootech.fruitlogix.auth.presentation.signup.RoleCard
+import com.rebootech.fruitlogix.auth.domain.model.UserRole
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
@@ -79,6 +86,48 @@ fun LoginScreen(
         snackbarHostState = snackbarHostState,
         modifier = modifier
     )
+
+    if (state.pendingRole != null) {
+        RoleChoiceSheet(onChoose = viewModel::chooseRole, onDismiss = viewModel::dismissRoleChoice)
+    }
+}
+
+/** First sign in on this phone: the server does not store the role, so the person picks it once. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RoleChoiceSheet(onChoose: (UserRole) -> Unit, onDismiss: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = scheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.md)
+                .padding(bottom = spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(spacing.inner)
+        ) {
+            Text(stringResource(R.string.login_role_title), style = FruitLogixTheme.typography.titleLarge, color = scheme.onSurface)
+            Text(stringResource(R.string.login_role_subtitle), style = FruitLogixTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+            RoleCard(
+                iconRes = R.drawable.ic_leaf,
+                title = stringResource(R.string.signup_role_producer),
+                description = stringResource(R.string.signup_role_producer_desc),
+                selected = false,
+                onClick = { onChoose(UserRole.PRODUCER) }
+            )
+            RoleCard(
+                iconRes = R.drawable.ic_dispatch_truck,
+                title = stringResource(R.string.signup_role_distributor),
+                description = stringResource(R.string.signup_role_distributor_desc),
+                selected = false,
+                onClick = { onChoose(UserRole.DISTRIBUTOR) }
+            )
+        }
+    }
 }
 
 @Composable
@@ -179,6 +228,10 @@ private fun LoginContent(
             state.generalError?.let {
                 Spacer(modifier = Modifier.height(spacing.xs))
                 AuthErrorBanner(message = stringResource(it))
+            }
+            if (state.slowServer) {
+                Spacer(modifier = Modifier.height(spacing.xs))
+                ServerWakingHint()
             }
 
             Spacer(modifier = Modifier.height(spacing.sm))

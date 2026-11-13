@@ -7,7 +7,6 @@
     <string name="prod_kpi_quality">Average quality</string>
     <string name="prod_kpi_tons">Weekly production</string>
     <string name="prod_kpi_incidents">Incidents (30 days)</string>
-    <string name="prod_kpi_tons_value">%1$s t</string>
     <string name="prod_kpi_quality_value">%1$s / 5</string>
     <string name="prod_register">Register producer</string>
     <string name="prod_invite">Invite</string>
@@ -36,8 +35,8 @@
     <string name="prod_form_location">Location</string>
     <string name="prod_form_location_placeholder">e.g. Huaraz, Áncash</string>
     <string name="prod_form_crop">Main crop</string>
-    <string name="prod_form_email">Email (optional)</string>
-    <string name="prod_form_phone">Phone (optional)</string>
+    <string name="prod_form_email">Email</string>
+    <string name="prod_form_phone">Phone</string>
     <string name="prod_form_save_register">Register</string>
     <string name="prod_form_save_edit">Save changes</string>
     <string name="prod_error_name">Enter the name</string>
@@ -69,6 +68,12 @@
     <string name="prod_delete_message">They leave your network. Their past orders and invoices are kept.</string>
     <string name="prod_delete_confirm">Remove</string>
     <string name="prod_deleted">%1$s removed from your network</string>
+    <string name="prod_form_ruc">RUC</string>
+    <string name="prod_error_ruc">The RUC has 11 digits</string>
+    <string name="prod_error_ruc_taken">A producer with this RUC is already registered</string>
+    <string name="prod_saved_phone_only">%1$s saved on this phone only: the server did not answer</string>
+    <string name="prod_server_rejected">The server did not accept the data. Check the RUC, email and phone.</string>
+    <string name="prod_delete_failed">Could not remove %1$s: the server did not answer. Try again.</string>
 
     <!-- Distributor profile -->
     <string name="dprof_role">Distributor</string>

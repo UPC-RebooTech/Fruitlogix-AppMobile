@@ -150,6 +150,24 @@ fun AuthErrorBanner(message: String, modifier: Modifier = Modifier) {
     }
 }
 
+/** Neutral hint while the server wakes up (Render's free plan sleeps when idle). */
+@Composable
+fun ServerWakingHint(modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(scheme.surfaceContainerHigh)
+            .padding(FruitLogixTheme.spacing.inner),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AppIcon(id = R.drawable.ic_logistics_hourglass, contentDescription = null, tint = scheme.onSurfaceVariant, modifier = Modifier.size(FruitLogixTheme.sizing.iconSm))
+        Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+        Text(stringResource(R.string.iam_server_waking), style = FruitLogixTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+    }
+}
+
 /** Checkbox with a 48dp+ tappable row, label included. */
 @Composable
 fun AuthCheckRow(

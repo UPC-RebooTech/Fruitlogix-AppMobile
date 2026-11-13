@@ -8,6 +8,7 @@ import com.rebootech.fruitlogix.distributor.DistributorDependencies
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.Producer
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerDraft
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerKpis
+import com.rebootech.fruitlogix.distributor.profilesManagement.domain.model.ProducerSaveResult
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.repository.ProfilesRepository
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.rules.InviteRules
 import com.rebootech.fruitlogix.distributor.profilesManagement.domain.rules.ProducerRules
@@ -34,6 +35,10 @@ data class ProducersUiState(
     val query: String = "",
     val sheet: ProducerSheet? = null,
     val formErrors: Set<ProducerRules.Error> = emptySet(),
+    /** Error from the server shown inside the form (e.g. data refused). */
+    @field:StringRes val sheetError: Int? = null,
+    /** A save or delete is running on the server: the buttons wait. */
+    val saving: Boolean = false,
     @field:StringRes val inviteError: Int? = null,
     val deleting: Producer? = null,
     val invite: PendingInvite? = null,
@@ -61,8 +66,8 @@ class ProducersViewModel(private val repository: ProfilesRepository) : ViewModel
 
     fun onQueryChange(value: String) = local.update { it.copy(query = value) }
 
-    fun openSheet(sheet: ProducerSheet) = local.update { it.copy(sheet = sheet, formErrors = emptySet(), inviteError = null) }
-    fun closeSheet() = local.update { it.copy(sheet = null, formErrors = emptySet(), inviteError = null) }
+    fun openSheet(sheet: ProducerSheet) = local.update { it.copy(sheet = sheet, formErrors = emptySet(), sheetError = null, inviteError = null) }
+    fun closeSheet() = local.update { it.copy(sheet = null, formErrors = emptySet(), sheetError = null, inviteError = null) }
     fun onMessageShown() = local.update { it.copy(message = null) }
     fun onInviteShared() = local.update { it.copy(invite = null) }
 
@@ -74,16 +79,24 @@ class ProducersViewModel(private val repository: ProfilesRepository) : ViewModel
             local.update { it.copy(formErrors = errors) }
             return
         }
+        if (local.value.saving) return
+        local.update { it.copy(saving = true, formErrors = emptySet(), sheetError = null) }
         viewModelScope.launch {
-            val message = if (editing == null) {
-                val created = repository.registerProducer(draft)
-                UiText.StringResource(R.string.prod_registered, arrayOf(created.name))
-            } else {
-                repository.updateProducer(editing.id, draft)
-                UiText.StringResource(R.string.prod_updated, arrayOf(draft.name.trim()))
+            val result = if (editing == null) repository.registerProducer(draft) else repository.updateProducer(editing.id, draft)
+            val name = draft.name.trim()
+            when (result) {
+                is ProducerSaveResult.Saved -> closeWith(
+                    UiText.StringResource(if (editing == null) R.string.prod_registered else R.string.prod_updated, arrayOf(name))
+                )
+                is ProducerSaveResult.SavedOnPhoneOnly -> closeWith(UiText.StringResource(R.string.prod_saved_phone_only, arrayOf(name)))
+                ProducerSaveResult.RucTaken -> local.update { it.copy(saving = false, formErrors = setOf(ProducerRules.Error.RUC_TAKEN)) }
+                ProducerSaveResult.Rejected -> local.update { it.copy(saving = false, sheetError = R.string.prod_server_rejected) }
             }
-            local.update { it.copy(sheet = null, formErrors = emptySet(), message = message) }
         }
+    }
+
+    private fun closeWith(message: UiText) = local.update {
+        it.copy(sheet = null, saving = false, formErrors = emptySet(), sheetError = null, message = message)
     }
 
     fun invite(name: String, contact: String, location: String, crop: String) {
@@ -115,9 +128,17 @@ class ProducersViewModel(private val repository: ProfilesRepository) : ViewModel
 
     fun confirmDelete() {
         val producer = local.value.deleting ?: return
+        if (local.value.saving) return
+        local.update { it.copy(saving = true) }
         viewModelScope.launch {
-            repository.deleteProducer(producer.id)
-            local.update { it.copy(deleting = null, message = UiText.StringResource(R.string.prod_deleted, arrayOf(producer.name))) }
+            val removed = repository.deleteProducer(producer.id)
+            local.update {
+                it.copy(
+                    deleting = null,
+                    saving = false,
+                    message = UiText.StringResource(if (removed) R.string.prod_deleted else R.string.prod_delete_failed, arrayOf(producer.name))
+                )
+            }
         }
     }
 

@@ -9,16 +9,27 @@ import java.time.LocalDateTime
  */
 data class DistributorOrder(
     val id: String,
+    /** Blank when the client is not in [OrderCatalog]; the screen then shows "Client #$clientId". */
     val clientName: String,
     val productName: String,
-    val quantityTons: Double,
+    /** Same unit as the server (quantityKg). */
+    val quantityKg: Double,
     val pallets: Int,
     val deliveryDate: LocalDate,
     val status: OrderStatus,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    /** commercialClientId on the server. */
+    val clientId: Int? = null,
+    /** Order id on the server; null for the sample orders that only live on this phone. */
+    val remoteId: Int? = null,
+    /** Producer assigned on the server (assign-producer). */
+    val producerId: Int? = null
 ) {
     /** Only pending orders can be changed: once in preparation the producer is already working on it. */
     val isEditable: Boolean get() = status == OrderStatus.PENDING
+
+    /** On the server only the delivery date can change (PUT /orders keeps client, product and quantity). */
+    val onlyDateEditable: Boolean get() = remoteId != null
 
     /** Orders can be deleted during their first 24 hours. */
     fun canBeDeleted(now: LocalDateTime = LocalDateTime.now()): Boolean =
@@ -29,18 +40,21 @@ data class DistributorOrder(
     }
 }
 
-/** What the distributor fills in to create or change an order. */
+/** What the distributor fills in to create or change an order. Client and product come from [OrderCatalog]. */
 data class OrderDraft(
-    val clientName: String,
+    val clientId: Int,
     val productName: String,
-    val quantityTons: Double,
-    val deliveryDate: LocalDate
+    val quantityKg: Double,
+    val deliveryDate: LocalDate,
+    /** Producer (server id) to assign right after creating; the order then goes to "in preparation". */
+    val producerId: Int? = null
 )
 
 /** A finished order (delivered or cancelled). */
 data class OrderHistoryItem(
     val id: String,
     val clientName: String,
+    val clientId: Int? = null,
     val producerName: String,
     val productName: String,
     val completedAt: LocalDateTime,

@@ -7,7 +7,7 @@
     <string name="iam_language_en">English</string>
     <string name="iam_show_password">Show password</string>
     <string name="iam_hide_password">Hide password</string>
-    <string name="iam_error_network">No connection. Check your internet and try again.</string>
+    <string name="iam_error_network">Could not reach the FruitLogix server. Check your internet and try again.</string>
     <string name="iam_error_unknown">Something went wrong. Please try again.</string>
 
     <!-- IAM: sign in -->
@@ -73,4 +73,10 @@
     <string name="signup_error_username_taken">This username is taken. Try another one.</string>
     <string name="signup_error_password">Your password does not meet the requirements</string>
     <string name="signup_error_terms">Accept the terms to continue</string>
+    <!-- Server -->
+    <string name="iam_server_waking">Waking up the server… The first sign in of the day can take up to a minute.</string>
+
+    <!-- Role on a new phone -->
+    <string name="login_role_title">One more step</string>
+    <string name="login_role_subtitle">This phone does not know your account yet. How do you use FruitLogix?</string>
 </resources>

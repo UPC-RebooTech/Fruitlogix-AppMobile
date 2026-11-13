@@ -2,6 +2,7 @@
 
 import android.util.Log
 import com.rebootech.fruitlogix.distributor.orderManagement.data.FakeOrderRepository
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderCatalog
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.CreditReason
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus
@@ -15,21 +16,22 @@ import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
 import com.rebootech.fruitlogix.shared.core.network.CreateInvoiceRequestDto
 import com.rebootech.fruitlogix.shared.core.network.InvoiceResponseDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.YearMonth
 
+/**
+ * Sample invoices with the same clients and producers as Orders and Fleet. When the Render
+ * backend answers (/api/v1/invoices), its invoices are merged in, and new invoices are sent
+ * there (CreateInvoiceResource). Without connection the sample data keeps the screen usable.
+ */
 class FakeBillingRepository private constructor() : BillingRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var nextNumber = 1050
 
     private val _invoices = MutableStateFlow(initialInvoices())
@@ -42,8 +44,15 @@ class FakeBillingRepository private constructor() : BillingRepository {
         _invoices.value.firstOrNull { it.id.equals(invoiceId, ignoreCase = true) }
 
     override suspend fun addInvoice(invoice: Invoice) = withContext(Dispatchers.IO) {
-        val resolvedClientId = FakeOrderRepository.resolveClientId(invoice.counterpartyName)
-        val resolvedOrderId = invoice.orderId?.let { FakeOrderRepository.instance.backendIdFor(it) } ?: 1
+        // The server needs the client id: only clients of the catalog can be sent (no invented ids)
+        val resolvedClientId = OrderCatalog.clientByName(invoice.counterpartyName)?.id
+        if (resolvedClientId == null) {
+            Log.i("FruitLogix-API", "Invoice for a client outside the catalog: kept on this phone")
+            _invoices.update { listOf(invoice) + it.filterNot { existing -> existing.id == invoice.id } }
+            return@withContext
+        }
+        // orderId is optional on the server: send null instead of linking the invoice to an unrelated order
+        val resolvedOrderId = invoice.orderId?.let { FakeOrderRepository.instance.backendIdFor(it) }
 
         val requestDto = CreateInvoiceRequestDto(
             clientId = resolvedClientId,
@@ -119,21 +128,22 @@ class FakeBillingRepository private constructor() : BillingRepository {
 
     private fun InvoiceResponseDto.toInvoice(index: Int): Invoice? {
         val resolvedAmount = totalAmount ?: amount ?: return null
-        val issued = issuedAt?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-            ?: LocalDate.now().minusDays(1)
         val due = dueDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-            ?: issued.plusDays(30)
+        val issued = issuedAt?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: due ?: return null
+        val dueOn = due ?: issued
 
+        // Same rule as orders: a client outside the catalog shows its server id
         val resolvedCounterparty = clientName?.takeIf { it.isNotBlank() }
-            ?: CLIENT_NAME_BY_ID[clientId]
-            ?: "Supermercados Lima Norte"
+            ?: OrderCatalog.client(clientId)?.name
+            ?: clientId?.let { "#$it" }
+            ?: return null
 
         return Invoice(
             id = invoiceNumber?.takeIf { it.isNotBlank() } ?: "INV-${id ?: (1100 + index)}",
             counterpartyName = resolvedCounterparty,
             amount = resolvedAmount,
             issuedOn = issued,
-            dueOn = due,
+            dueOn = dueOn,
             type = if (invoiceType.equals("PAYABLE", ignoreCase = true)) InvoiceType.PAYABLE else InvoiceType.RECEIVABLE,
             status = when (status?.uppercase()) {
                 "PAID" -> InvoiceStatus.PAID
@@ -146,15 +156,6 @@ class FakeBillingRepository private constructor() : BillingRepository {
 
     companion object {
         val instance: FakeBillingRepository by lazy { FakeBillingRepository() }
-
-        private val CLIENT_NAME_BY_ID = mapOf(
-            101 to "Supermercados Lima Norte",
-            102 to "Supermercados Lima Centro",
-            103 to "Mercados Lima Sur",
-            104 to "Plaza Vea Callao",
-            105 to "Distribuidora Andina",
-            106 to "Distribuidora Pacífico"
-        )
 
         private val PRICE_HISTORY: Map<Pair<String, String>, List<Double>> = mapOf(
             ("Palta Hass" to "Supermercados Lima Norte") to listOf(8.2, 8.5, 9.0, 8.8, 9.4),

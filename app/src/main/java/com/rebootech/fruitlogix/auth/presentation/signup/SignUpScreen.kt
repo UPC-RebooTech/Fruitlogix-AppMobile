@@ -46,6 +46,7 @@ import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.auth.domain.model.UserRole
 import com.rebootech.fruitlogix.auth.presentation.components.AuthCheckRow
 import com.rebootech.fruitlogix.auth.presentation.components.AuthErrorBanner
+import com.rebootech.fruitlogix.auth.presentation.components.ServerWakingHint
 import com.rebootech.fruitlogix.auth.presentation.components.AuthLanguageSwitch
 import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import com.rebootech.fruitlogix.auth.presentation.components.PasswordRules
@@ -174,7 +175,7 @@ private fun ColumnScope.RoleStep(
 }
 
 @Composable
-private fun RoleCard(
+internal fun RoleCard(
     iconRes: Int,
     title: String,
     description: String,
@@ -381,6 +382,10 @@ private fun ColumnScope.AccessStep(state: SignUpUiState, viewModel: SignUpViewMo
     state.generalError?.let {
         Spacer(modifier = Modifier.height(spacing.xs))
         AuthErrorBanner(message = stringResource(it))
+    }
+    if (state.slowServer) {
+        Spacer(modifier = Modifier.height(spacing.xs))
+        ServerWakingHint()
     }
 
     Spacer(modifier = Modifier.height(spacing.md))

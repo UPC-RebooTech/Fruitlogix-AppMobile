@@ -1,25 +1,33 @@
 package com.rebootech.fruitlogix.distributor.orderManagement.domain.validation
 
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderCatalog
 import java.time.LocalDate
 
-/** Business rules for the order form (create and edit). */
+/** Business rules for the order form (create and edit). Quantities are in kg, like the server. */
 object OrderValidator {
-    const val MAX_TONS = 100.0
+    /** 100 t, a full convoy; anything above is a typo. */
+    const val MAX_KG = 100_000.0
 
-    fun isValidClient(name: String): Boolean = name.trim().length in 2..80
+    /** Fresh fruit per pallet, used to estimate pallets. */
+    const val KG_PER_PALLET = 650.0
 
-    fun isValidProduct(name: String): Boolean = name.trim().length in 2..60
+    fun isValidClient(clientId: Int?): Boolean = OrderCatalog.client(clientId) != null
 
-    /** Accepts "12.5" and "12,5". */
-    fun parseTons(text: String): Double? =
-        text.trim().replace(',', '.').toDoubleOrNull()
+    fun isValidProduct(name: String): Boolean = OrderCatalog.product(name) != null
 
-    fun isValidQuantity(tons: Double?): Boolean = tons != null && tons > 0.0 && tons <= MAX_TONS
+    /** Accepts "11200", "11 200" and decimals with dot or comma ("850,5"). */
+    fun parseKg(text: String): Double? =
+        text.trim().replace(" ", "").replace(' '.toString(), "").replace(',', '.').toDoubleOrNull()
+
+    fun isValidQuantity(kg: Double?): Boolean = kg != null && kg > 0.0 && kg <= MAX_KG
 
     /** Delivery cannot be in the past. */
     fun isValidDeliveryDate(date: LocalDate?, today: LocalDate = LocalDate.now()): Boolean =
         date != null && !date.isBefore(today)
 
-    /** About 0.65 t per pallet of fresh fruit: used to estimate pallets for new orders. */
-    fun estimatePallets(tons: Double): Int = kotlin.math.max(1, kotlin.math.ceil(tons / 0.65).toInt())
+    fun estimatePallets(kg: Double): Int = kotlin.math.max(1, kotlin.math.ceil(kg / KG_PER_PALLET).toInt())
+
+    /** Total sent to the server: kg × price per kg of the catalog product. */
+    fun totalAmount(productName: String, kg: Double): Double? =
+        OrderCatalog.product(productName)?.let { kotlin.math.round(it.pricePerKg * kg * 100) / 100 }
 }

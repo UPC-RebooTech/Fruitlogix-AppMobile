@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.shared.core.network
 
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -16,10 +17,15 @@ data class SignInRequestDto(
     val password: String
 )
 
+data class SignUpRequestDto(
+    val username: String,
+    val password: String
+)
+
 data class AuthenticatedUserDto(
     val id: Int,
-    val username: String,
-    val token: String
+    val username: String?,
+    val token: String?
 )
 
 // ─── 2. Order Management (Contratos reales de Swagger) ──────────────────────
@@ -40,13 +46,12 @@ data class CreateOrderRequestDto(
     val items: List<OrderItemRequestDto>
 )
 
+/** UpdateOrderResource: the server only changes these fields (not client, items or quantity). */
 data class UpdateOrderRequestDto(
-    val commercialClientId: Int,
     val deliveryDueDate: String,
     val deliveryAddress: String,
     val totalAmount: Double,
-    val notes: String? = null,
-    val items: List<OrderItemRequestDto>
+    val notes: String? = null
 )
 
 data class OrderItemResponseDto(
@@ -69,6 +74,7 @@ data class OrderResponseDto(
     val totalAmount: Double? = null,
     val status: String? = null,
     val notes: String? = null,
+    val cancellationReason: String? = null,
     val createdAt: String? = null,
     val items: List<OrderItemResponseDto>? = null
 )
@@ -113,51 +119,59 @@ data class QualityInspectionResponseDto(
 )
 
 // ─── 4. Logistics & Deliveries ──────────────────────────────────────────────
+/** CreateDeliveryResource. The server requires driverName, vehiclePlate, routeOrigin, routeDestination and routeDistanceKm > 0. */
 data class CreateDeliveryRequestDto(
     val orderId: Int,
-    val originAddress: String,
-    val destinationAddress: String,
-    val estimatedArrival: String,
-    val notes: String? = null
+    val driverName: String,
+    val driverPhone: String,
+    val vehiclePlate: String,
+    val vehicleType: String,
+    val routeOrigin: String,
+    val routeDestination: String,
+    val routeDistanceKm: Double,
+    /** ISO date-time, e.g. 2026-11-13T15:30:00 */
+    val estimatedTimeOfArrival: String
 )
 
+/** ReportDelayResource: the server only stores the reason and sets the status to Delayed. */
 data class ReportDelayRequestDto(
-    val newEstimatedArrival: String,
-    val delayMinutes: Int,
     val reason: String
 )
 
+/** DeliveryResource. currentStatus: PendingDispatch, InTransit, Delayed, Delivered or Failed. */
 data class DeliveryResponseDto(
-    val id: Int? = null,
+    val id: Int,
     val orderId: Int? = null,
-    val unitCode: String? = null,
-    val vehiclePlate: String? = null,
     val driverName: String? = null,
-    val originAddress: String? = null,
-    val destinationAddress: String? = null,
-    val status: String? = null,
-    val estimatedArrival: String? = null,
-    val delayMinutes: Int? = null,
-    val delayReason: String? = null
+    val driverPhone: String? = null,
+    val vehiclePlate: String? = null,
+    val vehicleType: String? = null,
+    val routeOrigin: String? = null,
+    val routeDestination: String? = null,
+    val routeDistanceKm: Double? = null,
+    val estimatedTimeOfArrival: String? = null,
+    val currentStatus: String? = null
 )
 
+/** TrackingLogResource: GPS position and reefer readings of a delivery. */
 data class TrackingLogResponseDto(
     val id: Int? = null,
     val deliveryId: Int? = null,
-    val location: String? = null,
+    val timestamp: String? = null,
     val latitude: Double? = null,
     val longitude: Double? = null,
-    val timestamp: String? = null,
-    val notes: String? = null
+    val temperature: Double? = null,
+    val humidity: Double? = null
 )
 
+/** AlertResource. type: Temperature, Humidity, Location or Delay; severity: Info, Warning or Critical. */
 data class LogisticsAlertResponseDto(
     val id: Int? = null,
     val deliveryId: Int? = null,
-    val deviceId: String? = null,
-    val alertType: String? = null,
+    val type: String? = null,
     val severity: String? = null,
     val message: String? = null,
+    val isResolved: Boolean? = null,
     val createdAt: String? = null
 )
 
@@ -198,7 +212,7 @@ data class AlertRuleResponseDto(
 // ─── 6. Invoices & Billing ──────────────────────────────────────────────────
 data class CreateInvoiceRequestDto(
     val clientId: Int,
-    val orderId: Int,
+    val orderId: Int?,
     val amount: Double,
     val currency: String = "PEN",
     val dueDate: String,
@@ -220,41 +234,73 @@ data class InvoiceResponseDto(
     val status: String? = null
 )
 
-// ─── 7. Producer Network del Distribuidor ───────────────────────────────────
-data class ProducerRequestDto(
-    val producerType: String,
-    val fullName: String,
-    val taxId: String,
-    val legalName: String,
-    val country: String = "Perú",
-    val region: String,
-    val city: String,
-    val address: String,
-    val crop: String,
-    val email: String? = null,
-    val phone: String? = null
-)
-
-data class ProducerResponseDto(
-    val id: Int? = null,
-    val producerType: String? = null,
+// ─── Producers (/api/v1/producers) ─── same field names as the server ─────
+/** ProducerResource returned by GET, POST and PUT. */
+data class ProducerResourceDto(
+    val id: Int,
+    val producerType: String? = null, // "Individual" or "Company"
     val fullName: String? = null,
     val taxId: String? = null,
     val legalName: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
     val country: String? = null,
     val region: String? = null,
     val city: String? = null,
     val address: String? = null,
     val crop: String? = null,
-    val email: String? = null,
-    val phone: String? = null,
-    val rating: Double? = null
+    val cultivatedHectares: Double? = null,
+    val monthlyProduction: String? = null,
+    val operationsStartDate: String? = null,
+    val rating: Double? = null,
+    val certifications: String? = null,
+    val photo: String? = null
+)
+
+/** Body of POST and PUT. The server requires producerType, fullName, an 11-digit taxId, email, phone and crop. */
+data class SaveProducerRequestDto(
+    val producerType: String,
+    val fullName: String,
+    val taxId: String,
+    val legalName: String,
+    val email: String,
+    val phone: String,
+    val country: String,
+    val region: String,
+    val city: String,
+    val address: String,
+    val crop: String,
+    val cultivatedHectares: Double = 0.0,
+    val monthlyProduction: String = "",
+    val operationsStartDate: String? = null,
+    val certifications: String = "",
+    val photo: String = ""
 )
 
 interface FruitLogixApiService {
 
     @POST("authentication/sign-in")
-    suspend fun signIn(@Body request: SignInRequestDto): Response<AuthenticatedUserDto>
+    suspend fun signIn(@Body request: SignInRequestDto): AuthenticatedUserDto
+
+    /**
+     * 200 when created, 409 when the username is taken. Only the status code is read: the body's
+     * "message" comes as an object (untranslated server text), which a String field cannot parse.
+     */
+    @POST("authentication/sign-up")
+    suspend fun signUp(@Body request: SignUpRequestDto): Response<ResponseBody>
+
+    // Producers: 409 when the RUC is taken, 400 when a field is invalid, 404 when the id does not exist
+    @GET("producers")
+    suspend fun getProducers(): List<ProducerResourceDto>
+
+    @POST("producers")
+    suspend fun createProducer(@Body producer: SaveProducerRequestDto): ProducerResourceDto
+
+    @PUT("producers/{id}")
+    suspend fun updateProducer(@Path("id") id: Int, @Body producer: SaveProducerRequestDto): ProducerResourceDto
+
+    @DELETE("producers/{id}")
+    suspend fun deleteProducer(@Path("id") id: Int): Response<Unit>
 
     // A. Order Management
     @GET("orders")
@@ -301,19 +347,17 @@ interface FruitLogixApiService {
         @Body request: CreateDeliveryRequestDto
     ): Response<DeliveryResponseDto>
 
-    @POST("deliveries/{id}/start")
+    @POST("deliveries/{id}/start-dispatch")
     suspend fun startDelivery(@Path("id") id: Int): Response<DeliveryResponseDto>
 
-    @POST("deliveries/{id}/delay")
+    // The server only reads "reason" from the body
+    @POST("deliveries/{id}/report-delay")
     suspend fun reportDeliveryDelay(
         @Path("id") id: Int,
         @Body request: ReportDelayRequestDto
     ): Response<DeliveryResponseDto>
 
-    @POST("deliveries/{id}/complete")
-    suspend fun completeDelivery(@Path("id") id: Int): Response<DeliveryResponseDto>
-
-    @GET("trackinglogs")
+    @GET("tracking-logs")
     suspend fun getTrackingLogs(
         @Query("deliveryId") deliveryId: Int
     ): Response<List<TrackingLogResponseDto>>
@@ -322,9 +366,10 @@ interface FruitLogixApiService {
     suspend fun getLogisticsAlerts(): Response<List<LogisticsAlertResponseDto>>
 
     // E. Infrastructure IoT
-    @GET("devices")
+    @GET("io-t-devices")
     suspend fun getIotDevices(): Response<List<IotDeviceResponseDto>>
 
+    // The server ignores the deviceId query and returns all readings (per device: sensor-readings/device/{deviceId})
     @GET("sensor-readings")
     suspend fun getSensorReadings(
         @Query("deviceId") deviceId: String? = null
@@ -350,24 +395,4 @@ interface FruitLogixApiService {
         @Body request: CreateInvoiceRequestDto
     ): Response<InvoiceResponseDto>
 
-    // G. Producer Network
-    @GET("producers")
-    suspend fun getProducers(): Response<List<ProducerResponseDto>>
-
-    @GET("producers/{id}")
-    suspend fun getProducerById(@Path("id") id: Int): Response<ProducerResponseDto>
-
-    @POST("producers")
-    suspend fun createProducer(
-        @Body request: ProducerRequestDto
-    ): Response<ProducerResponseDto>
-
-    @PUT("producers/{id}")
-    suspend fun updateProducer(
-        @Path("id") id: Int,
-        @Body request: ProducerRequestDto
-    ): Response<ProducerResponseDto>
-
-    @DELETE("producers/{id}")
-    suspend fun deleteProducer(@Path("id") id: Int): Response<Unit>
 }

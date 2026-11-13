@@ -8,14 +8,28 @@ import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Vehicle
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.service.LicenseValidity
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.service.LicenseValidityState
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /** Assign a driver and a vehicle to an order (US79). */
 object AssignmentRules {
 
     enum class Error {
         ORDER_REQUIRED, DRIVER_REQUIRED, VEHICLE_REQUIRED,
-        DRIVER_NOT_AVAILABLE, LICENSE_EXPIRED, VEHICLE_NOT_AVAILABLE, OVER_CAPACITY
+        DRIVER_NOT_AVAILABLE, LICENSE_EXPIRED, VEHICLE_NOT_AVAILABLE, OVER_CAPACITY, ROUTE_KM
     }
+
+    /** Average speed of a loaded reefer truck, used to estimate the arrival. */
+    const val AVERAGE_KMH = 50.0
+
+    /** Longest road trip in Peru is under 3 000 km; anything above is a typo. */
+    const val MAX_ROUTE_KM = 3000.0
+
+    /** The server needs the route distance (more than 0 km) to create the delivery. */
+    fun isValidRouteKm(km: Double?): Boolean = km != null && km > 0.0 && km <= MAX_ROUTE_KM
+
+    /** Departure + distance at [AVERAGE_KMH]. */
+    fun estimatedArrival(departure: LocalDateTime, km: Double): LocalDateTime =
+        departure.plusMinutes(kotlin.math.ceil(km / AVERAGE_KMH * 60).toLong())
 
     fun isLicenseExpired(driver: Driver, today: LocalDate = LocalDate.now()) =
         LicenseValidity.checkValidity(driver.licenseExpiry, today) is LicenseValidityState.Expired
@@ -36,7 +50,7 @@ object AssignmentRules {
         isLicenseExpired(driver, today) -> Error.LICENSE_EXPIRED
         driver.status != DriverStatus.AVAILABLE -> Error.DRIVER_NOT_AVAILABLE
         vehicle.status != VehicleStatus.AVAILABLE -> Error.VEHICLE_NOT_AVAILABLE
-        order.quantityTons > vehicle.capacityTons -> Error.OVER_CAPACITY
+        order.quantityKg > vehicle.capacityKg -> Error.OVER_CAPACITY
         else -> null
     }
 }

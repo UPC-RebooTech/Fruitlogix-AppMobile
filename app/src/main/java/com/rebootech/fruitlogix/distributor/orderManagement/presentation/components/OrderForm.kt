@@ -38,10 +38,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderCatalog
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDraft
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
 import com.rebootech.fruitlogix.distributor.orderManagement.presentation.formatLongDate
@@ -53,92 +53,106 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** Products the distributor orders most, offered as one-tap chips. */
-val CommonProducts = listOf("Palta Hass", "Mango Kent", "Fresa", "Arándano", "Uva Red Globe", "Lima Tahití")
+/** A producer of the network that exists on the server (its id is what the server needs). */
+data class ProducerOption(val id: Int, val name: String)
 
 /** Form values shared by create and edit. Errors are string resources. */
 data class OrderFormState(
-    val clientName: String = "",
+    val clientId: Int? = null,
     val productName: String = "",
+    /** Kilograms, as typed. */
     val quantity: String = "",
     val deliveryDate: LocalDate? = null,
+    /** Optional producer to assign when creating (server id). */
+    val producerId: Int? = null,
     @field:StringRes val clientError: Int? = null,
     @field:StringRes val productError: Int? = null,
     @field:StringRes val quantityError: Int? = null,
     @field:StringRes val dateError: Int? = null
 ) {
     val estimatedPallets: Int?
-        get() = OrderValidator.parseTons(quantity)
+        get() = OrderValidator.parseKg(quantity)
             ?.takeIf { OrderValidator.isValidQuantity(it) }
             ?.let { OrderValidator.estimatePallets(it) }
 
-    /** Returns the draft when everything is valid, otherwise this form with its errors. */
-    fun validate(): Pair<OrderFormState, OrderDraft?> {
-        val tons = OrderValidator.parseTons(quantity)
+    /**
+     * Returns the draft when everything is valid, otherwise this form with its errors.
+     * @param onlyDate server orders: only the delivery date is checked (the rest cannot change).
+     */
+    fun validate(onlyDate: Boolean = false): Pair<OrderFormState, OrderDraft?> {
+        val kg = OrderValidator.parseKg(quantity)
         val checked = copy(
-            clientError = if (OrderValidator.isValidClient(clientName)) null else R.string.dist_order_error_client,
-            productError = if (OrderValidator.isValidProduct(productName)) null else R.string.dist_order_error_product,
-            quantityError = if (OrderValidator.isValidQuantity(tons)) null else R.string.dist_order_error_quantity,
+            clientError = if (onlyDate || OrderValidator.isValidClient(clientId)) null else R.string.dist_order_error_client,
+            productError = if (onlyDate || OrderValidator.isValidProduct(productName)) null else R.string.dist_order_error_product,
+            quantityError = if (onlyDate || OrderValidator.isValidQuantity(kg)) null else R.string.dist_order_error_quantity,
             dateError = if (OrderValidator.isValidDeliveryDate(deliveryDate)) null else R.string.dist_order_error_date
         )
         val ok = checked.clientError == null && checked.productError == null &&
             checked.quantityError == null && checked.dateError == null
-        return checked to if (ok) OrderDraft(clientName.trim(), productName.trim(), tons!!, deliveryDate!!) else null
+        return checked to if (ok) {
+            OrderDraft(
+                clientId = clientId ?: 0,
+                productName = productName.trim(),
+                quantityKg = kg ?: 0.0,
+                deliveryDate = deliveryDate!!,
+                producerId = producerId
+            )
+        } else null
     }
 }
 
+/**
+ * Client and product are picked from the catalog (the server needs their ids); quantity in kg.
+ * @param contentEnabled false on server orders: only the delivery date can change there.
+ * @param producers when not null, an optional "Producer" choice is shown (create only).
+ */
 @Composable
 fun OrderFormFields(
     form: OrderFormState,
-    onClientChange: (String) -> Unit,
+    onClientChange: (Int) -> Unit,
     onProductChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    contentEnabled: Boolean = enabled,
+    producers: List<ProducerOption>? = null,
+    onProducerChange: (Int?) -> Unit = {},
+    /** Shown instead of the client chips when the order's client is not in the catalog. */
+    currentClientLabel: String? = null
 ) {
     val spacing = FruitLogixTheme.spacing
     Column(verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
-        LabeledTextField(
+        ChoiceField(
             label = stringResource(R.string.dist_order_client),
-            value = form.clientName,
-            onValueChange = onClientChange,
-            placeholder = stringResource(R.string.dist_order_client_placeholder),
-            leadingIconRes = R.drawable.ic_warehouse,
-            error = form.clientError?.let { stringResource(it) },
-            enabled = enabled,
-            capitalization = KeyboardCapitalization.Words
-        )
+            error = form.clientError?.let { stringResource(it) }
+        ) {
+            if (!contentEnabled && currentClientLabel != null) {
+                SelectableChip(label = currentClientLabel, selected = true, onClick = {})
+            } else {
+                OrderCatalog.clients.forEach { client ->
+                    SelectableChip(
+                        label = client.name,
+                        selected = form.clientId == client.id,
+                        onClick = { if (contentEnabled) onClientChange(client.id) }
+                    )
+                }
+            }
+        }
 
-        Column {
-            LabeledTextField(
-                label = stringResource(R.string.dist_order_product),
-                value = form.productName,
-                onValueChange = onProductChange,
-                placeholder = stringResource(R.string.dist_order_product_placeholder),
-                leadingIconRes = R.drawable.ic_leaf,
-                error = form.productError?.let { stringResource(it) },
-                enabled = enabled,
-                capitalization = KeyboardCapitalization.Words
-            )
-            if (enabled) {
-                Spacer(modifier = Modifier.height(spacing.xs))
-                Text(
-                    text = stringResource(R.string.dist_order_product_suggestions),
-                    style = FruitLogixTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(spacing.xxs))
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.xs)
-                ) {
-                    CommonProducts.forEach { product ->
-                        SelectableChip(
-                            label = product,
-                            selected = form.productName.equals(product, ignoreCase = true),
-                            onClick = { onProductChange(product) }
-                        )
-                    }
+        ChoiceField(
+            label = stringResource(R.string.dist_order_product),
+            error = form.productError?.let { stringResource(it) }
+        ) {
+            val inCatalog = OrderCatalog.product(form.productName) != null
+            if (!contentEnabled && !inCatalog && form.productName.isNotBlank()) {
+                SelectableChip(label = form.productName, selected = true, onClick = {})
+            } else {
+                OrderCatalog.products.forEach { product ->
+                    SelectableChip(
+                        label = product.name,
+                        selected = form.productName.equals(product.name, ignoreCase = true),
+                        onClick = { if (contentEnabled) onProductChange(product.name) }
+                    )
                 }
             }
         }
@@ -151,7 +165,7 @@ fun OrderFormFields(
             leadingIconRes = R.drawable.ic_inventory,
             error = form.quantityError?.let { stringResource(it) },
             helper = form.estimatedPallets?.let { stringResource(R.string.dist_order_quantity_pallets, it) },
-            enabled = enabled,
+            enabled = contentEnabled,
             keyboardType = KeyboardType.Decimal,
             imeAction = ImeAction.Done
         )
@@ -162,6 +176,55 @@ fun OrderFormFields(
             error = form.dateError?.let { stringResource(it) },
             enabled = enabled
         )
+
+        if (producers != null) {
+            ChoiceField(
+                label = stringResource(R.string.dist_order_producer),
+                helper = stringResource(
+                    if (producers.isEmpty()) R.string.dist_order_producer_none_available else R.string.dist_order_producer_helper
+                )
+            ) {
+                SelectableChip(
+                    label = stringResource(R.string.dist_order_producer_later),
+                    selected = form.producerId == null,
+                    onClick = { if (enabled) onProducerChange(null) }
+                )
+                producers.forEach { producer ->
+                    SelectableChip(
+                        label = producer.name,
+                        selected = form.producerId == producer.id,
+                        onClick = { if (enabled) onProducerChange(producer.id) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Label + one row of chips (scrolls sideways) + error or help text. */
+@Composable
+private fun ChoiceField(
+    label: String,
+    error: String? = null,
+    helper: String? = null,
+    chips: @Composable () -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(label, style = FruitLogixTheme.typography.titleSmall, color = if (error != null) scheme.error else scheme.onSurface)
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)
+        ) { chips() }
+        when {
+            error != null -> Row(modifier = Modifier.padding(top = 6.dp), verticalAlignment = Alignment.Top) {
+                AppIcon(id = R.drawable.ic_warning, contentDescription = null, tint = scheme.error, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(error, style = FruitLogixTheme.typography.bodySmall, color = scheme.error)
+            }
+            helper != null -> Text(helper, style = FruitLogixTheme.typography.bodySmall, color = scheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
+        }
     }
 }
 

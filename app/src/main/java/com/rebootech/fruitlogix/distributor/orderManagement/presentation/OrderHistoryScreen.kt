@@ -143,9 +143,10 @@ private fun HistoryCard(item: OrderHistoryItem) {
             )
         }
         Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
-        Text(item.clientName, style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(clientLabel(item.clientName, item.clientId), style = FruitLogixTheme.typography.titleMedium, color = scheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
-            text = stringResource(R.string.dist_history_product_producer, item.productName, item.producerName),
+            text = if (item.producerName.isBlank()) productLabel(item.productName)
+                else stringResource(R.string.dist_history_product_producer, productLabel(item.productName), item.producerName),
             style = FruitLogixTheme.typography.bodyMedium,
             color = scheme.onSurfaceVariant
         )

@@ -1,4 +1,4 @@
-﻿package com.rebootech.fruitlogix.distributor.logisticsMonitoring.data
+package com.rebootech.fruitlogix.distributor.logisticsMonitoring.data
 
 import android.util.Log
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ActiveDispatch
@@ -14,6 +14,7 @@ import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
 import com.rebootech.fruitlogix.shared.core.network.DeliveryResponseDto
 import com.rebootech.fruitlogix.shared.core.network.ReportDelayRequestDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import com.rebootech.fruitlogix.shared.core.network.TrackingLogResponseDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,21 +26,26 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
+import retrofit2.Response
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * Trips in Fleet.
+ * - Sample trips (FL-408, FL-102, FL-219) only live on this phone, so the app works offline.
+ * - Server deliveries (/api/v1/deliveries) are shown as "D-<id>" trips. Starting a trip and
+ *   reporting a delay are sent to the server (start-dispatch, report-delay).
+ * - The server has no endpoint to mark a delivery as delivered or rejected yet: those changes
+ *   stay on this phone, and the reception is confirmed on the order (/orders/{id}/reception).
+ */
 class FakeFleetRepository(
     private val orderRepository: OrderRepository
 ) : FleetRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val trips = MutableStateFlow(initialTrips())
-    private val deliveryIdByUnit = ConcurrentHashMap<String, Int>(
-        mapOf("FL-408" to 1, "FL-102" to 2, "FL-219" to 3)
-    )
 
     init {
         scope.launch { refresh() }
@@ -49,7 +55,8 @@ class FakeFleetRepository(
         combine(trips, orderRepository.orders) { list, orders ->
             val activeOrderIds = orders.map { it.id }.toSet()
             list.map { trip ->
-                if (trip.isActive && trip.orderId !in activeOrderIds) {
+                // Sample trips follow their sample order; server trips follow the server status
+                if (trip.remoteId == null && trip.isActive && trip.orderId !in activeOrderIds) {
                     trip.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = trip.deliveredAt ?: LocalDateTime.now())
                 } else trip
             }
@@ -62,13 +69,12 @@ class FakeFleetRepository(
         trips.update { list -> list.map { if (it.unitId.equals(unitId, ignoreCase = true)) block(it) else it } }
 
     override suspend fun updateDeliveryState(unitId: String, state: DeliveryState) {
+        val before = dispatch(unitId) ?: return
         change(unitId) { it.copy(deliveryState = state) }
-        if (state == DeliveryState.ON_ROUTE) {
-            val remoteId = deliveryIdByUnit[unitId.uppercase()] ?: return
-            scope.launch {
-                runCatching { RetrofitClient.api.startDelivery(remoteId) }
-                    .onFailure { Log.w("FruitLogix-API", "POST /deliveries/$remoteId/start falló: ${it.message}") }
-            }
+        val remoteId = before.remoteId ?: return
+        // The server only allows starting a delivery that is still pending dispatch
+        if (state == DeliveryState.ON_ROUTE && before.deliveryState == DeliveryState.PENDING) {
+            callServer("start-dispatch $remoteId") { RetrofitClient.api.startDelivery(remoteId) }
         }
     }
 
@@ -76,21 +82,9 @@ class FakeFleetRepository(
         val current = dispatch(unitId) ?: return
         val updated = EtaRules.apply(current, newEta, reason)
         change(unitId) { updated }
-
-        val remoteId = deliveryIdByUnit[unitId.uppercase()] ?: return
-        scope.launch {
-            runCatching {
-                RetrofitClient.api.reportDeliveryDelay(
-                    id = remoteId,
-                    request = ReportDelayRequestDto(
-                        newEstimatedArrival = LocalDate.now().atTime(newEta).toString(),
-                        delayMinutes = updated.delayMinutes.coerceAtLeast(5),
-                        reason = reason.name
-                    )
-                )
-            }.onFailure {
-                Log.w("FruitLogix-API", "POST /deliveries/$remoteId/delay falló: ${it.message}")
-            }
+        val remoteId = current.remoteId ?: return
+        callServer("report-delay $remoteId") {
+            RetrofitClient.api.reportDeliveryDelay(remoteId, ReportDelayRequestDto(reason = reason.name))
         }
     }
 
@@ -106,12 +100,7 @@ class FakeFleetRepository(
                 travelledKm = it.totalKm
             )
         }
-        val remoteId = deliveryIdByUnit[unitId.uppercase()]
-        if (remoteId != null) {
-            scope.launch {
-                runCatching { RetrofitClient.api.completeDelivery(remoteId) }
-            }
-        }
+        // No delivery endpoint for this on the server: the reception is recorded on the order
         orderRepository.confirmReception(trip.orderId)
     }
 
@@ -119,60 +108,82 @@ class FakeFleetRepository(
         change(unitId) { it.copy(deliveryState = DeliveryState.REJECTED, rejectionReason = reason.trim()) }
 
     override suspend fun refresh() {
-        withContext(Dispatchers.IO) {
-            val result = runCatching { RetrofitClient.api.getDeliveries() }
-            result.onSuccess { response ->
-                if (response.isSuccessful) {
-                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-                    val remoteDeliveries = response.body().orEmpty()
-                    remoteDeliveries.forEach { dto ->
-                        mergeRemoteDelivery(dto)
-                    }
-                }
-            }.onFailure { err ->
-                Log.w("FruitLogix-API", "GET /deliveries no disponible (${err.message}); usando despachos locales.")
+        val response = withContext(Dispatchers.IO) {
+            try {
+                RetrofitClient.api.getDeliveries()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Log.w(TAG, "GET deliveries failed: ${e.javaClass.simpleName}")
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, "GET /deliveries: ${e.javaClass.simpleName}")
+                null
             }
+        } ?: return
+        if (!response.isSuccessful) {
+            Log.w(TAG, "GET deliveries answered ${response.code()}")
+            return
+        }
+        RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+        val deliveries = response.body().orEmpty()
+        val previous = trips.value.filter { it.remoteId != null }.associateBy { it.remoteId }
+        val fromServer = deliveries.map { dto ->
+            val onRoute = DeliveryMapper.state(dto.currentStatus) == DeliveryState.ON_ROUTE
+            toDispatch(dto, if (onRoute) latestTrackingLog(dto.id) else null, previous[dto.id])
+        }
+        // The server list replaces the previous server copy; sample trips stay
+        trips.update { list -> list.filter { it.remoteId == null } + fromServer }
+    }
 
-            // Consultar TrackingLogs para las entregas activas conocidas
-            for ((unitCode, delivId) in deliveryIdByUnit.entries) {
-                runCatching { RetrofitClient.api.getTrackingLogs(delivId) }.onSuccess { resp ->
-                    if (resp.isSuccessful) {
-                        val logs = resp.body().orEmpty()
-                        val latestLocation = logs.lastOrNull()?.location?.takeIf { it.isNotBlank() }
-                        if (latestLocation != null) {
-                            change(unitCode) { active ->
-                                val updatedCheckpoints = active.checkpoints.map { cp ->
-                                    if (cp.kind == CheckpointKind.CURRENT) cp.copy(name = latestLocation) else cp
-                                }
-                                active.copy(checkpoints = updatedCheckpoints)
-                            }
-                        }
-                    }
-                }
-            }
+    private fun toDispatch(dto: DeliveryResponseDto, latestLog: TrackingLogResponseDto?, previous: ActiveDispatch?): ActiveDispatch {
+        val orderCode = dto.orderId?.let { orderRepository.orderCodeFor(it) ?: "FX-$it" }.orEmpty()
+        val order = orderRepository.orderById(orderCode)
+        return DeliveryMapper.toDispatch(
+            dto = dto,
+            orderCode = orderCode,
+            productName = order?.productName.orEmpty(),
+            pallets = order?.pallets ?: 0,
+            latestLog = latestLog,
+            previous = previous
+        )
+    }
+
+    private suspend fun latestTrackingLog(deliveryId: Int): TrackingLogResponseDto? = withContext(Dispatchers.IO) {
+        try {
+            val response = RetrofitClient.api.getTrackingLogs(deliveryId)
+            if (!response.isSuccessful) return@withContext null
+            response.body().orEmpty().maxByOrNull { DeliveryMapper.parseDateTime(it.timestamp) ?: LocalDateTime.MIN }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            null
         }
     }
 
-    private fun mergeRemoteDelivery(dto: DeliveryResponseDto) {
-        val unitCode = dto.unitCode?.takeIf { it.isNotBlank() } ?: return
-        dto.id?.let { deliveryIdByUnit[unitCode.uppercase()] = it }
-
-        val mappedState = when (dto.status?.uppercase()) {
-            "PENDING", "CREATED" -> DeliveryState.PENDING
-            "DELIVERED", "COMPLETED" -> DeliveryState.DELIVERED
-            "REJECTED", "CANCELLED" -> DeliveryState.REJECTED
-            else -> DeliveryState.ON_ROUTE
+    /** Sends a change of a server delivery; on success the trip takes the server's answer. */
+    private suspend fun callServer(label: String, call: suspend () -> Response<DeliveryResponseDto>) {
+        val response = withContext(Dispatchers.IO) {
+            try {
+                call()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Log.w(TAG, "$label failed: ${e.javaClass.simpleName}")
+                null
+            }
+        } ?: return
+        val dto = response.body()
+        if (!response.isSuccessful || dto == null) {
+            // e.g. 500 when the server refuses the change (it does not answer 400/404 for these)
+            Log.w(TAG, "$label answered ${response.code()}")
+            return
         }
-
-        change(unitCode) { existing ->
-            existing.copy(
-                deliveryState = mappedState,
-                delayMinutes = dto.delayMinutes ?: existing.delayMinutes
-            )
-        }
+        val unitId = DeliveryMapper.unitIdFor(dto.id)
+        change(unitId) { current -> toDispatch(dto, null, current).copy(checkpoints = current.checkpoints) }
     }
 
     private companion object {
+        const val TAG = "FruitLogix-Fleet"
+
         fun initialTrips(): List<ActiveDispatch> {
             val now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
             val today = now.toLocalTime()

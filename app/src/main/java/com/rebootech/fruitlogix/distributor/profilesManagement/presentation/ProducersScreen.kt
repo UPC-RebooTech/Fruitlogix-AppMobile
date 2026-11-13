@@ -61,6 +61,7 @@ import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.components.whiteCard
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
+import com.rebootech.fruitlogix.shared.ui.format.formatKg
 import com.rebootech.fruitlogix.shared.ui.format.initialsOf
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
@@ -189,7 +190,7 @@ private fun Kpis(state: ProducersUiState) {
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
             KpiCard(
                 caption = stringResource(R.string.prod_kpi_tons),
-                value = stringResource(R.string.prod_kpi_tons_value, formatDecimal(kpis.weeklyTons)),
+                value = formatKg(kpis.weeklyTons * 1000),
                 icon = icon(R.drawable.ic_inventory),
                 modifier = Modifier.weight(1f)
             )
@@ -279,8 +280,8 @@ private fun ProducerSheetHost(sheet: ProducerSheet, state: ProducersUiState, vie
             Text(title, style = FruitLogixTheme.typography.titleLarge, color = scheme.onSurface)
             Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
             when (sheet) {
-                ProducerSheet.Register -> ProducerFormSheet(producer = null, errors = state.formErrors, onSave = viewModel::save)
-                is ProducerSheet.Edit -> ProducerFormSheet(producer = sheet.producer, errors = state.formErrors, onSave = viewModel::save)
+                ProducerSheet.Register -> ProducerFormSheet(producer = null, errors = state.formErrors, onSave = viewModel::save, serverError = state.sheetError?.let { stringResource(it) }, saving = state.saving)
+                is ProducerSheet.Edit -> ProducerFormSheet(producer = sheet.producer, errors = state.formErrors, onSave = viewModel::save, serverError = state.sheetError?.let { stringResource(it) }, saving = state.saving)
                 ProducerSheet.Invite -> InviteProducerSheet(error = state.inviteError?.let { stringResource(it) }, onInvite = viewModel::invite)
             }
         }

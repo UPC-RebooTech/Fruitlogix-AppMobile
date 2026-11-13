@@ -30,13 +30,16 @@ data class ActiveDispatch(
     val delayMinutes: Int = 0,
     val delayReason: DelayReason? = null,
     val deliveryState: DeliveryState = DeliveryState.ON_ROUTE,
-    val harvestedAt: LocalDateTime,
-    val inspectedAt: LocalDateTime,
-    val departedAt: LocalDateTime,
+    /** Lot times; null when unknown (the server does not send them). */
+    val harvestedAt: LocalDateTime?,
+    val inspectedAt: LocalDateTime?,
+    val departedAt: LocalDateTime?,
     val deliveredAt: LocalDateTime? = null,
     val reeferCheckedAt: LocalDateTime? = null,
     val rejectionReason: String? = null,
-    val checkpoints: List<Checkpoint>
+    val checkpoints: List<Checkpoint>,
+    /** Delivery id on the FruitLogix server; null for the sample trips that only live on this phone. */
+    val remoteId: Int? = null
 ) {
     val remainingKm: Double get() = (totalKm - travelledKm).coerceAtLeast(0.0)
     val progress: Float get() = if (totalKm <= 0.0) 0f else (travelledKm / totalKm).toFloat().coerceIn(0f, 1f)
