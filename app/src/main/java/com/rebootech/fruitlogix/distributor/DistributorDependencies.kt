@@ -18,11 +18,6 @@ import com.rebootech.fruitlogix.distributor.profilesManagement.domain.repository
 import com.rebootech.fruitlogix.distributor.qualityControl.data.FakeQualityRepository
 import com.rebootech.fruitlogix.distributor.qualityControl.domain.repository.QualityRepository
 
-/**
- * Composition root of the distributor (there is no DI framework). This is the only place that
- * knows the fake implementations: contexts depend on each other only through domain interfaces.
- * Swapping a fake for the Render backend later means changing one line here.
- */
 object DistributorDependencies {
     val orderRepository: OrderRepository by lazy { FakeOrderRepository.instance }
     val iotRepository: IotRepository by lazy { FakeIotRepository() }
@@ -32,15 +27,21 @@ object DistributorDependencies {
     val profilesRepository: ProfilesRepository by lazy { FakeProfilesRepository.instance }
     val driverRepository: DriverRepository by lazy { FakeDriverRepository(orderRepository) }
 
-    @Volatile private var settings: DistributorSettingsRepository? = null
+    @Volatile
+    private var settings: DistributorSettingsRepository? = null
 
-    /** Settings live in SharedPreferences, so they need a Context the first time. */
     fun settingsRepository(context: Context): DistributorSettingsRepository =
         settings ?: synchronized(this) {
             settings ?: PrefsDistributorSettingsRepository(
                 context.applicationContext,
-                // Everything that syncs with Render today
-                refreshers = listOf({ billingRepository.refresh() }, { profilesRepository.refresh() })
+                refreshers = listOf(
+                    { orderRepository.refresh() },
+                    { billingRepository.refresh() },
+                    { profilesRepository.refresh() },
+                    { qualityRepository.refresh() },
+                    { fleetRepository.refresh() },
+                    { iotRepository.refresh() }
+                )
             ).also { settings = it }
         }
 }

@@ -78,7 +78,7 @@ class FakeIotAlertRepository : IotAlertRepository {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val remoteOrders = RetrofitClient.api.getOrders()
-                if (remoteOrders.isNotEmpty()) {
+                if (remoteOrders.isSuccessful && !remoteOrders.body().isNullOrEmpty()) {
                     Log.d("FruitLogix-API", "Alertas IoT sincronizadas desde el backend.")
                     RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
                 }

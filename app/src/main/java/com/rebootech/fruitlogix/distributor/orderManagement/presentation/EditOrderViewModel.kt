@@ -31,7 +31,7 @@ data class EditOrderUiState(
 
 class EditOrderViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
-    private val repository: OrderRepository = FakeOrderRepository.instance
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
     private val orderId: String = savedStateHandle.get<String>("orderId").orEmpty()
 
     private val _uiState = MutableStateFlow(load())

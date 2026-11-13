@@ -85,7 +85,7 @@ class QualityControlViewModel(
         combine(repository.lots, iot.thresholds, local) { lots, thresholds, local ->
             local.copy(lots = lots, thresholds = thresholds)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), local.value)
-
+    init { viewModelScope.launch { repository.refresh() } }
     fun onTabChange(value: QualityTab) = local.update { it.copy(tab = value) }
     fun onStatusChange(value: LotStatus?) = local.update { it.copy(status = value) }
     fun onMonthChange(value: YearMonth) =

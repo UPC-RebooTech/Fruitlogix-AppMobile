@@ -1,5 +1,7 @@
 ﻿package com.rebootech.fruitlogix.distributor.paymentManagement.data
 
+import android.util.Log
+import com.rebootech.fruitlogix.distributor.orderManagement.data.FakeOrderRepository
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.CreditReason
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus
@@ -10,7 +12,8 @@ import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Purch
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.SummaryPeriod
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository.BillingRepository
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
-import com.rebootech.fruitlogix.shared.core.network.InvoiceDto
+import com.rebootech.fruitlogix.shared.core.network.CreateInvoiceRequestDto
+import com.rebootech.fruitlogix.shared.core.network.InvoiceResponseDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,11 +27,6 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.YearMonth
 
-/**
- * Sample invoices with the same clients and producers as Orders and Fleet. When the Render
- * backend answers (/api/v1/invoices), its invoices are merged in; new invoices are also sent
- * there. Without connection the sample data keeps the screen usable.
- */
 class FakeBillingRepository private constructor() : BillingRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -43,24 +41,39 @@ class FakeBillingRepository private constructor() : BillingRepository {
     override fun getInvoiceById(invoiceId: String): Invoice? =
         _invoices.value.firstOrNull { it.id.equals(invoiceId, ignoreCase = true) }
 
-    override suspend fun addInvoice(invoice: Invoice) {
-        _invoices.update { listOf(invoice) + it }
-        // Best effort: the invoice stays locally even if the server does not answer
-        scope.launch {
-            runCatching {
-                RetrofitClient.api.createInvoice(
-                    InvoiceDto(
-                        invoiceNumber = invoice.id,
-                        clientName = invoice.counterpartyName,
-                        amount = invoice.amount,
-                        issueDate = invoice.issuedOn.toString(),
-                        dueDate = invoice.dueOn.toString(),
-                        type = invoice.type.name,
-                        status = invoice.status.name
-                    )
-                )
+    override suspend fun addInvoice(invoice: Invoice) = withContext(Dispatchers.IO) {
+        val resolvedClientId = FakeOrderRepository.resolveClientId(invoice.counterpartyName)
+        val resolvedOrderId = invoice.orderId?.let { FakeOrderRepository.instance.backendIdFor(it) } ?: 1
+
+        val requestDto = CreateInvoiceRequestDto(
+            clientId = resolvedClientId,
+            orderId = resolvedOrderId,
+            amount = invoice.amount,
+            currency = "PEN",
+            dueDate = invoice.dueOn.toString(),
+            invoiceType = invoice.type.name
+        )
+
+        val result = runCatching { RetrofitClient.api.createInvoice(requestDto) }
+        var finalInvoice = invoice
+
+        result.onSuccess { response ->
+            if (response.isSuccessful) {
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                val body = response.body()
+                val serverCode = body?.invoiceNumber?.takeIf { it.isNotBlank() }
+                    ?: body?.id?.let { "INV-$it" }
+                if (serverCode != null) {
+                    finalInvoice = invoice.copy(id = serverCode)
+                }
+            } else {
+                Log.w("FruitLogix-API", "POST /invoices rechazado con HTTP ${response.code()}")
             }
+        }.onFailure { err ->
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, err.message)
         }
+
+        _invoices.update { listOf(finalInvoice) + it.filterNot { existing -> existing.id == finalInvoice.id } }
     }
 
     override suspend fun approveCreditNote(noteId: String, amount: Double) {
@@ -85,35 +98,63 @@ class FakeBillingRepository private constructor() : BillingRepository {
 
     override suspend fun refresh() {
         val remote = withContext(Dispatchers.IO) { runCatching { RetrofitClient.api.getInvoices() } }
-        remote.onSuccess { dtos ->
-            RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-            val mapped = dtos.mapIndexedNotNull { index, dto -> dto.toInvoice(index) }
-            if (mapped.isNotEmpty()) _invoices.update { (mapped + it).distinctBy { invoice -> invoice.id } }
-        }.onFailure {
-            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+        remote.onSuccess { response ->
+            if (response.isSuccessful) {
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                val dtos = response.body().orEmpty()
+                val mapped = dtos.mapIndexedNotNull { index, dto -> dto.toInvoice(index) }
+                if (mapped.isNotEmpty()) {
+                    _invoices.update { (mapped + it).distinctBy { invoice -> invoice.id } }
+                }
+            } else {
+                RetrofitClient.updateSyncStatus(
+                    BackendSyncStatus.OFFLINE_FALLBACK,
+                    "GET /invoices devolvió HTTP ${response.code()}"
+                )
+            }
+        }.onFailure { err ->
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, err.message)
         }
     }
 
-    private fun InvoiceDto.toInvoice(index: Int): Invoice? {
-        val issued = issueDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: return null
-        val due = dueDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: issued.plusDays(30)
+    private fun InvoiceResponseDto.toInvoice(index: Int): Invoice? {
+        val resolvedAmount = totalAmount ?: amount ?: return null
+        val issued = issuedAt?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+            ?: LocalDate.now().minusDays(1)
+        val due = dueDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+            ?: issued.plusDays(30)
+
+        val resolvedCounterparty = clientName?.takeIf { it.isNotBlank() }
+            ?: CLIENT_NAME_BY_ID[clientId]
+            ?: "Supermercados Lima Norte"
+
         return Invoice(
-            id = invoiceNumber ?: "INV-API-${id ?: index}",
-            counterpartyName = clientName ?: return null,
-            amount = amount ?: return null,
+            id = invoiceNumber?.takeIf { it.isNotBlank() } ?: "INV-${id ?: (1100 + index)}",
+            counterpartyName = resolvedCounterparty,
+            amount = resolvedAmount,
             issuedOn = issued,
             dueOn = due,
-            type = if (type.equals("PAYABLE", ignoreCase = true)) InvoiceType.PAYABLE else InvoiceType.RECEIVABLE,
+            type = if (invoiceType.equals("PAYABLE", ignoreCase = true)) InvoiceType.PAYABLE else InvoiceType.RECEIVABLE,
             status = when (status?.uppercase()) {
                 "PAID" -> InvoiceStatus.PAID
                 "OVERDUE" -> InvoiceStatus.OVERDUE
                 else -> InvoiceStatus.PENDING
-            }
+            },
+            orderId = orderId?.let { "FX-$it" }
         )
     }
 
     companion object {
         val instance: FakeBillingRepository by lazy { FakeBillingRepository() }
+
+        private val CLIENT_NAME_BY_ID = mapOf(
+            101 to "Supermercados Lima Norte",
+            102 to "Supermercados Lima Centro",
+            103 to "Mercados Lima Sur",
+            104 to "Plaza Vea Callao",
+            105 to "Distribuidora Andina",
+            106 to "Distribuidora Pacífico"
+        )
 
         private val PRICE_HISTORY: Map<Pair<String, String>, List<Double>> = mapOf(
             ("Palta Hass" to "Supermercados Lima Norte") to listOf(8.2, 8.5, 9.0, 8.8, 9.4),
@@ -126,7 +167,6 @@ class FakeBillingRepository private constructor() : BillingRepository {
             "Supermercados Lima Norte", "Mercados Lima Sur", "Supermercados Lima Centro", "Plaza Vea Callao"
         )
 
-        // Plaza Vea Callao has no finished purchases yet (US69, scenario 2)
         private val PURCHASES = listOf(
             PurchaseSummary("Supermercados Lima Norte", SummaryPeriod.WEEK, 1850, 17390.0, 3),
             PurchaseSummary("Supermercados Lima Norte", SummaryPeriod.MONTH, 7420, 69748.0, 12),
@@ -140,12 +180,10 @@ class FakeBillingRepository private constructor() : BillingRepository {
             fun invoice(id: String, who: String, amount: Double, issuedDaysAgo: Long, type: InvoiceType, status: InvoiceStatus, order: String? = null) =
                 Invoice(id, who, amount, today.minusDays(issuedDaysAgo), today.minusDays(issuedDaysAgo).plusDays(30), type, status, order)
             return listOf(
-                // To collect from clients
                 invoice("INV-1035", "Supermercados Lima Centro", 9880.0, 3, InvoiceType.RECEIVABLE, InvoiceStatus.PENDING, "FX-1035"),
                 invoice("INV-1029", "Supermercados Lima Norte", 8450.0, 12, InvoiceType.RECEIVABLE, InvoiceStatus.PENDING),
                 invoice("INV-1032", "Distribuidora Pacífico", 6200.0, 6, InvoiceType.RECEIVABLE, InvoiceStatus.PAID, "FX-1032"),
                 invoice("INV-1026", "Mercados Lima Sur", 3850.0, 40, InvoiceType.RECEIVABLE, InvoiceStatus.PENDING),
-                // To pay to producers
                 invoice("INV-2031", "Fundo Santa Rosa", 5200.0, 4, InvoiceType.PAYABLE, InvoiceStatus.PENDING),
                 invoice("INV-2028", "Agro Valle Verde", 3200.0, 8, InvoiceType.PAYABLE, InvoiceStatus.PAID),
                 invoice("INV-2024", "Campos del Norte", 4100.0, 35, InvoiceType.PAYABLE, InvoiceStatus.PENDING)

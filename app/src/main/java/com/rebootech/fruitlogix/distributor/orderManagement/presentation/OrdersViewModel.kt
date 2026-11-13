@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-
+import kotlinx.coroutines.launch
 data class OrdersUiState(
     val orders: List<DistributorOrder> = emptyList(),
     /** null = all statuses. */
@@ -23,15 +23,19 @@ data class OrdersUiState(
     fun count(status: OrderStatus): Int = orders.count { it.status == status }
 }
 
-class OrdersViewModel : ViewModel() {
+class OrdersViewModel(
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
+) : ViewModel() {
 
-    private val repository: OrderRepository = FakeOrderRepository.instance
     private val filter = MutableStateFlow<OrderStatus?>(null)
 
-    // The list follows the repository: new, edited, deleted and received orders show up at once.
     val uiState: StateFlow<OrdersUiState> = combine(repository.orders, filter) { orders, filter ->
         OrdersUiState(orders = orders, filter = filter)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OrdersUiState(orders = repository.orders.value))
+
+    init {
+        viewModelScope.launch { repository.refresh() }
+    }
 
     fun onFilterChange(status: OrderStatus?) {
         filter.value = status

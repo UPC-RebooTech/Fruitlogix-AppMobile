@@ -1,5 +1,6 @@
 ﻿package com.rebootech.fruitlogix.distributor.fleetManagement.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Assignment
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Driver
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.DriverStatus
@@ -10,6 +11,8 @@ import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Vehicle
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.repository.DriverRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
+import com.rebootech.fruitlogix.shared.core.network.CreateDeliveryRequestDto
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,16 +23,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
- * Drivers and vehicles of the Lima Central Hub: the same units, plates and people as the Fleet
- * trips. Orders "in preparation" (read through the Orders domain interface) are the dispatches
- * that still need a driver and a truck.
+ * Conductores y vehículos del Lima Central Hub.
+ *
+ * NOTA DE INTEGRACIÓN CON BACKEND:
+ * El backend de FruitLogix no expone endpoints para un catálogo de conductores (/drivers) ni vehículos (/vehicles),
+ * ni un endpoint específico para asignar conductor/vehículo a una orden (el endpoint PATCH /orders/{id}/assign-producer
+ * es exclusivo para productores agrícolas y NO debe usarse aquí).
+ * Cuando el distribuidor asigna un conductor y vehículo a una orden en preparación (US79), si la orden cuenta con un ID
+ * real en la base de datos de Render, se crea la entrega correspondiente mediante POST /api/v1/deliveries.
  */
-class FakeDriverRepository(orderRepository: OrderRepository) : DriverRepository {
+class FakeDriverRepository(
+    private val orderRepository: OrderRepository
+) : DriverRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val assignedOrders = MutableStateFlow(emptySet<String>())
 
     private val _drivers = MutableStateFlow(initialDrivers())
@@ -48,6 +60,7 @@ class FakeDriverRepository(orderRepository: OrderRepository) : DriverRepository 
         val vehicle = _vehicles.value.firstOrNull { it.id == vehicleId } ?: return
         val driver = _drivers.value.firstOrNull { it.id == driverId } ?: return
         val order = pendingDispatches.value.firstOrNull { it.orderId == orderId } ?: return
+
         _drivers.update { list ->
             list.map {
                 if (it.id == driverId) it.copy(
@@ -56,8 +69,41 @@ class FakeDriverRepository(orderRepository: OrderRepository) : DriverRepository 
                 ) else it
             }
         }
-        _vehicles.update { list -> list.map { if (it.id == vehicleId) it.copy(status = VehicleStatus.ON_ROUTE, driverName = driver.name) else it } }
+        _vehicles.update { list ->
+            list.map {
+                if (it.id == vehicleId) it.copy(status = VehicleStatus.ON_ROUTE, driverName = driver.name) else it
+            }
+        }
         assignedOrders.update { it + orderId }
+
+        // Si la orden existe en la BD del backend, registramos el despacho en POST /api/v1/deliveries
+        val realOrderId = orderRepository.backendIdFor(order.orderId)
+        if (realOrderId != null) {
+            scope.launch {
+                runCatching {
+                    RetrofitClient.api.createDelivery(
+                        CreateDeliveryRequestDto(
+                            orderId = realOrderId,
+                            originAddress = "Lima Central Hub, Callao",
+                            destinationAddress = order.clientName,
+                            estimatedArrival = LocalDateTime.now().plusHours(4).toString(),
+                            notes = "Unidad: ${vehicle.unitCode} (${vehicle.plate}) | Conductor: ${driver.name}"
+                        )
+                    )
+                }.onSuccess { response ->
+                    if (!response.isSuccessful) {
+                        Log.w("FruitLogix-API", "POST /deliveries devolvió HTTP ${response.code()} al asignar recursos")
+                    }
+                }.onFailure { err ->
+                    Log.w("FruitLogix-API", "Asignación guardada localmente; sin conexión a /deliveries: ${err.message}")
+                }
+            }
+        } else {
+            Log.i(
+                "FruitLogix-API",
+                "Asignación de conductor ${driver.name} y unidad ${vehicle.plate} para ${order.orderId} mantenida localmente (falta endpoint /assign-driver-vehicle en backend)."
+            )
+        }
     }
 
     private companion object {
@@ -70,11 +116,9 @@ class FakeDriverRepository(orderRepository: OrderRepository) : DriverRepository 
                     Assignment("FL-408", "C7X-915", "FX-1042", "Chavín de Huántar → Lima Central Hub")),
                 Driver("d3", "Luis Ramos", "+51 944 870 615", "A-IIIb", today.plusMonths(8), true, DriverStatus.ON_ROUTE,
                     Assignment("FL-219", "AFR-307", "FX-1038", "Piura → Lima Central Hub")),
-                // License expiring soon: can drive, with a warning
                 Driver("d4", "Pedro Salazar", "+51 933 210 456", "A-IIIc", today.plusDays(20), true, DriverStatus.AVAILABLE),
                 Driver("d5", "Ana Torres", "+51 922 678 901", "A-IIb", today.plusYears(1), false, DriverStatus.OFF_DUTY,
                     restUntil = LocalDate.now().plusDays(1).atTime(6, 0)),
-                // Expired license: listed but cannot be assigned
                 Driver("d6", "Ricardo Paredes", "+51 911 456 789", "A-IIIc", today.minusMonths(13), true, DriverStatus.AVAILABLE)
             )
         }
