@@ -27,8 +27,15 @@ object RetrofitClient {
     private val _syncStatus = MutableStateFlow(BackendSyncStatus.CONNECTING)
     val syncStatus: StateFlow<BackendSyncStatus> = _syncStatus.asStateFlow()
 
-    fun updateSyncStatus(status: BackendSyncStatus) {
+    private val _lastError = MutableStateFlow<String?>(null)
+    val lastError: StateFlow<String?> = _lastError.asStateFlow()
+
+    fun updateSyncStatus(status: BackendSyncStatus, errorMessage: String? = null) {
         _syncStatus.value = status
+        _lastError.value = errorMessage
+        if (errorMessage != null) {
+            Log.e("FruitLogix-API", "Sync status [${status.name}]: $errorMessage")
+        }
     }
 
     private val authInterceptor = Interceptor { chain ->
@@ -37,7 +44,7 @@ object RetrofitClient {
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
 
-        jwtToken?.let { token ->
+        jwtToken?.takeIf { it.isNotBlank() }?.let { token ->
             builder.header("Authorization", "Bearer $token")
         }
 
@@ -53,9 +60,9 @@ object RetrofitClient {
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(20, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .writeTimeout(20, TimeUnit.SECONDS)
         .build()
 
     val api: FruitLogixApiService by lazy {

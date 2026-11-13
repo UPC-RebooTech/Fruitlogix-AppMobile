@@ -18,11 +18,6 @@ import com.rebootech.fruitlogix.distributor.profilesManagement.domain.repository
 import com.rebootech.fruitlogix.distributor.qualityControl.data.FakeQualityRepository
 import com.rebootech.fruitlogix.distributor.qualityControl.domain.repository.QualityRepository
 
-/**
- * Composition root of the distributor (there is no DI framework). This is the only place that
- * knows the fake implementations: contexts depend on each other only through domain interfaces.
- * Swapping a fake for the Render backend later means changing one line here.
- */
 object DistributorDependencies {
     val orderRepository: OrderRepository by lazy { FakeOrderRepository.instance }
     val iotRepository: IotRepository by lazy { FakeIotRepository() }
@@ -35,7 +30,6 @@ object DistributorDependencies {
     @Volatile
     private var settings: DistributorSettingsRepository? = null
 
-    /** Settings live in SharedPreferences, so they need a Context the first time. */
     fun settingsRepository(context: Context): DistributorSettingsRepository =
         settings ?: synchronized(this) {
             settings ?: PrefsDistributorSettingsRepository(
@@ -44,7 +38,9 @@ object DistributorDependencies {
                     { orderRepository.refresh() },
                     { billingRepository.refresh() },
                     { profilesRepository.refresh() },
-                    { qualityRepository.refresh() }
+                    { qualityRepository.refresh() },
+                    { fleetRepository.refresh() },
+                    { iotRepository.refresh() }
                 )
             ).also { settings = it }
         }

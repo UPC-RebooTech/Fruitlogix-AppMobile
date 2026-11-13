@@ -1,5 +1,6 @@
 ﻿package com.rebootech.fruitlogix.distributor.orderManagement.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DeleteOrderResult
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanResult
@@ -10,8 +11,11 @@ import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderSt
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
-import com.rebootech.fruitlogix.shared.core.network.OrderDto
+import com.rebootech.fruitlogix.shared.core.network.CreateOrderRequestDto
+import com.rebootech.fruitlogix.shared.core.network.OrderItemRequestDto
+import com.rebootech.fruitlogix.shared.core.network.OrderResponseDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import com.rebootech.fruitlogix.shared.core.network.UpdateOrderRequestDto
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,14 +27,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
 
 class FakeOrderRepository private constructor() : OrderRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var nextOrderNumber = 1043
 
-    // Guarda la relación entre el ID visual ("FX-1043") y el ID numérico de la BD en Render
-    private val backendIdByCode = mutableMapOf<String, String>()
+    // Mapa real entre el código visual ("FX-1043") y el ID primario (Int) de PostgreSQL en Render
+    private val backendIds = ConcurrentHashMap<String, Int>()
+    private val deliveryIdByOrderCode = ConcurrentHashMap<String, Int>()
 
     private val _orders = MutableStateFlow(initialOrders())
     override val orders: StateFlow<List<DistributorOrder>> = _orders.asStateFlow()
@@ -45,9 +51,37 @@ class FakeOrderRepository private constructor() : OrderRepository {
     override fun orderById(orderId: String): DistributorOrder? =
         _orders.value.firstOrNull { it.id.equals(orderId, ignoreCase = true) }
 
-    override suspend fun createOrder(draft: OrderDraft): DistributorOrder {
-        val order = DistributorOrder(
-            id = "FX-${nextOrderNumber++}",
+    override fun backendIdFor(orderId: String): Int? = backendIds[orderId.uppercase()]
+
+    override suspend fun createOrder(draft: OrderDraft): DistributorOrder = withContext(Dispatchers.IO) {
+        val requestDto = draft.toCreateRequestDto()
+        val remoteResult = runCatching { RetrofitClient.api.createOrder(requestDto) }
+
+        var assignedCode = "FX-${nextOrderNumber++}"
+        remoteResult.onSuccess { response ->
+            if (response.isSuccessful) {
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                val body = response.body()
+                val realId = body?.id
+                val serverCode = body?.orderNumber?.takeIf { it.isNotBlank() }
+                    ?: realId?.let { "FX-$it" }
+                if (serverCode != null) assignedCode = serverCode
+                if (realId != null) backendIds[assignedCode.uppercase()] = realId
+            } else {
+                RetrofitClient.updateSyncStatus(
+                    BackendSyncStatus.OFFLINE_FALLBACK,
+                    "POST /orders rechazado (HTTP ${response.code()})"
+                )
+            }
+        }.onFailure { err ->
+            RetrofitClient.updateSyncStatus(
+                BackendSyncStatus.OFFLINE_FALLBACK,
+                "POST /orders sin conexión: ${err.message}"
+            )
+        }
+
+        val createdOrder = DistributorOrder(
+            id = assignedCode,
             clientName = draft.clientName.trim(),
             productName = draft.productName.trim(),
             quantityTons = draft.quantityTons,
@@ -56,24 +90,32 @@ class FakeOrderRepository private constructor() : OrderRepository {
             status = OrderStatus.PENDING,
             createdAt = LocalDateTime.now()
         )
-        _orders.update { listOf(order) + it }
-
-        // Guardar en el backend Render (POST /api/v1/orders)
-        scope.launch {
-            runCatching {
-                RetrofitClient.api.createOrder(order.toDto())
-            }.onSuccess { createdDto ->
-                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-                createdDto.id?.let { backendIdByCode[order.id] = it.toString() }
-            }
-        }
-        return order
+        _orders.update { listOf(createdOrder) + it.filterNot { existing -> existing.id == createdOrder.id } }
+        createdOrder
     }
 
-    override suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean {
-        val current = orderById(orderId) ?: return false
-        if (!current.isEditable) return false
-        var updatedOrder: DistributorOrder? = null
+    override suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean = withContext(Dispatchers.IO) {
+        val current = orderById(orderId) ?: return@withContext false
+        if (!current.isEditable) return@withContext false
+
+        val realId = backendIds[current.id.uppercase()]
+        if (realId != null) {
+            val responseResult = runCatching {
+                RetrofitClient.api.updateOrder(realId, draft.toUpdateRequestDto(current.id))
+            }
+            val response = responseResult.getOrNull()
+            if (response != null && !response.isSuccessful) {
+                // El servidor rechazó explícitamente la edición: no fingir éxito
+                RetrofitClient.updateSyncStatus(
+                    BackendSyncStatus.ONLINE,
+                    "PUT /orders/$realId rechazado (HTTP ${response.code()})"
+                )
+                return@withContext false
+            }
+        } else {
+            Log.w("FruitLogix-API", "Orden ${current.id} es sólo local (sin ID en BD); actualizando en memoria.")
+        }
+
         _orders.update { list ->
             list.map {
                 if (it.id == current.id) {
@@ -83,29 +125,30 @@ class FakeOrderRepository private constructor() : OrderRepository {
                         quantityTons = draft.quantityTons,
                         pallets = OrderValidator.estimatePallets(draft.quantityTons),
                         deliveryDate = draft.deliveryDate
-                    ).also { u -> updatedOrder = u }
+                    )
                 } else it
             }
         }
-        updatedOrder?.let { u ->
-            val remoteId = backendIdByCode[u.id] ?: u.id.removePrefix("FX-")
-            scope.launch {
-                runCatching { RetrofitClient.api.updateOrder(remoteId, u.toDto()) }
-            }
-        }
-        return true
+        true
     }
 
-    override suspend fun deleteOrder(orderId: String): DeleteOrderResult {
-        val order = orderById(orderId) ?: return DeleteOrderResult.NOT_FOUND
-        if (!order.canBeDeleted()) return DeleteOrderResult.WINDOW_EXPIRED
-        _orders.update { list -> list.filterNot { it.id == order.id } }
+    override suspend fun deleteOrder(orderId: String): DeleteOrderResult = withContext(Dispatchers.IO) {
+        val order = orderById(orderId) ?: return@withContext DeleteOrderResult.NOT_FOUND
+        if (!order.canBeDeleted()) return@withContext DeleteOrderResult.WINDOW_EXPIRED
 
-        val remoteId = backendIdByCode[order.id] ?: order.id.removePrefix("FX-")
-        scope.launch {
-            runCatching { RetrofitClient.api.deleteOrder(remoteId) }
+        val realId = backendIds[order.id.uppercase()]
+        if (realId != null) {
+            val responseResult = runCatching { RetrofitClient.api.deleteOrder(realId) }
+            val response = responseResult.getOrNull()
+            if (response != null && !response.isSuccessful && response.code() != 404) {
+                Log.e("FruitLogix-API", "DELETE /orders/$realId falló con HTTP ${response.code()}")
+                return@withContext DeleteOrderResult.NOT_FOUND
+            }
+            backendIds.remove(order.id.uppercase())
         }
-        return DeleteOrderResult.SUCCESS
+
+        _orders.update { list -> list.filterNot { it.id == order.id } }
+        DeleteOrderResult.SUCCESS
     }
 
     override fun validateLotCode(code: String): LotScanResult {
@@ -120,9 +163,25 @@ class FakeOrderRepository private constructor() : OrderRepository {
         }
     }
 
-    override suspend fun confirmReception(orderId: String): Boolean {
-        val order = orderById(orderId) ?: return false
-        if (order.status != OrderStatus.ON_ROUTE) return false
+    override suspend fun confirmReception(orderId: String): Boolean = withContext(Dispatchers.IO) {
+        val order = orderById(orderId) ?: return@withContext false
+        if (order.status != OrderStatus.ON_ROUTE) return@withContext false
+
+        // Utilizar el endpoint de completado de entrega en Deliveries (no un PUT genérico a orders)
+        val realOrderId = backendIds[order.id.uppercase()]
+        val knownDeliveryId = deliveryIdByOrderCode[order.id.uppercase()] ?: realOrderId
+        if (knownDeliveryId != null) {
+            runCatching {
+                RetrofitClient.api.completeDelivery(knownDeliveryId)
+            }.onSuccess { response ->
+                if (!response.isSuccessful) {
+                    Log.w("FruitLogix-API", "POST /deliveries/$knownDeliveryId/complete devolvió HTTP ${response.code()}")
+                }
+            }.onFailure { err ->
+                Log.w("FruitLogix-API", "No se pudo sincronizar recepción remota: ${err.message}")
+            }
+        }
+
         _orders.update { list -> list.filterNot { it.id == order.id } }
         _history.update {
             listOf(
@@ -136,74 +195,145 @@ class FakeOrderRepository private constructor() : OrderRepository {
                 )
             ) + it
         }
-
-        val remoteId = backendIdByCode[order.id] ?: order.id.removePrefix("FX-")
-        scope.launch {
-            runCatching {
-                RetrofitClient.api.updateOrder(
-                    remoteId,
-                    order.toDto().copy(status = "DELIVERED")
-                )
-            }
-        }
-        return true
+        true
     }
 
     override suspend fun refresh() {
         val remote = withContext(Dispatchers.IO) { runCatching { RetrofitClient.api.getOrders() } }
-        remote.onSuccess { dtos ->
-            RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-            val mapped = dtos.mapIndexedNotNull { index, dto -> dto.toDomain(index) }
-            if (mapped.isNotEmpty()) {
-                _orders.update { current ->
-                    (mapped + current).distinctBy { it.id }
+        remote.onSuccess { response ->
+            if (response.isSuccessful) {
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                val dtos = response.body().orEmpty()
+                val mappedActive = mutableListOf<DistributorOrder>()
+                val mappedHistory = mutableListOf<OrderHistoryItem>()
+
+                dtos.forEachIndexed { index, dto ->
+                    val statusUpper = dto.status?.uppercase().orEmpty()
+                    if (statusUpper == "DELIVERED" || statusUpper == "COMPLETED" || statusUpper == "CANCELLED") {
+                        dto.toHistoryItem(index)?.let { mappedHistory.add(it) }
+                    } else {
+                        dto.toDomainOrder(index)?.let { mappedActive.add(it) }
+                    }
                 }
+
+                if (mappedActive.isNotEmpty()) {
+                    _orders.update { local ->
+                        (mappedActive + local).distinctBy { it.id.uppercase() }
+                    }
+                }
+                if (mappedHistory.isNotEmpty()) {
+                    _history.update { local ->
+                        (mappedHistory + local).distinctBy { it.id.uppercase() }
+                    }
+                }
+            } else {
+                RetrofitClient.updateSyncStatus(
+                    BackendSyncStatus.OFFLINE_FALLBACK,
+                    "GET /orders devolvió HTTP ${response.code()}"
+                )
             }
-        }.onFailure {
-            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+        }.onFailure { err ->
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, err.message)
         }
     }
 
-    private fun DistributorOrder.toDto(): OrderDto = OrderDto(
-        orderNumber = id,
-        clientId = "1",
-        clientName = clientName,
-        producerId = "1",
-        productName = productName,
-        quantityKg = quantityTons * 1000.0,
-        totalAmount = quantityTons * 1000.0 * 8.5,
-        status = status.name,
-        deliveryDate = deliveryDate.toString(),
-        createdAt = createdAt.toString()
-    )
+    private fun OrderDraft.toCreateRequestDto(): CreateOrderRequestDto {
+        val clientNameClean = clientName.trim()
+        val prodNameClean = productName.trim()
+        val kg = (quantityTons * 1000.0).coerceAtLeast(1.0)
+        val unitPrice = UNIT_PRICE_BY_PRODUCT[prodNameClean] ?: 8.50
+        val subtotal = kg * unitPrice
 
-    private fun OrderDto.toDomain(index: Int): DistributorOrder? {
-        val code = orderNumber?.takeIf { it.isNotBlank() } ?: "FX-${id ?: (1100 + index)}"
-        id?.let { backendIdByCode[code] = it.toString() }
-        val tons = when {
-            quantityKg != null && quantityKg > 100.0 -> quantityKg / 1000.0
-            quantityKg != null && quantityKg > 0.0 -> quantityKg
-            else -> 10.0
+        return CreateOrderRequestDto(
+            commercialClientId = resolveClientId(clientNameClean),
+            deliveryDueDate = deliveryDate.atTime(14, 0).toString(),
+            deliveryAddress = ADDRESS_BY_CLIENT[clientNameClean] ?: "Lima Central Hub - Av. Argentina 3090, Callao",
+            totalAmount = subtotal,
+            notes = "Cliente: $clientNameClean | Pallets estimados: ${OrderValidator.estimatePallets(quantityTons)}",
+            items = listOf(
+                OrderItemRequestDto(
+                    productId = resolveProductId(prodNameClean),
+                    productName = prodNameClean,
+                    quantityKg = kg,
+                    unitPrice = unitPrice,
+                    subtotal = subtotal
+                )
+            )
+        )
+    }
+
+    private fun OrderDraft.toUpdateRequestDto(orderCode: String): UpdateOrderRequestDto {
+        val createDto = toCreateRequestDto()
+        return UpdateOrderRequestDto(
+            commercialClientId = createDto.commercialClientId,
+            deliveryDueDate = createDto.deliveryDueDate,
+            deliveryAddress = createDto.deliveryAddress,
+            totalAmount = createDto.totalAmount,
+            notes = "Orden $orderCode | ${createDto.notes.orEmpty()}",
+            items = createDto.items
+        )
+    }
+
+    private fun OrderResponseDto.toDomainOrder(index: Int): DistributorOrder? {
+        val realId = id
+        val code = orderNumber?.takeIf { it.isNotBlank() }
+            ?: realId?.let { "FX-$it" }
+            ?: "FX-${1100 + index}"
+
+        if (realId != null) {
+            backendIds[code.uppercase()] = realId
         }
-        val parsedDate = deliveryDate?.take(10)?.let {
+
+        val firstItem = items?.firstOrNull()
+        val prodName = firstItem?.productName?.takeIf { it.isNotBlank() } ?: "Palta Hass"
+        val kg = firstItem?.quantityKg ?: 10000.0
+        val tons = (kg / 1000.0).coerceAtLeast(0.5)
+
+        val resolvedClient = clientName?.takeIf { it.isNotBlank() }
+            ?: notes?.substringAfter("Cliente: ", "")?.substringBefore("|")?.trim()?.takeIf { it.isNotBlank() }
+            ?: CLIENT_BY_ID[commercialClientId]
+            ?: "Supermercados Lima Norte"
+
+        val parsedDueDate = deliveryDueDate?.take(10)?.let {
             runCatching { LocalDate.parse(it) }.getOrNull()
         } ?: LocalDate.now().plusDays(2)
 
+        val parsedCreatedAt = createdAt?.take(19)?.let {
+            runCatching { LocalDateTime.parse(it) }.getOrNull()
+        } ?: LocalDateTime.now().minusHours(1)
+
         val mappedStatus = when (status?.uppercase()) {
-            "ON_ROUTE", "IN_TRANSIT" -> OrderStatus.ON_ROUTE
-            "IN_PREPARATION", "PREPARING" -> OrderStatus.IN_PREPARATION
+            "ON_ROUTE", "IN_TRANSIT", "DISPATCHED" -> OrderStatus.ON_ROUTE
+            "IN_PREPARATION", "PREPARING", "ASSIGNED" -> OrderStatus.IN_PREPARATION
             else -> OrderStatus.PENDING
         }
 
         return DistributorOrder(
             id = code,
-            clientName = clientName?.takeIf { it.isNotBlank() } ?: "Supermercados Lima Norte",
-            productName = productName?.takeIf { it.isNotBlank() } ?: "Palta Hass",
+            clientName = resolvedClient,
+            productName = prodName,
             quantityTons = tons,
             pallets = OrderValidator.estimatePallets(tons),
-            deliveryDate = parsedDate,
+            deliveryDate = parsedDueDate,
             status = mappedStatus,
-            createdAt = LocalDateTime.now().minusHours(2)
+            createdAt = parsedCreatedAt
+        )
+    }
+
+    private fun OrderResponseDto.toHistoryItem(index: Int): OrderHistoryItem? {
+        val domain = toDomainOrder(index) ?: return null
+        val histStatus = if (status?.uppercase() == "CANCELLED") {
+            OrderHistoryStatus.CANCELLED
+        } else {
+            OrderHistoryStatus.DELIVERED
+        }
+        return OrderHistoryItem(
+            id = domain.id,
+            clientName = domain.clientName,
+            producerName = producerId?.let { "Productor #$it" } ?: (PRODUCER_BY_ORDER[domain.id] ?: "Fundo Santa Rosa"),
+            productName = domain.productName,
+            completedAt = domain.createdAt,
+            status = histStatus
         )
     }
 
@@ -214,6 +344,47 @@ class FakeOrderRepository private constructor() : OrderRepository {
         const val DEMO_INVALID_CODE = "DAMAGED-CODE"
 
         private val LOT_REGEX = Regex("^LOT-(FX-\\d+)")
+
+        private val CLIENT_ID_BY_NAME = mapOf(
+            "Supermercados Lima Norte" to 101,
+            "Supermercados Lima Centro" to 102,
+            "Mercados Lima Sur" to 103,
+            "Plaza Vea Callao" to 104,
+            "Distribuidora Andina" to 105,
+            "Distribuidora Pacífico" to 106
+        )
+
+        private val CLIENT_BY_ID = CLIENT_ID_BY_NAME.entries.associate { (k, v) -> v to k }
+
+        private val ADDRESS_BY_CLIENT = mapOf(
+            "Supermercados Lima Norte" to "Av. Alfredo Mendiola 3698, Independencia, Lima",
+            "Supermercados Lima Centro" to "Av. Alfonso Ugarte 1140, Breña, Lima",
+            "Mercados Lima Sur" to "Panamericana Sur Km 18.5, San Juan de Miraflores, Lima",
+            "Plaza Vea Callao" to "Av. Sáenz Peña 1250, Callao",
+            "Distribuidora Andina" to "Mercado Mayorista Santa Anita, Pabellón A, Lima"
+        )
+
+        private val PRODUCT_ID_BY_NAME = mapOf(
+            "Palta Hass" to 1,
+            "Uva Red Globe" to 2,
+            "Mango Kent" to 3,
+            "Arándano" to 4,
+            "Fresa" to 5
+        )
+
+        private val UNIT_PRICE_BY_PRODUCT = mapOf(
+            "Palta Hass" to 9.40,
+            "Uva Red Globe" to 8.60,
+            "Mango Kent" to 7.50,
+            "Arándano" to 18.50,
+            "Fresa" to 6.80
+        )
+
+        fun resolveClientId(clientName: String): Int =
+            CLIENT_ID_BY_NAME[clientName] ?: ((clientName.lowercase().hashCode() and 0x7FFFFFFF) % 900 + 100)
+
+        fun resolveProductId(productName: String): Int =
+            PRODUCT_ID_BY_NAME[productName] ?: ((productName.lowercase().hashCode() and 0x7FFFFFFF) % 50 + 1)
 
         private val PRODUCER_BY_ORDER = mapOf(
             "FX-1042" to "Fundo Santa Rosa",

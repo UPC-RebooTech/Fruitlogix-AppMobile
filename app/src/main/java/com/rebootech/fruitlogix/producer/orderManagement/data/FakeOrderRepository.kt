@@ -83,7 +83,7 @@ class FakeOrderRepository : OrderRepository {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val remoteOrders = RetrofitClient.api.getOrders()
-                if (remoteOrders.isNotEmpty()) {
+                if (remoteOrders.isSuccessful && !remoteOrders.body().isNullOrEmpty()) {
                     Log.d("FruitLogix-API", "Órdenes sincronizadas desde Render exitosamente.")
                     RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
                 }

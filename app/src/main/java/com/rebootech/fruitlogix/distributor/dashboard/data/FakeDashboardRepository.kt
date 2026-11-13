@@ -16,43 +16,73 @@ import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.rules.Arr
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.service.PredictTemperatureBreachUseCase
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
+import com.rebootech.fruitlogix.distributor.qualityControl.domain.model.LotStatus
+import com.rebootech.fruitlogix.distributor.qualityControl.domain.repository.QualityRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlin.math.roundToInt
 
-/**
- * Builds the Home from the other contexts, only through their domain interfaces: orders,
- * trucks and alerts are the same ones the Orders and Fleet tabs show.
- * Deliveries, ETA average and quality are still sample figures.
- */
 class FakeDashboardRepository(
     private val orders: OrderRepository = DistributorDependencies.orderRepository,
     private val fleet: FleetRepository = DistributorDependencies.fleetRepository,
-    private val iot: IotRepository = DistributorDependencies.iotRepository
+    private val iot: IotRepository = DistributorDependencies.iotRepository,
+    private val quality: QualityRepository = DistributorDependencies.qualityRepository
 ) {
     private val predictor = PredictTemperatureBreachUseCase()
 
     fun observeDashboard(): Flow<DashboardData> =
-        combine(orders.orders, fleet.dispatches, iot.devices, iot.alerts) { orderList, dispatches, _, alerts ->
+        combine(
+            orders.orders,
+            orders.history,
+            fleet.dispatches,
+            iot.alerts,
+            quality.lots
+        ) { orderList, historyList, dispatches, alerts, qualityLots ->
             val active = dispatches.filter { it.isActive }
             val predictions = active.associate { it.unitId to predict(it) }
+
+            val avgEta = if (active.isNotEmpty()) {
+                active.map { ((it.remainingKm / 55.0) * 60.0).roundToInt() + it.delayMinutes }
+                    .average()
+                    .roundToInt()
+                    .coerceAtLeast(5)
+            } else {
+                0
+            }
+
+            val decidedLots = qualityLots.filter { it.status != LotStatus.PENDING }
+            val approvalPct = if (decidedLots.isNotEmpty()) {
+                val approved = decidedLots.count { it.status == LotStatus.APPROVED }
+                ((approved.toDouble() / decidedLots.size) * 1000.0).roundToInt() / 10.0
+            } else {
+                100.0
+            }
+
             DashboardData(
                 hubName = GeofenceZone().name,
-                // The riskiest truck; if none is at risk, the first one ("all in range")
                 temperatureAlert = predictions.values.filterNotNull()
                     .sortedBy { if (it.status == PredictiveAlertStatus.NOMINAL) 1 else 0 }
                     .firstOrNull(),
                 summary = DashboardSummary(
                     activeOrders = orderList.size,
                     pendingOrders = orderList.count { it.status == OrderStatus.PENDING },
-                    deliveriesToday = 32,
-                    averageEtaMinutes = 42,
-                    qualityApprovalPct = 98.4,
-                    lotsInspected = 200,
+                    deliveriesToday = dispatches.size + historyList.size,
+                    averageEtaMinutes = avgEta,
+                    qualityApprovalPct = approvalPct,
+                    lotsInspected = qualityLots.size,
                     criticalAlerts = alerts.count { it.severity == AlertSeverity.CRITICAL },
                     warningAlerts = alerts.count { it.severity == AlertSeverity.WARNING }
                 ),
                 tasks = buildList {
-                    add(DistributorTask.MissingDispatchGuide(id = "task-guide", orderId = "FX-1040", producerName = "Agro Valle Verde"))
+                    orderList.firstOrNull { it.status == OrderStatus.IN_PREPARATION }?.let { prepOrder ->
+                        add(
+                            DistributorTask.MissingDispatchGuide(
+                                id = "task-guide-${prepOrder.id}",
+                                orderId = prepOrder.id,
+                                producerName = "Agro Valle Verde"
+                            )
+                        )
+                    }
                     active.filter { ArrivalRules.isAtGate(it) }.forEach {
                         add(DistributorTask.ReceiveAtDock("task-${it.unitId}", it.unitId, it.dock, it.pallets, it.productName))
                     }

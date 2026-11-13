@@ -92,7 +92,7 @@ class FakePaymentRepository : PaymentRepository {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val remoteOrders = RetrofitClient.api.getOrders()
-                if (remoteOrders.isNotEmpty()) {
+                if (remoteOrders.isSuccessful && !remoteOrders.body().isNullOrEmpty()) {
                     Log.d("FruitLogix-API", "Resumen de pagos sincronizado desde Render.")
                     RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
                 }

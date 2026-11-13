@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.auth.data.DataStoreSessionRepository
+import com.rebootech.fruitlogix.distributor.DistributorDependencies
 import com.rebootech.fruitlogix.distributor.dashboard.data.FakeDashboardRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +29,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { it.copy(isLoading = false, data = data, userName = firstName) }
             }
         }
-        viewModelScope.launch {
-            com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository.refresh()
-            com.rebootech.fruitlogix.distributor.DistributorDependencies.billingRepository.refresh()
-            com.rebootech.fruitlogix.distributor.DistributorDependencies.profilesRepository.refresh()
-            com.rebootech.fruitlogix.distributor.DistributorDependencies.qualityRepository.refresh()
-        }
+        viewModelScope.launch { DistributorDependencies.orderRepository.refresh() }
+        viewModelScope.launch { DistributorDependencies.billingRepository.refresh() }
+        viewModelScope.launch { DistributorDependencies.profilesRepository.refresh() }
+        viewModelScope.launch { DistributorDependencies.qualityRepository.refresh() }
+        viewModelScope.launch { DistributorDependencies.fleetRepository.refresh() }
+        viewModelScope.launch { DistributorDependencies.iotRepository.refresh() }
     }
-
 }

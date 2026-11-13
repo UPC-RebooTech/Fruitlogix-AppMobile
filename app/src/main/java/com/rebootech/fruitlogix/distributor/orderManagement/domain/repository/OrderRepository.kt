@@ -13,6 +13,9 @@ interface OrderRepository {
 
     fun orderById(orderId: String): DistributorOrder?
 
+    /** Devuelve el ID numérico real de la base de datos en Render si la orden ya está persistida. */
+    fun backendIdFor(orderId: String): Int? = null
+
     suspend fun createOrder(draft: OrderDraft): DistributorOrder
 
     suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean
@@ -23,6 +26,5 @@ interface OrderRepository {
 
     suspend fun confirmReception(orderId: String): Boolean
 
-    /** Sincroniza pedidos desde el backend en Render (/api/v1/orders). */
     suspend fun refresh() {}
 }
