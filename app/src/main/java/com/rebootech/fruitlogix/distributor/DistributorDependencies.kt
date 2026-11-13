@@ -32,15 +32,20 @@ object DistributorDependencies {
     val profilesRepository: ProfilesRepository by lazy { FakeProfilesRepository.instance }
     val driverRepository: DriverRepository by lazy { FakeDriverRepository(orderRepository) }
 
-    @Volatile private var settings: DistributorSettingsRepository? = null
+    @Volatile
+    private var settings: DistributorSettingsRepository? = null
 
     /** Settings live in SharedPreferences, so they need a Context the first time. */
     fun settingsRepository(context: Context): DistributorSettingsRepository =
         settings ?: synchronized(this) {
             settings ?: PrefsDistributorSettingsRepository(
                 context.applicationContext,
-                // Everything that syncs with Render today
-                refreshers = listOf({ billingRepository.refresh() }, { profilesRepository.refresh() })
+                refreshers = listOf(
+                    { orderRepository.refresh() },
+                    { billingRepository.refresh() },
+                    { profilesRepository.refresh() },
+                    { qualityRepository.refresh() }
+                )
             ).also { settings = it }
         }
 }

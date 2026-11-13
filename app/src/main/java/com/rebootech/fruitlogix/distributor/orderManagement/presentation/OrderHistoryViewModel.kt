@@ -31,7 +31,7 @@ data class OrderHistoryUiState(
 
 class OrderHistoryViewModel : ViewModel() {
 
-    private val repository: OrderRepository = FakeOrderRepository.instance
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
     private val query = MutableStateFlow("")
     private val status = MutableStateFlow<OrderHistoryStatus?>(null)
 

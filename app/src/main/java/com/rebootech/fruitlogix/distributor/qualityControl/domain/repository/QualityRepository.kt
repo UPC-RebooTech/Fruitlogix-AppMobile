@@ -20,4 +20,6 @@ interface QualityRepository {
     suspend fun addFieldInspection(lotCode: String, productName: String, celsius: Double, humidityPercent: Double)
 
     suspend fun addVoiceIncident(lotCode: String, description: String, voiceNoteSeconds: Int)
+
+    suspend fun refresh() {}
 }

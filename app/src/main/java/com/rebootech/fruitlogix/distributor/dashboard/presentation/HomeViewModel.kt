@@ -28,5 +28,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { it.copy(isLoading = false, data = data, userName = firstName) }
             }
         }
+        viewModelScope.launch {
+            com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository.refresh()
+            com.rebootech.fruitlogix.distributor.DistributorDependencies.billingRepository.refresh()
+            com.rebootech.fruitlogix.distributor.DistributorDependencies.profilesRepository.refresh()
+            com.rebootech.fruitlogix.distributor.DistributorDependencies.qualityRepository.refresh()
+        }
     }
+
 }

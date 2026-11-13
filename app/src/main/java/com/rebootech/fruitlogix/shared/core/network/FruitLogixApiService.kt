@@ -64,7 +64,7 @@ data class InvoiceDto(
     val status: String? = null
 )
 
-// ─── DTOs de Control de Calidad (US10, US12, US53) ─────────
+// ─── DTOs de Control de Calidad (US10, US12, US53, US57) ───
 data class QualityInspectionDto(
     val id: Int? = null,
     val batchId: String? = null,
@@ -73,6 +73,28 @@ data class QualityInspectionDto(
     val humidity: Double? = null,
     val status: String? = null,
     val comments: String? = null
+)
+
+// ─── DTOs de Logística e IoT (US14, US16, US18, US45, US62) ─
+data class DeliveryDto(
+    val id: String? = null,
+    val unitId: String? = null,
+    val orderId: String? = null,
+    val driverName: String? = null,
+    val vehiclePlate: String? = null,
+    val status: String? = null,
+    val eta: String? = null,
+    val notes: String? = null
+)
+
+data class IotSensorReadingDto(
+    val id: String? = null,
+    val deviceId: String? = null,
+    val unitId: String? = null,
+    val temperatureCelsius: Double? = null,
+    val humidityPercent: Double? = null,
+    val batteryPercent: Int? = null,
+    val status: String? = null
 )
 
 interface FruitLogixApiService {
@@ -125,4 +147,27 @@ interface FruitLogixApiService {
 
     @POST("quality-inspections")
     suspend fun createQualityInspection(@Body inspection: QualityInspectionDto): QualityInspectionDto
+
+    @PUT("quality-inspections/{id}")
+    suspend fun updateQualityInspection(
+        @Path("id") id: String,
+        @Body inspection: QualityInspectionDto
+    ): QualityInspectionDto
+
+    // Logística / Entregas
+    @GET("deliveries")
+    suspend fun getDeliveries(): List<DeliveryDto>
+
+    @POST("deliveries")
+    suspend fun createDelivery(@Body delivery: DeliveryDto): DeliveryDto
+
+    @PUT("deliveries/{id}")
+    suspend fun updateDelivery(@Path("id") id: String, @Body delivery: DeliveryDto): DeliveryDto
+
+    // Dispositivos y Lecturas IoT
+    @GET("sensor-readings")
+    suspend fun getSensorReadings(): List<IotSensorReadingDto>
+
+    @POST("sensor-readings")
+    suspend fun postSensorReading(@Body reading: IotSensorReadingDto): IotSensorReadingDto
 }

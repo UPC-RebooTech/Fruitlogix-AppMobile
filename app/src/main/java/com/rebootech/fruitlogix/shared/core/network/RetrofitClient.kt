@@ -19,7 +19,7 @@ enum class BackendSyncStatus(val label: String) {
 
 object RetrofitClient {
 
-    const val BASE_URL = "https://fruitlogix-platform.onrender.com/api/v1/"
+    const val BASE_URL = "https://rebootech-fruitlogix-api.onrender.com/api/v1/"
 
     @Volatile
     var jwtToken: String? = null

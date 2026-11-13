@@ -9,23 +9,38 @@ import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHi
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.OrderDto
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-/** In-memory orders shared by every distributor screen (use [instance]). */
 class FakeOrderRepository private constructor() : OrderRepository {
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var nextOrderNumber = 1043
+
+    // Guarda la relación entre el ID visual ("FX-1043") y el ID numérico de la BD en Render
+    private val backendIdByCode = mutableMapOf<String, String>()
 
     private val _orders = MutableStateFlow(initialOrders())
     override val orders: StateFlow<List<DistributorOrder>> = _orders.asStateFlow()
 
     private val _history = MutableStateFlow(initialHistory())
     override val history: StateFlow<List<OrderHistoryItem>> = _history.asStateFlow()
+
+    init {
+        scope.launch { refresh() }
+    }
 
     override fun orderById(orderId: String): DistributorOrder? =
         _orders.value.firstOrNull { it.id.equals(orderId, ignoreCase = true) }
@@ -41,14 +56,24 @@ class FakeOrderRepository private constructor() : OrderRepository {
             status = OrderStatus.PENDING,
             createdAt = LocalDateTime.now()
         )
-        // Newest first, so the user sees it at the top of the list
         _orders.update { listOf(order) + it }
+
+        // Guardar en el backend Render (POST /api/v1/orders)
+        scope.launch {
+            runCatching {
+                RetrofitClient.api.createOrder(order.toDto())
+            }.onSuccess { createdDto ->
+                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                createdDto.id?.let { backendIdByCode[order.id] = it.toString() }
+            }
+        }
         return order
     }
 
     override suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean {
         val current = orderById(orderId) ?: return false
         if (!current.isEditable) return false
+        var updatedOrder: DistributorOrder? = null
         _orders.update { list ->
             list.map {
                 if (it.id == current.id) {
@@ -58,8 +83,14 @@ class FakeOrderRepository private constructor() : OrderRepository {
                         quantityTons = draft.quantityTons,
                         pallets = OrderValidator.estimatePallets(draft.quantityTons),
                         deliveryDate = draft.deliveryDate
-                    )
+                    ).also { u -> updatedOrder = u }
                 } else it
+            }
+        }
+        updatedOrder?.let { u ->
+            val remoteId = backendIdByCode[u.id] ?: u.id.removePrefix("FX-")
+            scope.launch {
+                runCatching { RetrofitClient.api.updateOrder(remoteId, u.toDto()) }
             }
         }
         return true
@@ -69,10 +100,14 @@ class FakeOrderRepository private constructor() : OrderRepository {
         val order = orderById(orderId) ?: return DeleteOrderResult.NOT_FOUND
         if (!order.canBeDeleted()) return DeleteOrderResult.WINDOW_EXPIRED
         _orders.update { list -> list.filterNot { it.id == order.id } }
+
+        val remoteId = backendIdByCode[order.id] ?: order.id.removePrefix("FX-")
+        scope.launch {
+            runCatching { RetrofitClient.api.deleteOrder(remoteId) }
+        }
         return DeleteOrderResult.SUCCESS
     }
 
-    /** Lot labels look like "LOT-FX-1042-PALTA": the order id is inside. */
     override fun validateLotCode(code: String): LotScanResult {
         val clean = code.trim().uppercase()
         val orderId = LOT_REGEX.find(clean)?.groupValues?.get(1)
@@ -94,21 +129,87 @@ class FakeOrderRepository private constructor() : OrderRepository {
                 OrderHistoryItem(
                     id = order.id,
                     clientName = order.clientName,
-                    producerName = PRODUCER_BY_ORDER[order.id] ?: "—",
+                    producerName = PRODUCER_BY_ORDER[order.id] ?: "Fundo Santa Rosa",
                     productName = order.productName,
                     completedAt = LocalDateTime.now(),
                     status = OrderHistoryStatus.DELIVERED
                 )
             ) + it
         }
+
+        val remoteId = backendIdByCode[order.id] ?: order.id.removePrefix("FX-")
+        scope.launch {
+            runCatching {
+                RetrofitClient.api.updateOrder(
+                    remoteId,
+                    order.toDto().copy(status = "DELIVERED")
+                )
+            }
+        }
         return true
+    }
+
+    override suspend fun refresh() {
+        val remote = withContext(Dispatchers.IO) { runCatching { RetrofitClient.api.getOrders() } }
+        remote.onSuccess { dtos ->
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+            val mapped = dtos.mapIndexedNotNull { index, dto -> dto.toDomain(index) }
+            if (mapped.isNotEmpty()) {
+                _orders.update { current ->
+                    (mapped + current).distinctBy { it.id }
+                }
+            }
+        }.onFailure {
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK)
+        }
+    }
+
+    private fun DistributorOrder.toDto(): OrderDto = OrderDto(
+        orderNumber = id,
+        clientId = "1",
+        clientName = clientName,
+        producerId = "1",
+        productName = productName,
+        quantityKg = quantityTons * 1000.0,
+        totalAmount = quantityTons * 1000.0 * 8.5,
+        status = status.name,
+        deliveryDate = deliveryDate.toString(),
+        createdAt = createdAt.toString()
+    )
+
+    private fun OrderDto.toDomain(index: Int): DistributorOrder? {
+        val code = orderNumber?.takeIf { it.isNotBlank() } ?: "FX-${id ?: (1100 + index)}"
+        id?.let { backendIdByCode[code] = it.toString() }
+        val tons = when {
+            quantityKg != null && quantityKg > 100.0 -> quantityKg / 1000.0
+            quantityKg != null && quantityKg > 0.0 -> quantityKg
+            else -> 10.0
+        }
+        val parsedDate = deliveryDate?.take(10)?.let {
+            runCatching { LocalDate.parse(it) }.getOrNull()
+        } ?: LocalDate.now().plusDays(2)
+
+        val mappedStatus = when (status?.uppercase()) {
+            "ON_ROUTE", "IN_TRANSIT" -> OrderStatus.ON_ROUTE
+            "IN_PREPARATION", "PREPARING" -> OrderStatus.IN_PREPARATION
+            else -> OrderStatus.PENDING
+        }
+
+        return DistributorOrder(
+            id = code,
+            clientName = clientName?.takeIf { it.isNotBlank() } ?: "Supermercados Lima Norte",
+            productName = productName?.takeIf { it.isNotBlank() } ?: "Palta Hass",
+            quantityTons = tons,
+            pallets = OrderValidator.estimatePallets(tons),
+            deliveryDate = parsedDate,
+            status = mappedStatus,
+            createdAt = LocalDateTime.now().minusHours(2)
+        )
     }
 
     companion object {
         val instance: FakeOrderRepository by lazy { FakeOrderRepository() }
 
-        /** Codes for the scanner demo (the camera does not decode labels yet). */
-        /** Lot of FL-102, the truck waiting at the hub gate. */
         const val DEMO_VALID_CODE = "LOT-FX-1041-UVA"
         const val DEMO_INVALID_CODE = "DAMAGED-CODE"
 
@@ -136,7 +237,6 @@ class FakeOrderRepository private constructor() : OrderRepository {
                     status = OrderStatus.ON_ROUTE,
                     createdAt = now.minusHours(40)
                 ),
-                // FL-102 (Ica): at the hub gate now
                 DistributorOrder(
                     id = "FX-1041",
                     clientName = "Supermercados Lima Centro",
@@ -147,7 +247,6 @@ class FakeOrderRepository private constructor() : OrderRepository {
                     status = OrderStatus.ON_ROUTE,
                     createdAt = now.minusHours(52)
                 ),
-                // FL-219 (Piura): delayed at a weigh station
                 DistributorOrder(
                     id = "FX-1038",
                     clientName = "Plaza Vea Callao",

@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.time.LocalDate
-
+import kotlinx.coroutines.launch
 /**
  * Drivers and vehicles of the Lima Central Hub: the same units, plates and people as the Fleet
  * trips. Orders "in preparation" (read through the Orders domain interface) are the dispatches
@@ -58,6 +58,17 @@ class FakeDriverRepository(orderRepository: OrderRepository) : DriverRepository 
         }
         _vehicles.update { list -> list.map { if (it.id == vehicleId) it.copy(status = VehicleStatus.ON_ROUTE, driverName = driver.name) else it } }
         assignedOrders.update { it + orderId }
+        // Sincronizar asignación con el backend en Render
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            runCatching {
+                com.rebootech.fruitlogix.shared.core.network.RetrofitClient.api.assignProducer(
+                    orderId.removePrefix("FX-"),
+                    com.rebootech.fruitlogix.shared.core.network.AssignProducerRequestDto(
+                        producerId = "${driver.name} - ${vehicle.plate}"
+                    )
+                )
+            }
+        }
     }
 
     private companion object {

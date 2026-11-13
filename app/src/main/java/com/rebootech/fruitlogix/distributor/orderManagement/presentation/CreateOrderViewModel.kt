@@ -21,7 +21,7 @@ data class CreateOrderUiState(
 
 class CreateOrderViewModel : ViewModel() {
 
-    private val repository: OrderRepository = FakeOrderRepository.instance
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
 
     private val _uiState = MutableStateFlow(CreateOrderUiState())
     val uiState: StateFlow<CreateOrderUiState> = _uiState.asStateFlow()

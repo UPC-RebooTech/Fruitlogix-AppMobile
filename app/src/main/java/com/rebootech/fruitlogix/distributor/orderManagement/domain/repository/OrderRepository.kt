@@ -7,10 +7,6 @@ import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDr
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryItem
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Flows instead of one-off reads, so every screen (Home, Orders, History) updates by itself
- * after creating, editing, deleting or receiving an order.
- */
 interface OrderRepository {
     val orders: StateFlow<List<DistributorOrder>>
     val history: StateFlow<List<OrderHistoryItem>>
@@ -19,13 +15,14 @@ interface OrderRepository {
 
     suspend fun createOrder(draft: OrderDraft): DistributorOrder
 
-    /** @return false if the order does not exist or is no longer editable. */
     suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean
 
     suspend fun deleteOrder(orderId: String): DeleteOrderResult
 
     fun validateLotCode(code: String): LotScanResult
 
-    /** The lot arrived at the warehouse: the order is delivered and moves to history. */
     suspend fun confirmReception(orderId: String): Boolean
+
+    /** Sincroniza pedidos desde el backend en Render (/api/v1/orders). */
+    suspend fun refresh() {}
 }
