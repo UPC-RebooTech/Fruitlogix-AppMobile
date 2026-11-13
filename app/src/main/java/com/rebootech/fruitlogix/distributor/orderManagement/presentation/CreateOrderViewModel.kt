@@ -16,12 +16,13 @@ import java.time.LocalDate
 data class CreateOrderUiState(
     val form: OrderFormState = OrderFormState(),
     val isSaving: Boolean = false,
-    val created: DistributorOrder? = null
+    val created: DistributorOrder? = null,
+    val errorMessage: String? = null
 )
 
 class CreateOrderViewModel : ViewModel() {
 
-    private val repository: OrderRepository = FakeOrderRepository.instance
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
 
     private val _uiState = MutableStateFlow(CreateOrderUiState())
     val uiState: StateFlow<CreateOrderUiState> = _uiState.asStateFlow()
@@ -33,7 +34,7 @@ class CreateOrderViewModel : ViewModel() {
     fun onDateChange(value: LocalDate) = updateForm { it.copy(deliveryDate = value, dateError = null) }
 
     private fun updateForm(change: (OrderFormState) -> OrderFormState) =
-        _uiState.update { it.copy(form = change(it.form)) }
+        _uiState.update { it.copy(form = change(it.form), errorMessage = null) }
 
     fun submit() {
         val state = _uiState.value
@@ -44,9 +45,18 @@ class CreateOrderViewModel : ViewModel() {
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            val order = repository.createOrder(draft)
-            _uiState.update { it.copy(isSaving = false, created = order) }
+            _uiState.update { it.copy(isSaving = true, errorMessage = null) }
+            try {
+                val order = repository.createOrder(draft)
+                _uiState.update { it.copy(isSaving = false, created = order) }
+            } catch (err: kotlinx.coroutines.CancellationException) {
+                throw err
+            } catch (err: Exception) {
+                _uiState.update {
+                    it.copy(isSaving = false, created = null,
+                        errorMessage = err.message ?: "No se pudo registrar el pedido. Inténtalo de nuevo.")
+                }
+            }
         }
     }
 

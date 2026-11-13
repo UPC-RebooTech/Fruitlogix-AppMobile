@@ -33,14 +33,23 @@ object RetrofitClient {
     private val _syncStatus = MutableStateFlow(BackendSyncStatus.CONNECTING)
     val syncStatus: StateFlow<BackendSyncStatus> = _syncStatus.asStateFlow()
 
-    fun updateSyncStatus(status: BackendSyncStatus) {
+    private val _lastError = MutableStateFlow<String?>(null)
+    val lastError: StateFlow<String?> = _lastError.asStateFlow()
+
+    fun updateSyncStatus(status: BackendSyncStatus, errorMessage: String? = null) {
         _syncStatus.value = status
+        _lastError.value = errorMessage
+        if (errorMessage != null) {
+            Log.e("FruitLogix-API", "Sync status [${status.name}]: $errorMessage")
+        }
     }
 
     private val authInterceptor = Interceptor { chain ->
         val builder = chain.request().newBuilder()
             .header("Accept", "application/json")
-        jwtToken?.let { builder.header("Authorization", "Bearer $it") }
+        jwtToken?.takeIf { it.isNotBlank() }?.let { token ->
+            builder.header("Authorization", "Bearer $token")
+        }
         chain.proceed(builder.build())
     }
 

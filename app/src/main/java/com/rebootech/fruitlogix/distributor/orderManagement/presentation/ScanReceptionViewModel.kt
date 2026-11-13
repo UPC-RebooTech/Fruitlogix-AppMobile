@@ -23,7 +23,7 @@ data class ScanReceptionUiState(
 /** Gate reception: read the lot label → check it against an order on route → confirm. */
 class ScanReceptionViewModel : ViewModel() {
 
-    private val repository: OrderRepository = FakeOrderRepository.instance
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
 
     private val _uiState = MutableStateFlow(ScanReceptionUiState())
     val uiState: StateFlow<ScanReceptionUiState> = _uiState.asStateFlow()

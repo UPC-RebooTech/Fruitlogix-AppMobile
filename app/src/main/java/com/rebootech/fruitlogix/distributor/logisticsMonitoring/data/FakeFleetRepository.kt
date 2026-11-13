@@ -1,5 +1,6 @@
 ﻿package com.rebootech.fruitlogix.distributor.logisticsMonitoring.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ActiveDispatch
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Checkpoint
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.CheckpointKind
@@ -9,6 +10,10 @@ import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Dri
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.repository.FleetRepository
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.rules.EtaRules
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
+import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
+import com.rebootech.fruitlogix.shared.core.network.DeliveryResponseDto
+import com.rebootech.fruitlogix.shared.core.network.ReportDelayRequestDto
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,20 +23,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.ConcurrentHashMap
 
-/**
- * Sample fleet of the Lima Central Hub (Callao, Peru). Every truck carries an order that is
- * "on route" in Orders. Reading the orders through their domain interface keeps both sides in
- * sync: an order received at the gate (Scan reception) also closes its trip here.
- */
 class FakeFleetRepository(
     private val orderRepository: OrderRepository
 ) : FleetRepository {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val trips = MutableStateFlow(initialTrips())
+    private val deliveryIdByUnit = ConcurrentHashMap<String, Int>(
+        mapOf("FL-408" to 1, "FL-102" to 2, "FL-219" to 3)
+    )
+
+    init {
+        scope.launch { refresh() }
+    }
 
     override val dispatches: StateFlow<List<ActiveDispatch>> =
         combine(trips, orderRepository.orders) { list, orders ->
@@ -49,24 +61,116 @@ class FakeFleetRepository(
     private fun change(unitId: String, block: (ActiveDispatch) -> ActiveDispatch) =
         trips.update { list -> list.map { if (it.unitId.equals(unitId, ignoreCase = true)) block(it) else it } }
 
-    override suspend fun updateDeliveryState(unitId: String, state: DeliveryState) =
+    override suspend fun updateDeliveryState(unitId: String, state: DeliveryState) {
         change(unitId) { it.copy(deliveryState = state) }
+        if (state == DeliveryState.ON_ROUTE) {
+            val remoteId = deliveryIdByUnit[unitId.uppercase()] ?: return
+            scope.launch {
+                runCatching { RetrofitClient.api.startDelivery(remoteId) }
+                    .onFailure { Log.w("FruitLogix-API", "POST /deliveries/$remoteId/start falló: ${it.message}") }
+            }
+        }
+    }
 
-    override suspend fun updateEta(unitId: String, newEta: java.time.LocalTime, reason: DelayReason) =
-        change(unitId) { EtaRules.apply(it, newEta, reason) }
+    override suspend fun updateEta(unitId: String, newEta: LocalTime, reason: DelayReason) {
+        val current = dispatch(unitId) ?: return
+        val updated = EtaRules.apply(current, newEta, reason)
+        change(unitId) { updated }
+
+        val remoteId = deliveryIdByUnit[unitId.uppercase()] ?: return
+        scope.launch {
+            runCatching {
+                RetrofitClient.api.reportDeliveryDelay(
+                    id = remoteId,
+                    request = ReportDelayRequestDto(
+                        newEstimatedArrival = LocalDate.now().atTime(newEta).toString(),
+                        delayMinutes = updated.delayMinutes.coerceAtLeast(5),
+                        reason = reason.name
+                    )
+                )
+            }.onFailure {
+                Log.w("FruitLogix-API", "POST /deliveries/$remoteId/delay falló: ${it.message}")
+            }
+        }
+    }
 
     override suspend fun recordReeferCheck(unitId: String) =
         change(unitId) { it.copy(reeferCheckedAt = LocalDateTime.now()) }
 
     override suspend fun completeDelivery(unitId: String) {
         val trip = dispatch(unitId) ?: return
-        change(unitId) { it.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = LocalDateTime.now(), travelledKm = it.totalKm) }
-        // The order is received at the hub: it moves to the order history
+        change(unitId) {
+            it.copy(
+                deliveryState = DeliveryState.DELIVERED,
+                deliveredAt = LocalDateTime.now(),
+                travelledKm = it.totalKm
+            )
+        }
+        val remoteId = deliveryIdByUnit[unitId.uppercase()]
+        if (remoteId != null) {
+            scope.launch {
+                runCatching { RetrofitClient.api.completeDelivery(remoteId) }
+            }
+        }
         orderRepository.confirmReception(trip.orderId)
     }
 
     override suspend fun rejectDelivery(unitId: String, reason: String) =
         change(unitId) { it.copy(deliveryState = DeliveryState.REJECTED, rejectionReason = reason.trim()) }
+
+    override suspend fun refresh() {
+        withContext(Dispatchers.IO) {
+            val result = runCatching { RetrofitClient.api.getDeliveries() }
+            result.onSuccess { response ->
+                if (response.isSuccessful) {
+                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+                    val remoteDeliveries = response.body().orEmpty()
+                    remoteDeliveries.forEach { dto ->
+                        mergeRemoteDelivery(dto)
+                    }
+                }
+            }.onFailure { err ->
+                Log.w("FruitLogix-API", "GET /deliveries no disponible (${err.message}); usando despachos locales.")
+            }
+
+            // Consultar TrackingLogs para las entregas activas conocidas
+            for ((unitCode, delivId) in deliveryIdByUnit.entries) {
+                runCatching { RetrofitClient.api.getTrackingLogs(delivId) }.onSuccess { resp ->
+                    if (resp.isSuccessful) {
+                        val logs = resp.body().orEmpty()
+                        val latestLocation = logs.lastOrNull()?.location?.takeIf { it.isNotBlank() }
+                        if (latestLocation != null) {
+                            change(unitCode) { active ->
+                                val updatedCheckpoints = active.checkpoints.map { cp ->
+                                    if (cp.kind == CheckpointKind.CURRENT) cp.copy(name = latestLocation) else cp
+                                }
+                                active.copy(checkpoints = updatedCheckpoints)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun mergeRemoteDelivery(dto: DeliveryResponseDto) {
+        val unitCode = dto.unitCode?.takeIf { it.isNotBlank() } ?: return
+        dto.id?.let { deliveryIdByUnit[unitCode.uppercase()] = it }
+
+        val mappedState = when (dto.status?.uppercase()) {
+            "PENDING", "CREATED" -> DeliveryState.PENDING
+            "DELIVERED", "COMPLETED" -> DeliveryState.DELIVERED
+            "REJECTED", "CANCELLED" -> DeliveryState.REJECTED
+            else -> DeliveryState.ON_ROUTE
+        }
+
+        change(unitCode) { existing ->
+            existing.copy(
+                deliveryState = mappedState,
+                delayMinutes = dto.delayMinutes ?: existing.delayMinutes
+            )
+        }
+    }
 
     private companion object {
         fun initialTrips(): List<ActiveDispatch> {

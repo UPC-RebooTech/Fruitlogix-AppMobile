@@ -1,5 +1,6 @@
 ﻿package com.rebootech.fruitlogix.distributor.infrastructureIot.data
 
+import android.util.Log
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.AlertKind
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.AlertSeverity
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.DeviceStatus
@@ -10,26 +11,29 @@ import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.Senso
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.TemperatureReading
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.model.ThresholdRules
 import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.repository.IotRepository
+import com.rebootech.fruitlogix.shared.core.network.CreateSensorReadingRequestDto
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import com.rebootech.fruitlogix.shared.core.network.SensorReadingResponseDto
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import kotlin.math.sin
 
-/**
- * Sample sensors for the same trucks as Logistics (FL-102, FL-408, FL-219) plus two
- * sensors at the Lima Central Hub. Use the shared instance from DistributorDependencies.
- */
 class FakeIotRepository : IotRepository {
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val now = LocalDateTime.now()
 
     private val history: Map<String, List<TemperatureReading>> = mapOf(
-        // Uva Red Globe (-1 … 2 °C): steady all trip
         "FL-102" to steady(fromMinutes = 360, base = 0.75, amplitude = 0.15) + TemperatureReading(0, 0.8),
-        // Palta Hass (5 … 7 °C): fine for hours, then rising toward the limit in the last 45 min
         "FL-408" to steady(fromMinutes = 300, base = 5.2, amplitude = 0.15, until = 54) + listOf(
             TemperatureReading(45, 5.1),
             TemperatureReading(36, 5.3),
@@ -38,7 +42,6 @@ class FakeIotRepository : IotRepository {
             TemperatureReading(9, 6.1),
             TemperatureReading(0, 6.4)
         ),
-        // Mango Kent (10 … 13 °C): one short excursion during the weigh-station stop
         "FL-219" to (steady(fromMinutes = 600, base = 11.3, amplitude = 0.25) + TemperatureReading(0, 11.4))
             .map { if (it.minutesAgo == 240) it.copy(celsius = 13.4) else it }
     )
@@ -82,6 +85,10 @@ class FakeIotRepository : IotRepository {
     )
     override val thresholds: StateFlow<List<FruitThreshold>> = _thresholds.asStateFlow()
 
+    init {
+        scope.launch { refresh() }
+    }
+
     override fun deviceForUnit(unitId: String): IotDevice? = _devices.value.firstOrNull { it.unitId == unitId }
 
     override fun temperatureHistory(unitId: String): List<TemperatureReading> = history[unitId].orEmpty()
@@ -92,14 +99,32 @@ class FakeIotRepository : IotRepository {
     override suspend fun calibrate(deviceId: String) {
         setStatus(deviceId, DeviceStatus.CALIBRATING)
         delay(CALIBRATION_MS)
+        var calibratedReading: SensorReading? = null
         _devices.update { list ->
             list.map {
                 if (it.id == deviceId) {
+                    val updatedReading = it.lastReading.copy(at = LocalDateTime.now())
+                    calibratedReading = updatedReading
                     it.copy(
                         status = if (it.isLowBattery) DeviceStatus.LOW_BATTERY else DeviceStatus.ONLINE,
-                        lastReading = it.lastReading.copy(at = LocalDateTime.now())
+                        lastReading = updatedReading
                     )
                 } else it
+            }
+        }
+        // Registrar lectura de verificación post-calibración usando el contrato real (deviceId, value, unit, timestamp)
+        calibratedReading?.let { reading ->
+            scope.launch {
+                runCatching {
+                    RetrofitClient.api.createSensorReading(
+                        CreateSensorReadingRequestDto(
+                            deviceId = deviceId,
+                            value = reading.celsius,
+                            unit = "C",
+                            timestamp = reading.at.toString()
+                        )
+                    )
+                }
             }
         }
     }
@@ -129,10 +154,80 @@ class FakeIotRepository : IotRepository {
         return null
     }
 
+    override suspend fun refresh() {
+        withContext(Dispatchers.IO) {
+            // 1. Consultar lecturas de sensores (deviceId, value, unit, timestamp)
+            runCatching { RetrofitClient.api.getSensorReadings() }.onSuccess { response ->
+                if (response.isSuccessful) {
+                    val readings = response.body().orEmpty()
+                    if (readings.isNotEmpty()) {
+                        applyRemoteSensorReadings(readings)
+                    }
+                }
+            }.onFailure { err ->
+                Log.w("FruitLogix-API", "GET /sensor-readings no disponible: ${err.message}")
+            }
+
+            // 2. Consultar reglas de alerta por fruta (AlertRules)
+            runCatching { RetrofitClient.api.getAlertRules() }.onSuccess { response ->
+                if (response.isSuccessful) {
+                    val rules = response.body().orEmpty()
+                    val mappedRules = rules.mapIndexedNotNull { idx, dto ->
+                        val name = dto.fruitName?.takeIf { it.isNotBlank() } ?: return@mapIndexedNotNull null
+                        FruitThreshold(
+                            id = "fr-api-${dto.id ?: idx}",
+                            fruitName = name,
+                            minTempCelsius = dto.minTemperature ?: 0.0,
+                            maxTempCelsius = dto.maxTemperature ?: 10.0,
+                            minHumidityPercent = dto.minHumidity ?: 85.0,
+                            maxHumidityPercent = dto.maxHumidity ?: 95.0
+                        )
+                    }
+                    if (mappedRules.isNotEmpty()) {
+                        _thresholds.update { current ->
+                            (mappedRules + current).distinctBy { it.fruitName.lowercase() }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun applyRemoteSensorReadings(dtos: List<SensorReadingResponseDto>) {
+        val grouped = dtos.filter { !it.deviceId.isNullOrBlank() && it.value != null }
+            .groupBy { it.deviceId!! }
+
+        _devices.update { currentDevices ->
+            currentDevices.map { dev ->
+                val devReadings = grouped[dev.id].orEmpty()
+                if (devReadings.isEmpty()) {
+                    dev
+                } else {
+                    val tempValue = devReadings.lastOrNull {
+                        val u = it.unit.orEmpty().uppercase()
+                        u == "C" || u == "°C" || u == "CELSIUS"
+                    }?.value ?: dev.lastReading.celsius
+
+                    val humValue = devReadings.lastOrNull {
+                        val u = it.unit.orEmpty().uppercase()
+                        u == "%" || u == "RH" || u == "HUMIDITY"
+                    }?.value ?: dev.lastReading.humidityPercent
+
+                    dev.copy(
+                        lastReading = SensorReading(
+                            celsius = tempValue,
+                            humidityPercent = humValue,
+                            at = LocalDateTime.now()
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     private companion object {
         const val CALIBRATION_MS = 2_000L
 
-        /** One reading every 10 minutes from [fromMinutes] ago until [until] minutes ago, with a gentle wave. */
         fun steady(fromMinutes: Int, base: Double, amplitude: Double, until: Int = 10): List<TemperatureReading> =
             (fromMinutes downTo until step 10).map { minutes ->
                 val wave = sin(minutes / 37.0) * amplitude
