@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,7 +24,7 @@ fun ErrorState(
     message: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    title: String = "Ha ocurrido un error"
+    title: String = stringResource(R.string.common_error_title)
 ) {
     Column(
         modifier = modifier
@@ -35,7 +36,7 @@ fun ErrorState(
         AppIcon(
             id = R.drawable.ic_warning,
             contentDescription = null,
-            tint = FruitLogixTheme.colors.dangerStrong,
+            tint = androidx.compose.material3.MaterialTheme.colorScheme.error,
             modifier = Modifier.size(48.dp)
         )
 
@@ -55,14 +56,14 @@ fun ErrorState(
         Text(
             text = message,
             style = FruitLogixTheme.typography.bodyMedium,
-            color = FruitLogixTheme.colors.textMuted,
+            color = FruitLogixTheme.colors.textMutedLight,
             textAlign = TextAlign.Center
         )
 
         Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
 
         SecondaryButton(
-            text = "Reintentar",
+            text = stringResource(R.string.common_retry),
             onClick = onRetry
         )
     }

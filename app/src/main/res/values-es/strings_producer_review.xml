@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Revisar y enviar reporte de calidad -->
+    <string name="review_title">Revisar reporte</string>
+    <string name="review_sent_title">Reporte enviado</string>
+    <string name="review_no_data">Aún no hay una inspección guardada para este pedido.</string>
+
+    <string name="review_photos_title">Sin fotos adjuntas</string>
+    <string name="review_photos_message">Igual puedes enviarlo, pero la aprobación puede tardar más. Los distribuidores suelen pedir fotos en lotes de exportación.</string>
+    <string name="review_add_photos">Agregar fotos</string>
+    <string name="review_photos_soon">La captura de fotos estará disponible pronto</string>
+
+    <string name="review_recipient">Se enviará a %1$s (%2$s)</string>
+    <string name="review_recipient_client">Se enviará a %1$s</string>
+
+    <string name="review_report_label">Reporte de inspección</string>
+    <string name="review_sizes">Calibres: %1$s</string>
+    <string name="review_section_measurements">Mediciones</string>
+    <string name="review_section_notes">Tus notas</string>
+
+    <string name="review_send">Enviar reporte</string>
+    <string name="review_edit">Editar inspección</string>
+
+    <string name="review_sent_message">Esperando la revisión del distribuidor</string>
+    <string name="review_sent_at">Enviado %1$s</string>
+    <string name="review_section_next">Siguientes pasos</string>
+    <string name="review_step_sent">Reporte enviado</string>
+    <string name="review_step_decision">Decisión del distribuidor</string>
+    <string name="review_step_decision_detail">Recibirás una notificación con el resultado</string>
+    <string name="review_step_dispatch">Despacho</string>
+    <string name="review_step_dispatch_detail">Disponible después de la aprobación</string>
+    <string name="review_back_to_order">Volver al pedido</string>
+</resources>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bandeja de notificaciones del productor (alertas IoT y de campo) -->
+    <string name="iot_inbox_title">Notificaciones</string>
+    <string name="iot_inbox_subtitle">Alertas de sensores y eventos de campo</string>
+    <string name="iot_inbox_mark_all_read">Marcar todas como leídas</string>
+    <string name="iot_inbox_cd_settings">Ajustes de notificaciones</string>
+    <plurals name="iot_inbox_unread">
+        <item quantity="one">%1$d sin leer</item>
+        <item quantity="many">%1$d sin leer</item>
+        <item quantity="other">%1$d sin leer</item>
+    </plurals>
+
+    <!-- Filtros -->
+    <string name="iot_filter_all">Todas (%1$d)</string>
+    <string name="iot_filter_critical">Críticas (%1$d)</string>
+    <string name="iot_filter_cold_chain">Cadena de frío (%1$d)</string>
+
+    <!-- Vacío -->
+    <string name="iot_empty_title">Sin notificaciones</string>
+    <string name="iot_empty_message">No tienes alertas en esta categoría por ahora.</string>
+
+    <!-- Severidad -->
+    <string name="iot_severity_critical">Crítica</string>
+    <string name="iot_severity_warning">Advertencia</string>
+    <string name="iot_severity_info">Info</string>
+
+    <!-- Activos -->
+    <string name="iot_asset_cold_room">Cámara de frío %1$s</string>
+    <string name="iot_asset_warehouse">Almacén %1$s</string>
+    <string name="iot_asset_truck">Camión %1$s</string>
+    <string name="iot_asset_gateway">Gateway %1$s</string>
+
+    <!-- Títulos y descripciones -->
+    <string name="iot_title_temperature">Temperatura · %1$s</string>
+    <string name="iot_desc_temperature">Temperatura en %1$s °C, sobre el límite de %2$s °C. Los palets están en riesgo.</string>
+    <string name="iot_title_humidity">Humedad · %1$s</string>
+    <string name="iot_desc_humidity">La humedad relativa bajó a %1$s%% (mínimo %2$s%%). Activa los nebulizadores.</string>
+    <string name="iot_title_vibration">Telemetría de tránsito · %1$s</string>
+    <string name="iot_desc_vibration">Vibración excesiva durante la carga en el muelle %1$s. Se activó el sensor de fuerza G.</string>
+    <string name="iot_title_traceability">Trazabilidad sincronizada</string>
+    <string name="iot_desc_traceability">%1$s kg de %2$s registrados con hash de trazabilidad SENASA/HACCP verificado.</string>
+
+    <!-- Tarjeta -->
+    <string name="iot_sensor">Sensor %1$s</string>
+    <string name="iot_view_order">Ver pedido #%1$s</string>
+    <string name="iot_cd_dismiss">Descartar notificación</string>
+    <string name="iot_cd_unread">Sin leer</string>
+</resources>

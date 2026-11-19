@@ -1,67 +1,57 @@
 ﻿package com.rebootech.fruitlogix.distributor.dashboard.domain
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.FleetUnitSummary
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ActiveDispatch
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.PredictiveAlert
-import com.rebootech.fruitlogix.distributor.qualityControl.domain.model.ComplianceSummary
 
 /**
- * Domain models for the Home dashboard screen.
+ * Domain models for the distributor Home. Only data: every label is resolved in presentation,
+ * so the whole screen follows the selected language. Trucks and alerts are the same ones the
+ * Fleet screen shows (read through the Logistics and IoT domain interfaces).
  */
 
-data class GreetingInfo(
-    val dateLine: String,
-    val shiftLabel: String,
-    val userName: String,
-    val hubDescription: String
-)
+/** Something the distributor has to do today. */
+sealed interface DistributorTask {
+    val id: String
 
-data class PriorityAction(
-    @StringRes val titleRes: Int,
-    @DrawableRes val iconRes: Int,
-    val style: PriorityActionStyle
-)
+    /** An export order cannot leave without its SUNAT dispatch guide. */
+    data class MissingDispatchGuide(
+        override val id: String,
+        val orderId: String,
+        val producerName: String
+    ) : DistributorTask
 
-enum class PriorityActionStyle {
-    DARK,
-    LIME
+    /** A truck is at the hub gate: its lot has to be received. */
+    data class ReceiveAtDock(
+        override val id: String,
+        val unitId: String,
+        val dock: String,
+        val pallets: Int,
+        val productName: String
+    ) : DistributorTask
 }
 
-data class KpiData(
-    val caption: String,
-    @DrawableRes val iconRes: Int,
-    val value: String,
-    val deltaText: String? = null,
-    val deltaIsPositive: Boolean = true,
-    val progress: Float? = null,
-    val footerLine1: String? = null,
-    val footerLine2: String? = null,
-    val footerBadgeText: String? = null,
-    val footerBadgeType: KpiBadgeType = KpiBadgeType.SUCCESS,
-    val segmentedBarSegments: List<SegmentedBarSegment>? = null
+data class DashboardSummary(
+    val activeOrders: Int,
+    val pendingOrders: Int,
+    val deliveriesToday: Int,
+    val averageEtaMinutes: Int,
+    val qualityApprovalPct: Double,
+    val lotsInspected: Int,
+    val criticalAlerts: Int,
+    val warningAlerts: Int
 )
 
-enum class KpiBadgeType {
-    SUCCESS,
-    WARNING,
-    DANGER,
-    INFO,
-    NEUTRAL
-}
-
-data class SegmentedBarSegment(
-    val weight: Float,
-    val type: KpiBadgeType
+/** A truck on the road as the Home shows it. */
+data class HomeTruck(
+    val dispatch: ActiveDispatch,
+    val celsius: Double?,
+    val atRisk: Boolean
 )
 
 data class DashboardData(
-    val greeting: GreetingInfo,
-    val priorityActions: List<PriorityAction>,
-    val predictiveAlert: PredictiveAlert?,
-    val kpis: List<KpiData>,
-    val actionItems: List<ActionItem>,
-    val fleetUnits: List<FleetUnitSummary>,
-    val fleetInTransitCount: Int,
-    val complianceSummary: ComplianceSummary
+    val hubName: String,
+    val temperatureAlert: PredictiveAlert?,
+    val summary: DashboardSummary,
+    val tasks: List<DistributorTask>,
+    val fleet: List<HomeTruck>
 )

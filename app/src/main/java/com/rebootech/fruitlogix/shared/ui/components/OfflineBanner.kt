@@ -11,39 +11,40 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
+/**
+ * Offline notice shown at the top of a screen. Mango (attention) container, icon + text.
+ */
 @Composable
 fun OfflineBanner(
     isOffline: Boolean,
     modifier: Modifier = Modifier,
-    message: String = "Sin conexión — se sincronizará automáticamente"
+    message: String = stringResource(R.string.sync_offline)
 ) {
     if (!isOffline) return
 
+    val colors = FruitLogixTheme.colors
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(FruitLogixTheme.colors.warning.copy(alpha = 0.2f))
-            .padding(horizontal = FruitLogixTheme.spacing.sm, vertical = 6.dp),
+            .background(colors.attentionContainer)
+            .padding(horizontal = FruitLogixTheme.spacing.sm, vertical = FruitLogixTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AppIcon(
             id = R.drawable.ic_warning,
             contentDescription = null,
-            tint = FruitLogixTheme.colors.warning,
-            modifier = Modifier.size(16.dp)
+            tint = colors.attentionContent,
+            modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
         )
         Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
         Text(
             text = message,
-            style = FruitLogixTheme.typography.labelSmall,
-            color = FruitLogixTheme.colors.textOnLight,
-            fontWeight = FontWeight.Medium
+            style = FruitLogixTheme.typography.labelMedium,
+            color = colors.onAttentionContainer
         )
     }
 }
-

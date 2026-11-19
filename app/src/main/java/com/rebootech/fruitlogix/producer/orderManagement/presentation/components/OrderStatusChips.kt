@@ -1,5 +1,10 @@
 package com.rebootech.fruitlogix.producer.orderManagement.presentation.components
 
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -82,15 +87,21 @@ private fun StatusChip(
     isPendingAlert: Boolean,
     onClick: () -> Unit
 ) {
-    val bgColor = if (isSelected) FruitLogixTheme.colors.surfaceDark else FruitLogixTheme.colors.surfaceLight
-    val textColor = if (isSelected) FruitLogixTheme.colors.textOnDark else FruitLogixTheme.colors.textOnLight
+    val scheme = MaterialTheme.colorScheme
+    val bgColor = if (isSelected) scheme.secondary else scheme.surfaceContainerHigh
+    val textColor = if (isSelected) scheme.onSecondary else scheme.onSurface
+    val description = stringResource(
+        if (isSelected) R.string.producer_orders_cd_chip_selected else R.string.producer_orders_cd_chip_not_selected,
+        "$label ($count)"
+    )
 
     Box(
         modifier = Modifier
-            .height(38.dp)
+            .height(FruitLogixTheme.sizing.minTouch)
             .clip(FruitLogixTheme.shapes.Pill)
             .background(bgColor)
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .semantics(mergeDescendants = true) { contentDescription = description }
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -100,38 +111,34 @@ private fun StatusChip(
         ) {
             Text(
                 text = label,
-                style = FruitLogixTheme.typography.labelSmall,
+                style = FruitLogixTheme.typography.labelMedium,
                 color = textColor,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                 maxLines = 1,
                 softWrap = false
             )
 
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
 
-            // Badge with count
-            val badgeBg = when {
-                isPendingAlert && !isSelected -> FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.16f)
-                isSelected -> FruitLogixTheme.colors.primary
-                else -> FruitLogixTheme.colors.surfaceDark.copy(alpha = 0.12f)
-            }
-            val badgeTextColor = when {
-                isPendingAlert && !isSelected -> FruitLogixTheme.colors.dangerStrong
-                isSelected -> FruitLogixTheme.colors.onPrimary
-                else -> FruitLogixTheme.colors.textMuted
+            // Count: Lima when selected; red tint when there are pending orders to answer
+            val (badgeBg, badgeText) = when {
+                isSelected -> scheme.primaryContainer to scheme.onPrimaryContainer
+                isPendingAlert -> scheme.errorContainer to scheme.onErrorContainer
+                else -> scheme.surfaceContainerLowest to scheme.onSurfaceVariant
             }
 
             Box(
                 modifier = Modifier
-                    .size(20.dp)
+                    .defaultMinSize(minWidth = 22.dp, minHeight = 22.dp)
                     .clip(CircleShape)
-                    .background(badgeBg),
+                    .background(badgeBg)
+                    .padding(horizontal = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = count.toString(),
-                    style = FruitLogixTheme.typography.labelSmall,
-                    color = badgeTextColor,
+                    style = FruitLogixTheme.typography.labelMedium,
+                    color = badgeText,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )

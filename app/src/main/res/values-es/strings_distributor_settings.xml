@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Distribuidor: notificaciones -->
+    <string name="dset_notif_temperature">Alertas de temperatura</string>
+    <string name="dset_notif_temperature_desc">Un reefer está en riesgo o fuera de rango. Siempre suena, incluso en horario de silencio</string>
+    <string name="dset_notif_arrivals">Llegadas al hub</string>
+    <string name="dset_notif_arrivals_desc">Un camión entra al perímetro del hub o llega a la puerta</string>
+    <string name="dset_notif_delays">Retrasos</string>
+    <string name="dset_notif_delays_desc">Una entrega va tarde o cambia su hora de llegada</string>
+    <string name="dset_notif_quality">Lotes por revisar</string>
+    <string name="dset_notif_quality_desc">Lotes recibidos que esperan tu decisión de calidad</string>
+    <string name="dset_notif_orders">Cambios en pedidos</string>
+    <string name="dset_notif_orders_desc">Un productor acepta o rechaza uno de tus pedidos</string>
+    <string name="dset_notif_invoices">Facturas</string>
+    <string name="dset_notif_invoices_desc">Facturas por vencer o ya vencidas</string>
+    <string name="dset_notif_quiet_desc">Silencia las alertas de 10 p. m. a 6 a. m., salvo las de temperatura</string>
+
+    <!-- Distribuidor: datos y sincronización -->
+    <string name="dset_sync_intro">Las facturas y los productores vienen del servidor de FruitLogix. Sin conexión, la app sigue funcionando con los datos guardados en este teléfono.</string>
+    <string name="dset_server_title">Servidor FruitLogix</string>
+    <string name="dset_server_online">Conectado</string>
+    <string name="dset_server_online_desc">Los datos vienen del servidor</string>
+    <string name="dset_server_offline">Sin conexión</string>
+    <string name="dset_server_offline_desc">Mostrando los datos guardados en este teléfono</string>
+    <string name="dset_server_connecting">Conectando…</string>
+    <string name="dset_server_connecting_desc">Revisando el servidor</string>
+    <string name="dset_sync_auto_desc">Actualiza facturas y productores al abrir la app</string>
+    <string name="dset_sync_wifi_desc">Ahorra datos móviles cuando estás fuera del hub</string>
+
+    <!-- Distribuidor: ayuda -->
+    <string name="dset_faq_reception_q">¿Cómo recibo un camión en el andén?</string>
+    <string name="dset_faq_reception_a">Abre Flota → Llegadas, o escanea el QR del lote desde Pedidos. Revisa la temperatura y confirma la recepción.</string>
+    <string name="dset_faq_temperature_q">¿Qué hago con una alerta de temperatura?</string>
+    <string name="dset_faq_temperature_a">Abre la alerta desde Inicio o Sensores, revisa la tendencia de temperatura y contacta al conductor. El certificado de cadena de frío registra cada evento.</string>
+    <string name="dset_faq_quality_q">¿Cómo apruebo o rechazo un lote?</string>
+    <string name="dset_faq_quality_a">Ve a Calidad → Lotes, abre el lote y registra tu decisión con su motivo.</string>
+    <string name="dset_faq_offline_q">¿Puedo trabajar sin señal?</string>
+    <string name="dset_faq_offline_a">Sí. La app muestra los datos guardados en este teléfono y los actualiza cuando vuelve la conexión. Puedes forzarlo en Mi cuenta → Datos y sincronización.</string>
+    <string name="dset_contact_desc">Habla con tus productores desde tu red de productores, o contacta al equipo de FruitLogix.</string>
+    <string name="dset_contact_producers">Abrir productores</string>
+</resources>

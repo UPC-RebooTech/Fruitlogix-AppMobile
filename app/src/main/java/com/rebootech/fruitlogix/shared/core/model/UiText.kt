@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.shared.core.model
 
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -23,11 +24,20 @@ sealed class UiText {
         }
     }
 
+    /**
+     * Resolves the text outside composition (e.g. for a snackbar inside LaunchedEffect).
+     * Arguments that are UiText themselves (e.g. a translated status) are resolved too.
+     */
+    fun asString(context: Context): String = when (this) {
+        is Plain -> value
+        is StringResource -> context.getString(id, *args.map { if (it is UiText) it.asString(context) else it }.toTypedArray())
+    }
+
     @Composable
     fun asString(): String {
         return when (this) {
             is Plain -> value
-            is StringResource -> stringResource(id, *args)
+            is StringResource -> stringResource(id, *args.map { if (it is UiText) it.asString() else it }.toTypedArray())
         }
     }
 }

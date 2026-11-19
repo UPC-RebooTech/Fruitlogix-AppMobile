@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bandeja de mensajes del productor -->
+    <string name="messages_title">Mensajes</string>
+    <string name="messages_subtitle">Chat con tus distribuidores, una conversación por pedido</string>
+    <string name="messages_order">Pedido #%1$s</string>
+    <string name="messages_you">Tú: %1$s</string>
+    <string name="messages_no_messages">Aún no hay mensajes. Toca para coordinar este pedido.</string>
+    <string name="messages_empty_title">Sin conversaciones</string>
+    <string name="messages_empty_message">Las conversaciones aparecen aquí cuando tienes pedidos activos.</string>
+    <plurals name="messages_unread">
+        <item quantity="one">%1$d mensaje sin leer</item>
+        <item quantity="many">%1$d mensajes sin leer</item>
+        <item quantity="other">%1$d mensajes sin leer</item>
+    </plurals>
+</resources>

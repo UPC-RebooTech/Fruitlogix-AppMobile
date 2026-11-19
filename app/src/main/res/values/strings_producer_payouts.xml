@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer payouts -->
+    <string name="payouts_title">Payouts</string>
+    <string name="payouts_subtitle">Payments from your distributors for each lot</string>
+
+    <string name="payouts_kpi_pending">To collect</string>
+    <string name="payouts_kpi_overdue">%1$s overdue</string>
+    <string name="payouts_kpi_paid">Collected this month</string>
+
+    <string name="payouts_filter_all">All (%1$d)</string>
+    <string name="payouts_filter_pending">Pending (%1$d)</string>
+    <string name="payouts_filter_paid">Paid (%1$d)</string>
+    <string name="payouts_empty">No payments in this category.</string>
+
+    <string name="payouts_type_settlement">Lot settlement · %1$s</string>
+    <string name="payouts_type_settlement_lot">Lot settlement · %1$s #%2$s</string>
+    <string name="payouts_type_advance">Harvest advance · %1$s</string>
+
+    <string name="payouts_status_pending">Pending</string>
+    <string name="payouts_status_paid">Paid</string>
+    <string name="payouts_status_overdue">Overdue</string>
+
+    <string name="payouts_issued">Issued %1$s</string>
+    <string name="payouts_due">Due %1$s</string>
+    <string name="payouts_was_due">Was due %1$s</string>
+</resources>

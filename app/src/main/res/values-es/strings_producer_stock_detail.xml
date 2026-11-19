@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Detalle de lote de stock del productor -->
+    <string name="stock_detail_subtitle">%1$s · %2$s</string>
+    <string name="stock_detail_not_found">No encontramos este lote.</string>
+    <string name="stock_detail_chamber_temp">%1$s °C en cámara</string>
+    <string name="stock_detail_on_hand">En existencia</string>
+    <string name="stock_detail_below_min">%1$s kg por debajo del mínimo de %2$s kg</string>
+    <string name="stock_detail_reserved">Reservado para pedidos</string>
+    <string name="stock_detail_free">Libre para comprometer</string>
+
+    <string name="stock_detail_section_adjust">Ajustar stock</string>
+    <string name="stock_detail_adjust_hint">Cuenta el lote y registra la cantidad real.</string>
+    <string name="stock_detail_new_amount">Nueva cantidad</string>
+    <string name="stock_detail_change">Cambio: %1$s kg</string>
+    <string name="stock_detail_save">Guardar stock</string>
+    <string name="stock_detail_saved">Stock actualizado</string>
+    <string name="stock_detail_cd_adjust">%1$s kg</string>
+
+    <string name="stock_detail_section_threshold">Alerta de stock mínimo</string>
+    <string name="stock_detail_threshold_hint">Recibes una alerta de stock crítico por debajo de esta cantidad.</string>
+    <string name="stock_detail_cd_threshold_down">Bajar el mínimo en 5 kg</string>
+    <string name="stock_detail_cd_threshold_up">Subir el mínimo en 5 kg</string>
+
+    <string name="stock_detail_section_movements">Movimientos</string>
+    <string name="stock_detail_no_movements">Aún no hay movimientos.</string>
+    <string name="stock_detail_move_intake">Ingreso de cosecha</string>
+    <string name="stock_detail_move_dispatch">Despacho</string>
+    <string name="stock_detail_move_adjustment">Ajuste manual</string>
+    <string name="stock_detail_move_with_ref">%1$s · %2$s</string>
+</resources>

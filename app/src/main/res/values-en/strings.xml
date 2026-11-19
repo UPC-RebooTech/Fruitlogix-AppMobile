@@ -8,8 +8,7 @@
     <string name="producer_nav_payouts">Payouts</string>
     <string name="producer_nav_messaging">Messages</string>
     <string name="producer_nav_notifications">Notifications</string>
-    <string name="producer_nav_profile">My Farm</string>
-    <string name="order_history_filter_producer_example">E.g. Finca Los Andes</string>
+    <string name="producer_nav_profile">My account</string>
 
     <!-- Top Bar -->
     <string name="topbar_title">FruitLogix</string>
@@ -17,7 +16,7 @@
     <string name="producer_topbar_subtitle">PRODUCER FIELD</string>
 
     <!-- Producer Orders Screen -->
-    <string name="producer_orders_search_placeholder">Search order ID or client...</string>
+    <string name="producer_orders_search_placeholder">Search order or client</string>
     <string name="producer_orders_tile_awaiting_action">Awaiting action</string>
     <string name="producer_orders_tile_in_shed">In shed</string>
     <string name="producer_orders_tile_active_vol">Active volume</string>
@@ -36,16 +35,19 @@
     <string name="producer_orders_respond_within">Respond within %1$d h</string>
     <string name="producer_orders_overdue">Overdue</string>
     <string name="producer_orders_btn_review">Review</string>
-    <string name="producer_orders_btn_accept">Accept Order</string>
+    <string name="producer_orders_btn_accept">Accept order</string>
     <string name="producer_orders_btn_review_respond">Review &amp; respond</string>
-    <string name="producer_orders_btn_update_inspection">Update Inspection</string>
+    <string name="producer_orders_btn_prepare_inspect">Prepare &amp; inspect</string>
+    <string name="producer_orders_btn_view_review_status">View review status</string>
     <string name="producer_orders_btn_view_report">View report</string>
     <string name="producer_orders_btn_reinspect">Re-inspect</string>
     <string name="producer_orders_btn_view_details">View details</string>
     <string name="producer_orders_short_by">Short by %1$d kg of %2$s</string>
     <string name="producer_orders_quality_approved">Quality Approved</string>
-    <string name="producer_orders_quality_pending">Quality Pending Check</string>
+    <string name="producer_orders_quality_not_started">QA: Not started</string>
+    <string name="producer_orders_quality_in_review">Quality in review</string>
     <string name="producer_orders_quality_rejected">Quality Rejected</string>
+    <string name="producer_orders_quality_rejected_badge">QA: Rejected</string>
     <string name="producer_orders_ready_to_load">Ready to load</string>
     <string name="producer_orders_truck_assigned">Truck %1$s assigned</string>
     <string name="producer_orders_dispatched_at">Dispatched %1$s</string>
@@ -99,4 +101,12 @@
     <string name="producer_orders_filter_apply_format">Apply filters (%1$d)</string>
     <string name="producer_orders_filter_date_pill">Date: %1$s</string>
     <string name="producer_orders_filter_close">Close filters</string>
+    <!-- Auth & Session -->
+    <string name="auth_logout_button">Log out</string>
+    <string name="auth_logout_dialog_title">Log out?</string>
+    <string name="auth_logout_dialog_message">You will need to log in again to enter.</string>
+    <string name="auth_logout_dialog_confirm">Log out</string>
+    <string name="auth_logout_dialog_cancel">Cancel</string>
+    <!-- Auth Login Strings -->
+    <!-- Auth Sign Up Strings -->
 </resources>

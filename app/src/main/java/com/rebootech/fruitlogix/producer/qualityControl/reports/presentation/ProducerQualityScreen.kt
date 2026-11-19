@@ -2,175 +2,243 @@ package com.rebootech.fruitlogix.producer.qualityControl.reports.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.qualityControl.reports.data.QualityReportRepository
+import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.DEFECT_LIMIT_PCT
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityReportItem
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityStatus
+import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
+import com.rebootech.fruitlogix.shared.ui.components.KpiCard
+import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
+import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import java.text.NumberFormat
 
+private enum class ReportFilter { ALL, APPROVED, PENDING, REJECTED }
+
+// TODO(producer): take from the producer profile when it exists.
+private const val FARM_NAME = "Fundo Santa Rosa"
+
+/**
+ * Producer quality reports.
+ * Card rule: the two summary numbers are dark KPI tiles; reports are light list cards.
+ */
 @Composable
 fun ProducerQualityScreen(
     onNavigateToDetail: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableStateOf("All") }
-    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilter by rememberSaveable { mutableStateOf(ReportFilter.ALL) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     val allReports = QualityReportRepository.reports
+    val summary = QualityReportRepository.summary
+    val scheme = MaterialTheme.colorScheme
+    val spacing = FruitLogixTheme.spacing
+    val locale = reportLocale()
 
     val filteredReports = allReports.filter { report ->
-        val matchesTab = when (selectedTab) {
-            "Approved" -> report.status == QualityStatus.APPROVED
-            "Pending" -> report.status == QualityStatus.PENDING
-            "Rejected" -> report.status == QualityStatus.REJECTED
-            else -> true
+        val matchesFilter = when (selectedFilter) {
+            ReportFilter.APPROVED -> report.status == QualityStatus.APPROVED
+            ReportFilter.PENDING -> report.status == QualityStatus.PENDING
+            ReportFilter.REJECTED -> report.status == QualityStatus.REJECTED
+            ReportFilter.ALL -> true
         }
         val matchesSearch = searchQuery.isBlank() ||
-                report.orderNumber.contains(searchQuery, ignoreCase = true) ||
-                report.productName.contains(searchQuery, ignoreCase = true) ||
-                report.clientName.contains(searchQuery, ignoreCase = true)
-        matchesTab && matchesSearch
+            report.orderNumber.contains(searchQuery, ignoreCase = true) ||
+            report.productName.contains(searchQuery, ignoreCase = true) ||
+            report.clientName.contains(searchQuery, ignoreCase = true)
+        matchesFilter && matchesSearch
     }
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(FruitLogixTheme.colors.bg)
-            .padding(16.dp)
+            .background(scheme.background),
+        contentPadding = PaddingValues(start = spacing.sm, end = spacing.sm, top = spacing.sm, bottom = spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(spacing.inner)
     ) {
-        // Título Principal y Subtítulo
-        Text(
-            text = "Quality Reports",
-            style = FruitLogixTheme.typography.displayLarge,
-            color = FruitLogixTheme.colors.textOnLight
-        )
-        Text(
-            text = "INSPECTION HISTORY PER ORDER • FUNDO SANTA ROSA",
-            style = FruitLogixTheme.typography.labelSmall,
-            color = FruitLogixTheme.colors.textMuted
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 1. Tarjeta de Métricas Superiores (Pass Rate & Sampled Today)
-        FruitLogixCard(
-            variant = CardVariant.Dark,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_shield_check),
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Inspection Pass Rate", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("92.8%", style = FruitLogixTheme.typography.displayLarge, color = FruitLogixTheme.colors.white)
-                    Text("📈 +1.4% this week", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.primary)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(55.dp)
-                        .background(FruitLogixTheme.colors.surfaceTint)
+        item {
+            Column {
+                Text(
+                    text = stringResource(R.string.producer_reports_title),
+                    style = FruitLogixTheme.typography.headlineMedium,
+                    color = scheme.onBackground
                 )
-
-                Column(modifier = Modifier.weight(1f).padding(start = 14.dp)) {
-                    Text("SAMPLED TODAY", style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("1,470 kg", style = FruitLogixTheme.typography.titleLarge, color = FruitLogixTheme.colors.white)
-                    Text("42 total crates inspected", style = FruitLogixTheme.typography.bodySmall, color = FruitLogixTheme.colors.textMuted)
-                }
+                Text(
+                    text = stringResource(R.string.producer_reports_subtitle, FARM_NAME),
+                    style = FruitLogixTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // Summary KPIs (dark)
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                KpiCard(
+                    caption = stringResource(R.string.producer_reports_kpi_pass_rate),
+                    value = "${formatDecimal(summary.passRatePct)}%",
+                    icon = {
+                        AppIcon(
+                            id = R.drawable.ic_shield_check,
+                            contentDescription = null,
+                            tint = scheme.inversePrimary,
+                            modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                        )
+                    },
+                    footer = {
+                        Text(
+                            text = stringResource(
+                                R.string.producer_reports_kpi_weekly_delta,
+                                "+${formatDecimal(summary.weeklyDeltaPct)}%"
+                            ),
+                            style = FruitLogixTheme.typography.bodySmall,
+                            color = scheme.inversePrimary
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+                KpiCard(
+                    caption = stringResource(R.string.producer_reports_kpi_sampled_today),
+                    value = stringResource(
+                        R.string.producer_orders_tile_volume_format,
+                        NumberFormat.getNumberInstance(locale).format(summary.sampledTodayKg)
+                    ),
+                    icon = {
+                        AppIcon(
+                            id = R.drawable.ic_inventory,
+                            contentDescription = null,
+                            tint = scheme.inversePrimary,
+                            modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                        )
+                    },
+                    footer = {
+                        Text(
+                            text = pluralStringResource(
+                                R.plurals.producer_reports_kpi_crates,
+                                summary.cratesInspectedToday,
+                                summary.cratesInspectedToday
+                            ),
+                            style = FruitLogixTheme.typography.bodySmall,
+                            color = FruitLogixTheme.colors.onInverseSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
-        // 2. Buscador
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = { Text("Search order #, product, client...", color = FruitLogixTheme.colors.textMuted) },
-            leadingIcon = {
-                Icon(painter = painterResource(id = R.drawable.ic_search), contentDescription = null, tint = FruitLogixTheme.colors.textMuted)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = FruitLogixTheme.colors.surfaceLight,
-                unfocusedContainerColor = FruitLogixTheme.colors.surfaceLight,
-                focusedBorderColor = FruitLogixTheme.colors.primary,
-                unfocusedBorderColor = Color.Transparent
-            ),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // 3. Pestañas de Filtro (All, Approved, Pending, Rejected)
-        val tabs = listOf("All", "Approved", "Pending", "Rejected")
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            tabs.forEach { tab ->
-                val isSelected = selectedTab == tab
-                val count = when (tab) {
-                    "Approved" -> allReports.count { it.status == QualityStatus.APPROVED }
-                    "Pending" -> allReports.count { it.status == QualityStatus.PENDING }
-                    "Rejected" -> allReports.count { it.status == QualityStatus.REJECTED }
-                    else -> allReports.size
-                }
-                Surface(
-                    color = if (isSelected) FruitLogixTheme.colors.primary else FruitLogixTheme.colors.surfaceLight,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.clickable { selectedTab = tab }
-                ) {
+        // Search
+        item {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = {
                     Text(
-                        text = "$tab ($count)",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnLight,
-                        fontWeight = FontWeight.Bold
+                        text = stringResource(R.string.producer_reports_search_placeholder),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                leadingIcon = {
+                    AppIcon(
+                        id = R.drawable.ic_search,
+                        contentDescription = null,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.icon)
+                    )
+                },
+                textStyle = FruitLogixTheme.typography.bodyMedium,
+                modifier = Modifier.fillMaxWidth(),
+                shape = FruitLogixTheme.shapes.Input,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = scheme.surfaceContainerLowest,
+                    unfocusedContainerColor = scheme.surfaceContainerLow,
+                    focusedBorderColor = scheme.primary,
+                    unfocusedBorderColor = scheme.outlineVariant,
+                    focusedPlaceholderColor = scheme.onSurfaceVariant,
+                    unfocusedPlaceholderColor = scheme.onSurfaceVariant,
+                    focusedLeadingIconColor = scheme.onSurfaceVariant,
+                    unfocusedLeadingIconColor = scheme.onSurfaceVariant
+                ),
+                singleLine = true
+            )
+        }
+
+        // Status filters
+        item {
+            val counts = mapOf(
+                ReportFilter.ALL to allReports.size,
+                ReportFilter.APPROVED to allReports.count { it.status == QualityStatus.APPROVED },
+                ReportFilter.PENDING to allReports.count { it.status == QualityStatus.PENDING },
+                ReportFilter.REJECTED to allReports.count { it.status == QualityStatus.REJECTED }
+            )
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                items(ReportFilter.entries) { filter ->
+                    val labelRes = when (filter) {
+                        ReportFilter.ALL -> R.string.producer_reports_filter_all
+                        ReportFilter.APPROVED -> R.string.producer_reports_filter_approved
+                        ReportFilter.PENDING -> R.string.producer_reports_filter_pending
+                        ReportFilter.REJECTED -> R.string.producer_reports_filter_rejected
+                    }
+                    ReportFilterChip(
+                        label = stringResource(labelRes, counts[filter] ?: 0),
+                        selected = selectedFilter == filter,
+                        onClick = { selectedFilter = filter }
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 4. Lista de Reportes de Calidad
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(filteredReports) { report ->
+        if (filteredReports.isEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.producer_reports_empty),
+                    style = FruitLogixTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = spacing.md)
+                )
+            }
+        } else {
+            items(filteredReports, key = { it.id }) { report ->
                 QualityReportCard(
                     report = report,
                     onClick = { onNavigateToDetail(report.id) }
@@ -181,209 +249,254 @@ fun ProducerQualityScreen(
 }
 
 @Composable
+private fun ReportFilterChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        modifier = Modifier
+            .defaultMinSize(minHeight = FruitLogixTheme.sizing.minTouch)
+            .clip(FruitLogixTheme.shapes.Pill)
+            .background(if (selected) scheme.secondary else scheme.surfaceContainerHigh)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = FruitLogixTheme.typography.labelMedium,
+            color = if (selected) scheme.onSecondary else scheme.onSurface,
+            maxLines = 1,
+            softWrap = false
+        )
+    }
+}
+
+/** Quality report (light list card). */
+@Composable
 fun QualityReportCard(report: QualityReportItem, onClick: () -> Unit) {
-    val statusBg = when (report.status) {
-        QualityStatus.APPROVED -> FruitLogixTheme.colors.success
-        QualityStatus.PENDING -> FruitLogixTheme.colors.warning
-        QualityStatus.REJECTED -> FruitLogixTheme.colors.dangerStrong
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+
+    val (statusRes, badgeType) = when (report.status) {
+        QualityStatus.APPROVED -> R.string.producer_reports_status_approved to StatusBadgeType.SUCCESS
+        QualityStatus.PENDING -> R.string.producer_reports_status_pending to StatusBadgeType.WARNING
+        QualityStatus.REJECTED -> R.string.producer_reports_status_rejected to StatusBadgeType.DANGER
+    }
+    val actionRes = when (report.status) {
+        QualityStatus.APPROVED -> R.string.producer_reports_action_certificate
+        QualityStatus.PENDING -> R.string.producer_reports_action_review
+        QualityStatus.REJECTED -> R.string.producer_reports_action_audit
     }
 
-    val statusText = when (report.status) {
-        QualityStatus.APPROVED -> "Approved"
-        QualityStatus.PENDING -> "Pending Quality"
-        QualityStatus.REJECTED -> "Rejected"
-    }
-
-    // Usamos el contenedor con clickable limpio
     FruitLogixCard(
         variant = CardVariant.White,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick) // <--- Aquí toda la tarjeta reacciona al toque
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Header de la Orden y Estado
+        Column(modifier = Modifier.padding(FruitLogixTheme.spacing.sm)) {
+            // Order + status, then client and time on their own lines
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "${report.orderNumber} • ${report.clientName}",
-                        style = FruitLogixTheme.typography.titleMedium,
-                        color = FruitLogixTheme.colors.textOnLight,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "${report.timestamp} • ${report.locationInfo}",
-                        style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
-                }
-                Surface(
-                    color = statusBg.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = statusText,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = statusBg,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = report.orderNumber,
+                    style = FruitLogixTheme.typography.titleMedium,
+                    color = scheme.primary,
+                    modifier = Modifier.weight(1f)
+                )
+                StatusBadge(
+                    text = stringResource(statusRes),
+                    type = badgeType,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
+            Text(
+                text = report.clientName,
+                style = FruitLogixTheme.typography.titleMedium,
+                color = scheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${formatInspectedAt(report.inspectedAt)} · ${report.locationInfo}",
+                style = FruitLogixTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+
+            // Product + lot
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(FruitLogixTheme.shapes.Button)
+                    .background(scheme.surfaceContainerLow)
+                    .padding(FruitLogixTheme.spacing.inner),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppIcon(
+                    id = R.drawable.ic_leaf,
+                    contentDescription = null,
+                    tint = scheme.primary,
+                    modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                )
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                Text(
+                    text = "${report.productName} · ${stringResource(R.string.common_kg_value, report.weightKg)}",
+                    style = FruitLogixTheme.typography.titleSmall,
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                Text(
+                    text = stringResource(R.string.producer_reports_lot, report.lotCode),
+                    style = FruitLogixTheme.extraTypography.dataMonoSmall,
+                    color = scheme.onSecondaryContainer,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier
+                        .clip(FruitLogixTheme.shapes.Tag)
+                        .background(scheme.secondaryContainer)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Subtarjeta de Producto y Lote
-            Surface(
-                color = FruitLogixTheme.colors.surfaceLight,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            // Quarantine alert (derived from the metrics)
+            if (report.isQuarantined) {
+                Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
                 Row(
-                    modifier = Modifier.padding(10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(FruitLogixTheme.shapes.Button)
+                        .background(scheme.errorContainer)
+                        .padding(FruitLogixTheme.spacing.inner),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_leaf),
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "${report.productName} • ${report.weightKg} kg",
-                            style = FruitLogixTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.textOnLight
-                        )
-                    }
-                    Surface(
-                        color = FruitLogixTheme.colors.surfaceTint,
-                        shape = RoundedCornerShape(4.dp)
-                    ) {
-                        Text(
-                            text = report.lotCode,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = FruitLogixTheme.typography.labelSmall,
-                            color = FruitLogixTheme.colors.textOnLight,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    AppIcon(
+                        id = R.drawable.ic_alert,
+                        contentDescription = null,
+                        tint = scheme.error,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                    )
+                    Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                    Text(
+                        text = stringResource(
+                            R.string.producer_reports_quarantine_alert,
+                            formatDecimal(report.defectsPercentage),
+                            formatDecimal(DEFECT_LIMIT_PCT)
+                        ),
+                        style = FruitLogixTheme.typography.bodySmall,
+                        color = scheme.onErrorContainer
+                    )
                 }
             }
 
-            // Alerta si es rechazado
-            if (!report.alertMessage.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    color = FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_alert),
-                            contentDescription = null,
-                            tint = FruitLogixTheme.colors.dangerStrong,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = report.alertMessage,
-                            style = FruitLogixTheme.typography.bodySmall,
-                            color = FruitLogixTheme.colors.dangerStrong,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+
+            // Metrics 2x2 (larger than 4 in a row, easier to read in the field)
+            val defectsHigh = report.defectsPercentage > DEFECT_LIMIT_PCT
+            Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                    MetricBox(
+                        label = stringResource(R.string.producer_reports_metric_visual),
+                        value = "${formatDecimal(report.visualScore)} / ${formatDecimal(5.0)}",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricBox(
+                        label = stringResource(R.string.producer_reports_metric_defects),
+                        value = "${formatDecimal(report.defectsPercentage)}%",
+                        container = if (defectsHigh) scheme.errorContainer else null,
+                        content = if (defectsHigh) scheme.onErrorContainer else null,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                    MetricBox(
+                        label = stringResource(R.string.producer_reports_metric_core_temp),
+                        value = "${formatDecimal(report.coreTemp)} °C",
+                        container = colors.coldContainer,
+                        content = colors.onColdContainer,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MetricBox(
+                        label = stringResource(R.string.producer_reports_metric_humidity),
+                        value = "${report.humidityPercentage}%",
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+            HorizontalDivider(color = scheme.outlineVariant)
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
 
-            // Grid de Métricas de Inspección
+            // Inspector + action
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                MetricBox("Visual", "${report.visualScore} / 5.0", modifier = Modifier.weight(1f))
-                MetricBox("Defects", "${report.defectsPercentage}%", modifier = Modifier.weight(1f), isAlert = report.defectsPercentage > 3.0)
-                MetricBox("Core Temp", "${report.coreTemp} °C", modifier = Modifier.weight(1f))
-                MetricBox("Humidity", "${report.humidityPercentage}%", modifier = Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Inspector y Botón de Acción inferior
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_person),
-                        contentDescription = null,
-                        tint = FruitLogixTheme.colors.textMuted,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Inspector: ${report.inspectorName}",
-                        style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted
-                    )
-                }
-
-                // Superficie interactiva que también dispara el onClick general
-                Surface(
-                    color = FruitLogixTheme.colors.primary.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.clickable(onClick = onClick)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = when(report.status) {
-                                QualityStatus.APPROVED -> "Certificate >"
-                                QualityStatus.PENDING -> "Review >"
-                                QualityStatus.REJECTED -> "Audit Details >"
-                            },
-                            style = FruitLogixTheme.typography.labelSmall,
-                            color = FruitLogixTheme.colors.primary,
-                            fontWeight = FontWeight.Bold
+                AppIcon(
+                    id = R.drawable.ic_person,
+                    contentDescription = null,
+                    tint = scheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xxs))
+                Text(
+                    text = stringResource(R.string.producer_reports_inspector, report.inspectorName),
+                    style = FruitLogixTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                TextActionButton(
+                    text = stringResource(actionRes),
+                    onClick = onClick,
+                    trailingIcon = {
+                        AppIcon(
+                            id = R.drawable.ic_chevron_right,
+                            contentDescription = null,
+                            modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
                         )
                     }
-                }
+                )
             }
         }
     }
 }
+
+/** Metric tile: label on top, value in the data font. */
 @Composable
-fun MetricBox(label: String, value: String, modifier: Modifier = Modifier, isAlert: Boolean = false) {
-    Surface(
-        color = if (isAlert) FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.1f) else FruitLogixTheme.colors.surfaceLight,
-        shape = RoundedCornerShape(8.dp),
+fun MetricBox(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    container: Color? = null,
+    content: Color? = null
+) {
+    val scheme = MaterialTheme.colorScheme
+    val fg = content ?: scheme.onSurface
+    Column(
         modifier = modifier
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(container ?: scheme.surfaceContainerLow)
+            .padding(horizontal = FruitLogixTheme.spacing.inner, vertical = FruitLogixTheme.spacing.xs)
     ) {
-        Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = label, style = FruitLogixTheme.typography.labelSmall, color = FruitLogixTheme.colors.textMuted)
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                style = FruitLogixTheme.typography.bodySmall,
-                fontWeight = FontWeight.Bold,
-                color = if (isAlert) FruitLogixTheme.colors.dangerStrong else FruitLogixTheme.colors.textOnLight
-            )
-        }
+        Text(
+            text = label,
+            style = FruitLogixTheme.typography.labelMedium,
+            color = if (content != null) fg else scheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = FruitLogixTheme.extraTypography.dataMono,
+            color = fg
+        )
     }
 }

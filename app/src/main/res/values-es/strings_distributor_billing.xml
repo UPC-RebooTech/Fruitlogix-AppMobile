@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Lista de facturas -->
+    <string name="inv_title">Facturación</string>
+    <string name="inv_subtitle">Lo que cobras a clientes y pagas a productores.</string>
+    <string name="inv_to_collect">Por cobrar</string>
+    <string name="inv_to_pay">Por pagar</string>
+    <plurals name="inv_overdue_count">
+        <item quantity="one">%d vencida</item>
+        <item quantity="many">%d vencidas</item>
+        <item quantity="other">%d vencidas</item>
+    </plurals>
+    <string name="inv_up_to_date">Al día</string>
+    <string name="inv_tab_collect">Por cobrar (%1$d)</string>
+    <string name="inv_tab_pay">Por pagar (%1$d)</string>
+    <string name="inv_filter_all">Todas</string>
+    <string name="inv_status_pending">Pendiente</string>
+    <string name="inv_status_overdue">Vencida</string>
+    <string name="inv_status_paid">Pagada</string>
+    <string name="inv_export">Exportar reporte PDF</string>
+    <string name="inv_issued">Emitida %1$s</string>
+    <string name="inv_due">Vence %1$s</string>
+    <plurals name="inv_days_overdue">
+        <item quantity="one">Vencida hace %d día</item>
+        <item quantity="many">Vencida hace %d días</item>
+        <item quantity="other">Vencida hace %d días</item>
+    </plurals>
+    <string name="inv_order">Pedido %1$s</string>
+    <string name="inv_empty">No hay facturas con este estado.</string>
+
+    <!-- Herramientas de facturación -->
+    <string name="inv_tools_title">Herramientas de facturación</string>
+    <string name="inv_tool_auto">Facturar una recepción</string>
+    <string name="inv_tool_auto_sub">Kilos recibidos × precio pactado</string>
+    <string name="inv_tool_credit">Notas de crédito propuestas</string>
+    <string name="inv_tool_credit_sub">%1$d por revisar</string>
+    <string name="inv_tool_credit_done">Todas revisadas</string>
+    <string name="inv_tool_prices">Precio por kilo</string>
+    <string name="inv_tool_prices_sub">Historial por producto y cliente</string>
+    <string name="inv_tool_purchases">Compras por cliente</string>
+    <string name="inv_tool_purchases_sub">Resumen semanal o mensual</string>
+    <string name="inv_close">Cerrar</string>
+
+    <!-- US66 -->
+    <string name="inv_auto_message">Al confirmar una recepción, la factura es kilos recibidos × precio pactado.</string>
+    <string name="inv_auto_client">Cliente</string>
+    <string name="inv_auto_client_placeholder">ej. Supermercados Lima Norte</string>
+    <string name="inv_auto_kilos">Kilos recibidos</string>
+    <string name="inv_auto_price">Precio pactado por kilo (S/)</string>
+    <string name="inv_auto_price_help">Déjalo vacío si aún no hay precio pactado.</string>
+    <string name="inv_auto_total">Total: %1$s</string>
+    <string name="inv_auto_issue">Emitir factura</string>
+    <string name="inv_auto_error_client">Ingresa el cliente</string>
+    <string name="inv_auto_error_kilos">Ingresa los kilos recibidos</string>
+    <string name="inv_auto_pending">No hay precio pactado con %1$s. El pedido queda como \"facturación pendiente\".</string>
+    <string name="inv_auto_issued">Factura %1$s emitida por %2$s</string>
+
+    <!-- US67 -->
+    <string name="inv_credit_for">Factura %1$s · %2$s</string>
+    <string name="inv_credit_thermal">Excursión térmica: %1$s por %2$d min · %3$d kg de %4$s</string>
+    <string name="inv_credit_rejected">%1$d kg de %2$s rechazados</string>
+    <string name="inv_credit_damaged">%1$d kg de %2$s dañados en la recepción</string>
+    <string name="inv_credit_suggested">Sugerido: %1$s</string>
+    <string name="inv_credit_approved">Aprobada: %1$s</string>
+    <string name="inv_credit_approve">Aprobar</string>
+    <string name="inv_credit_badge_approved">Aprobada</string>
+    <string name="inv_credit_adjust">Ajustar monto</string>
+    <string name="inv_credit_amount">Monto de la nota (S/)</string>
+    <string name="inv_credit_save">Aprobar con este monto</string>
+    <string name="inv_credit_error_number">Ingresa un monto</string>
+    <string name="inv_credit_error_positive">El monto debe ser mayor que 0</string>
+    <string name="inv_credit_error_above">No puede superar la factura (%1$s)</string>
+    <string name="inv_credit_none">No hay notas de crédito por revisar: los pedidos recientes no tuvieron rechazos ni excursiones.</string>
+    <string name="inv_credit_done">Nota de crédito %1$s aprobada por %2$s</string>
+
+    <!-- US68 -->
+    <string name="inv_prices_product">Producto</string>
+    <string name="inv_prices_client">Cliente</string>
+    <string name="inv_prices_now">Ahora %1$s por kg</string>
+    <string name="inv_prices_change">%1$s en %2$d meses</string>
+    <string name="inv_prices_none">No hay historial de precios de %1$s con %2$s.</string>
+    <string name="inv_prices_chart_cd">Precio por kilo en los últimos %1$d meses, de %2$s a %3$s</string>
+
+    <!-- US69 -->
+    <string name="inv_purchases_client">Cliente</string>
+    <string name="inv_purchases_week">Esta semana</string>
+    <string name="inv_purchases_month">Este mes</string>
+    <string name="inv_purchases_kilos">Kilos comprados</string>
+    <string name="inv_purchases_amount">Monto</string>
+    <string name="inv_purchases_orders">Pedidos</string>
+    <string name="inv_purchases_kg">%1$s kg</string>
+    <string name="inv_purchases_none">%1$s no tiene compras finalizadas en este periodo.</string>
+
+    <!-- Detalle de factura -->
+    <string name="inv_detail_from">Por cobrar a</string>
+    <string name="inv_detail_to">Por pagar a</string>
+    <string name="inv_detail_issued">Emitida</string>
+    <string name="inv_detail_due">Vence</string>
+    <string name="inv_detail_order">Pedido</string>
+    <string name="inv_detail_credit_notes">Notas de crédito</string>
+    <string name="inv_detail_not_found">No encontramos esta factura.</string>
+
+    <!-- Reporte PDF -->
+    <string name="inv_pdf_title">Reporte financiero</string>
+    <string name="inv_pdf_generated">Generado %1$s</string>
+    <string name="inv_pdf_filter">Estado: %1$s</string>
+    <string name="inv_pdf_total">Total %1$s</string>
+    <string name="inv_pdf_subject">Reporte financiero FruitLogix</string>
+    <string name="inv_pdf_share">Compartir el reporte</string>
+</resources>

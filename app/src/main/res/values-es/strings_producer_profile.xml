@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cuenta -->
+    <string name="profile_account_title">Mi cuenta</string>
+    <string name="profile_role_producer">Productor</string>
+    <string name="profile_username">\@%1$s</string>
+    <string name="profile_edit">Editar perfil</string>
+    <string name="profile_section_settings">Ajustes</string>
+    <string name="profile_section_support">Soporte</string>
+    <string name="profile_version">Versión %1$s</string>
+    <string name="common_back">Volver</string>
+
+    <!-- Filas de ajustes -->
+    <string name="settings_notifications">Notificaciones</string>
+    <plurals name="settings_notifications_summary">
+        <item quantity="one">%1$d de %2$d alertas activas</item>
+        <item quantity="many">%1$d de %2$d alertas activas</item>
+        <item quantity="other">%1$d de %2$d alertas activas</item>
+    </plurals>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_es">Español</string>
+    <string name="settings_sync">Datos y sincronización</string>
+    <string name="settings_sync_summary">Última sincronización: %1$s</string>
+    <string name="settings_sync_never">Aún no se sincroniza</string>
+    <string name="settings_help">Ayuda y soporte</string>
+    <string name="settings_help_summary">Preguntas frecuentes y contacto</string>
+
+    <!-- Editar perfil -->
+    <string name="profile_edit_title">Editar perfil</string>
+    <string name="profile_section_personal">Datos personales</string>
+    <string name="profile_section_farm">Datos del fundo y legales</string>
+    <string name="profile_field_full_name">Nombre completo</string>
+    <string name="profile_field_email">Correo electrónico</string>
+    <string name="profile_field_phone">Teléfono</string>
+    <string name="profile_field_farm_name">Nombre del fundo</string>
+    <string name="profile_field_legal_name">Razón social</string>
+    <string name="profile_field_ruc">RUC</string>
+    <string name="profile_field_location">Ubicación</string>
+    <string name="profile_certification">Certificación GlobalGAP</string>
+    <string name="profile_certification_valid">Válida hasta %1$s</string>
+    <string name="profile_certification_missing">Sin certificación registrada</string>
+    <string name="profile_save">Guardar cambios</string>
+    <string name="profile_saved">Perfil actualizado</string>
+    <string name="profile_error_required">Este campo es obligatorio</string>
+    <string name="profile_error_email">Ingresa un correo válido</string>
+    <string name="profile_error_phone">Ingresa un teléfono válido</string>
+    <string name="profile_error_ruc">El RUC debe tener 11 dígitos</string>
+
+    <!-- Ajustes de notificaciones -->
+    <string name="settings_notifications_intro">Elige qué alertas quieres recibir en este teléfono.</string>
+    <string name="settings_notif_new_orders">Pedidos nuevos</string>
+    <string name="settings_notif_new_orders_desc">Cuando un distribuidor te envía un pedido</string>
+    <string name="settings_notif_quality">Resultados de calidad</string>
+    <string name="settings_notif_quality_desc">Reportes de inspección aprobados o rechazados</string>
+    <string name="settings_notif_cold_chain">Alertas de cadena de frío</string>
+    <string name="settings_notif_cold_chain_desc">Temperatura o humedad fuera de rango en tus cámaras</string>
+    <string name="settings_notif_payments">Pagos</string>
+    <string name="settings_notif_payments_desc">Liquidaciones realizadas y facturas pendientes</string>
+    <string name="settings_notif_messages">Mensajes</string>
+    <string name="settings_notif_messages_desc">Mensajes nuevos de distribuidores</string>
+    <string name="settings_notif_quiet">Horario de silencio</string>
+    <string name="settings_notif_quiet_desc">Silencia alertas de 10 p. m. a 6 a. m., salvo las de cadena de frío</string>
+
+    <!-- Ajustes de idioma -->
+    <string name="settings_language_intro">Toda la app cambiará al idioma que elijas.</string>
+
+    <!-- Ajustes de sincronización -->
+    <string name="settings_sync_intro">FruitLogix funciona sin señal. Tus cambios se guardan en el teléfono y se envían cuando vuelves a tener conexión.</string>
+    <string name="settings_sync_status">Estado de sincronización</string>
+    <string name="settings_sync_up_to_date">Todo está al día</string>
+    <plurals name="settings_sync_pending">
+        <item quantity="one">%1$d cambio pendiente de sincronizar</item>
+        <item quantity="many">%1$d cambios pendientes de sincronizar</item>
+        <item quantity="other">%1$d cambios pendientes de sincronizar</item>
+    </plurals>
+    <string name="settings_sync_now">Sincronizar ahora</string>
+    <string name="settings_sync_in_progress">Sincronizando…</string>
+    <string name="settings_sync_auto">Sincronizar automáticamente</string>
+    <string name="settings_sync_auto_desc">Envía los cambios apenas haya conexión</string>
+    <string name="settings_sync_wifi">Sincronizar solo con Wi-Fi</string>
+    <string name="settings_sync_wifi_desc">Ahorra datos móviles en el campo</string>
+
+    <!-- Ayuda -->
+    <string name="help_intro">Respuestas a las preguntas más comunes.</string>
+    <string name="help_faq_offline_q">¿Puedo usar la app sin señal?</string>
+    <string name="help_faq_offline_a">Sí. Las inspecciones, cosechas y cambios de stock se guardan en el teléfono y se sincronizan solos cuando vuelves a tener conexión.</string>
+    <string name="help_faq_reject_q">¿Qué hago si rechazan un lote?</string>
+    <string name="help_faq_reject_a">Abre el reporte desde Pedidos o Reportes, revisa el motivo y usa Reinspeccionar después de reclasificar el lote.</string>
+    <string name="help_faq_payments_q">¿Cuándo me pagan?</string>
+    <string name="help_faq_payments_a">Las liquidaciones aparecen en Liquidaciones con su fecha. Recibirás una notificación cuando se realice un pago.</string>
+    <string name="help_faq_language_q">¿Cómo cambio el idioma?</string>
+    <string name="help_faq_language_a">Toca EN o ES en la barra superior, o entra a Mi cuenta → Idioma.</string>
+    <string name="help_contact_title">Contactar a soporte</string>
+    <string name="help_contact_desc">Escribe a tu distribuidor desde Mensajes o contacta al equipo de FruitLogix.</string>
+    <string name="help_contact_messages">Abrir Mensajes</string>
+    <string name="help_cd_expand">Mostrar respuesta</string>
+    <string name="help_cd_collapse">Ocultar respuesta</string>
+</resources>

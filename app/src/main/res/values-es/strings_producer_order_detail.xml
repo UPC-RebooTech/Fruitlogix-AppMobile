@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Detalle de pedido del productor -->
+    <string name="order_detail_title">Pedido #%1$s</string>
+    <string name="order_detail_cd_chat">Escribir al distribuidor</string>
+    <string name="order_detail_not_found">No encontramos este pedido.</string>
+
+    <string name="order_detail_total">Total solicitado</string>
+    <string name="order_detail_delivery_on">Entrega %1$s</string>
+    <plurals name="order_detail_products_count">
+        <item quantity="one">%1$d producto</item>
+        <item quantity="many">%1$d productos</item>
+        <item quantity="other">%1$d productos</item>
+    </plurals>
+
+    <string name="order_detail_section_products">Productos solicitados</string>
+    <string name="order_detail_section_dispatch">Condiciones de despacho</string>
+    <string name="order_detail_section_quality">Calidad</string>
+    <string name="order_detail_section_truck">Camión asignado</string>
+
+    <string name="order_detail_mode">Modalidad</string>
+    <string name="order_detail_mode_pickup">Recojo en la puerta del fundo por el distribuidor</string>
+    <string name="order_detail_mode_delivery">Entrega en el almacén del distribuidor</string>
+    <string name="order_detail_date">Fecha pactada</string>
+    <string name="order_detail_window">Rango horario</string>
+    <string name="order_detail_window_value">%1$s – %2$s</string>
+    <string name="order_detail_cold_chain">Cadena de frío</string>
+    <string name="order_detail_cold_chain_value">Mantener entre %1$s °C y %2$s °C</string>
+    <string name="order_detail_distributor">Contacto del distribuidor</string>
+    <string name="order_detail_note">Nota del distribuidor</string>
+
+    <string name="order_detail_truck_plate">Placa</string>
+    <string name="order_detail_truck_vehicle">Vehículo</string>
+    <string name="order_detail_truck_driver">Conductor</string>
+    <string name="order_detail_truck_eta">Llegada estimada</string>
+
+    <string name="order_detail_message">Escribir al distribuidor</string>
+</resources>

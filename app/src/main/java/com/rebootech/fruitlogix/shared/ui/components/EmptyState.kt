@@ -52,7 +52,7 @@ fun EmptyState(
         Text(
             text = message,
             style = FruitLogixTheme.typography.bodyMedium,
-            color = FruitLogixTheme.colors.textMuted,
+            color = FruitLogixTheme.colors.textMutedLight,
             textAlign = TextAlign.Center
         )
 

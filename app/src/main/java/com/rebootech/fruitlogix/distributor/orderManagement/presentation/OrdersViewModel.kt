@@ -1,64 +1,43 @@
 ﻿package com.rebootech.fruitlogix.distributor.orderManagement.presentation
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.distributor.orderManagement.data.FakeOrderRepository
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+data class OrdersUiState(
+    val orders: List<DistributorOrder> = emptyList(),
+    /** null = all statuses. */
+    val filter: OrderStatus? = null
+) {
+    val visibleOrders: List<DistributorOrder>
+        get() = if (filter == null) orders else orders.filter { it.status == filter }
+
+    fun count(status: OrderStatus): Int = orders.count { it.status == status }
+}
 
 class OrdersViewModel(
-    private val repository: OrderRepository = FakeOrderRepository()
+    private val repository: OrderRepository = com.rebootech.fruitlogix.distributor.DistributorDependencies.orderRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(OrdersUiState())
+    private val filter = MutableStateFlow<OrderStatus?>(null)
 
-    val uiState: StateFlow<OrdersUiState> =
-        _uiState.asStateFlow()
+    val uiState: StateFlow<OrdersUiState> = combine(repository.orders, filter) { orders, filter ->
+        OrdersUiState(orders = orders, filter = filter)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), OrdersUiState(orders = repository.orders.value))
 
     init {
-        loadOrders()
+        viewModelScope.launch { repository.refresh() }
     }
 
-    fun loadOrders() {
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            orders = repository.getOrders()
-        )
+    fun onFilterChange(status: OrderStatus?) {
+        filter.value = status
     }
-
-    fun requestDelete(orderId: String) {
-        val order = repository.getOrderById(orderId)
-
-        _uiState.value = _uiState.value.copy(
-            deleteCandidate = order,
-            deleteResult = null
-        )
-    }
-
-    fun confirmDelete() {
-        val order = _uiState.value.deleteCandidate ?: return
-
-        val result = repository.deleteOrder(order.id)
-
-        _uiState.value = _uiState.value.copy(
-            orders = repository.getOrders(),
-            deleteCandidate = null,
-            deleteResult = result
-        )
-    }
-
-    fun dismissDelete() {
-        _uiState.value = _uiState.value.copy(
-            deleteCandidate = null,
-            deleteResult = null
-        )
-    }
-
-    fun clearDeleteResult() {
-        _uiState.value = _uiState.value.copy(
-            deleteResult = null
-        )
-    }
-
 }

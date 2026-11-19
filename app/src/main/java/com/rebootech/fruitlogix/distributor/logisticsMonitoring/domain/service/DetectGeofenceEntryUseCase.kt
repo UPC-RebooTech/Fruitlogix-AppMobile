@@ -1,6 +1,5 @@
 ﻿package com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.service
 
-import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Arrival
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.GeofenceZone
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ShipmentEnteredGeofence
 import kotlin.math.atan2
@@ -9,52 +8,26 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Use case to evaluate whether a shipment location is inside a geofence zone using Haversine distance calculations.
- * Pure Kotlin logic.
+ * Decides when a truck enters the hub's geofence. Pure Kotlin.
  */
 class DetectGeofenceEntryUseCase(
-    private val defaultZone: GeofenceZone = GeofenceZone()
+    private val zone: GeofenceZone = GeofenceZone()
 ) {
 
-    /**
-     * Calculates distance in kilometers between two lat/lng coordinates using Haversine formula.
-     */
-    fun calculateDistanceKm(
-        lat1: Double,
-        lng1: Double,
-        lat2: Double = defaultZone.centerLat,
-        lng2: Double = defaultZone.centerLng
-    ): Double {
-        val r = 6371.0 // Earth radius in km
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLng = Math.toRadians(lng2 - lng1)
+    /** Haversine distance in km between a position and the zone center. */
+    fun distanceToHubKm(lat: Double, lng: Double): Double {
+        val r = 6371.0
+        val dLat = Math.toRadians(zone.centerLat - lat)
+        val dLng = Math.toRadians(zone.centerLng - lng)
         val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
-                sin(dLng / 2) * sin(dLng / 2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return r * c
+            cos(Math.toRadians(lat)) * cos(Math.toRadians(zone.centerLat)) * sin(dLng / 2) * sin(dLng / 2)
+        return r * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
 
-    /**
-     * Checks if an arrival unit is within the geofence perimeter.
-     */
-    fun isInsideGeofence(arrival: Arrival, zone: GeofenceZone = defaultZone): Boolean {
-        return arrival.distanceKm <= zone.radiusKm
-    }
-
-    /**
-     * Evaluates geofence entry and publishes domain event.
-     */
-    fun evaluateAndPublishEvent(arrival: Arrival, zone: GeofenceZone = defaultZone): ShipmentEnteredGeofence? {
-        if (isInsideGeofence(arrival, zone)) {
-            val event = ShipmentEnteredGeofence(
-                unitId = arrival.unitId,
-                geofenceName = zone.name,
-                distanceKm = arrival.distanceKm
-            )
-            // TODO: Publish ShipmentEnteredGeofence to core EventBus if available
-            return event
-        }
-        return null
-    }
+    /** @return the event when [distanceKm] is inside the perimeter, otherwise null. */
+    fun evaluate(unitId: String, distanceKm: Double): ShipmentEnteredGeofence? =
+        if (distanceKm <= zone.radiusKm) {
+            // TODO(events): publish ShipmentEnteredGeofence on an event bus when there is one
+            ShipmentEnteredGeofence(unitId = unitId, geofenceName = zone.name, distanceKm = distanceKm.toFloat())
+        } else null
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Review and send quality report -->
+    <string name="review_title">Review report</string>
+    <string name="review_sent_title">Report sent</string>
+    <string name="review_no_data">There is no inspection saved for this order yet.</string>
+
+    <string name="review_photos_title">No photos attached</string>
+    <string name="review_photos_message">You can still send it, but approval may take longer. Distributors often ask for photos for export lots.</string>
+    <string name="review_add_photos">Add photos</string>
+    <string name="review_photos_soon">Photo capture will be available soon</string>
+
+    <string name="review_recipient">Will be sent to %1$s (%2$s)</string>
+    <string name="review_recipient_client">Will be sent to %1$s</string>
+
+    <string name="review_report_label">Inspection report</string>
+    <string name="review_sizes">Sizes: %1$s</string>
+    <string name="review_section_measurements">Measurements</string>
+    <string name="review_section_notes">Your notes</string>
+
+    <string name="review_send">Send report</string>
+    <string name="review_edit">Edit inspection</string>
+
+    <string name="review_sent_message">Waiting for the distributor\'s review</string>
+    <string name="review_sent_at">Sent %1$s</string>
+    <string name="review_section_next">Next steps</string>
+    <string name="review_step_sent">Report sent</string>
+    <string name="review_step_decision">Distributor decision</string>
+    <string name="review_step_decision_detail">You will get a notification with the result</string>
+    <string name="review_step_dispatch">Dispatch</string>
+    <string name="review_step_dispatch_detail">Available after approval</string>
+    <string name="review_back_to_order">Back to order</string>
+</resources>

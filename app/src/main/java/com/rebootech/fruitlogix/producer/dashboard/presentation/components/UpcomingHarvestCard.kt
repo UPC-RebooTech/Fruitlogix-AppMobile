@@ -1,7 +1,7 @@
 package com.rebootech.fruitlogix.producer.dashboard.presentation.components
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,12 +10,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
@@ -24,8 +25,14 @@ import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
+import com.rebootech.fruitlogix.shared.ui.format.formatRelativeDateTime
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.harvestStatusBadge
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.harvestStatusLabel
 
+/**
+ * Next planned harvest (light list card).
+ * Date and status are formatted from data (LocalDateTime + HarvestStatus) in the selected language.
+ */
 @Composable
 fun UpcomingHarvestCard(
     harvest: PlannedHarvest?,
@@ -33,63 +40,67 @@ fun UpcomingHarvestCard(
     modifier: Modifier = Modifier
 ) {
     if (harvest == null) return
+    val scheme = MaterialTheme.colorScheme
 
     FruitLogixCard(
-        variant = CardVariant.Tint,
+        variant = CardVariant.White,
         onClick = onClick,
         modifier = modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Row(
+            modifier = Modifier.padding(FruitLogixTheme.spacing.sm),
+            verticalAlignment = Alignment.Top
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(FruitLogixTheme.sizing.iconBox)
+                    .clip(FruitLogixTheme.shapes.IconBox)
+                    .background(scheme.secondaryContainer),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "PROXIMA COSECHA",
-                    style = FruitLogixTheme.typography.labelSmall,
-                    color = FruitLogixTheme.colors.textMuted,
-                    fontWeight = FontWeight.Bold
-                )
-
                 AppIcon(
-                    id = R.drawable.ic_schedule,
+                    id = R.drawable.ic_leaf,
                     contentDescription = null,
-                    tint = FruitLogixTheme.colors.textOnLight,
-                    modifier = Modifier.size(20.dp)
+                    tint = scheme.onSecondaryContainer,
+                    modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.inner))
 
-            Text(
-                text = "${harvest.productName} • ${harvest.dateFormatted} • ~${harvest.expectedKg} kg",
-                fontFamily = PoppinsFontFamily,
-                fontWeight = FontWeight.Bold,
-                style = FruitLogixTheme.typography.titleMedium,
-                color = FruitLogixTheme.colors.textOnLight
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.producer_home_next_harvest).uppercase(),
+                    style = FruitLogixTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
+                Text(
+                    text = harvest.productName,
+                    style = FruitLogixTheme.typography.titleMedium,
+                    color = scheme.onSurface
+                )
+                Text(
+                    text = "${formatRelativeDateTime(harvest.harvestedAt)} · ${stringResource(R.string.producer_home_harvest_expected, harvest.expectedKg)}",
+                    style = FruitLogixTheme.typography.bodyMedium,
+                    color = scheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xs))
                 StatusBadge(
-                    text = harvest.statusText,
-                    type = StatusBadgeType.NEUTRAL,
+                    text = stringResource(harvestStatusLabel(harvest.status)),
+                    type = harvestStatusBadge(harvest.status),
                     maxLines = 1,
                     softWrap = false
                 )
-
                 if (!harvest.crewName.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
                     Text(
                         text = harvest.crewName,
                         style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted
+                        color = scheme.onSurfaceVariant
                     )
                 }
             }
         }
     }
 }
-

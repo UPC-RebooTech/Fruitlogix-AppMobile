@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Escanear lote -->
+    <string name="scan_title">Escanear lote</string>
+    <string name="scan_subtitle">Apunta la cámara al QR o código de barras de la jaba</string>
+    <string name="scan_looking">Buscando un código de lote…</string>
+    <string name="scan_order_context">Pedido #%1$s · %2$s</string>
+    <string name="scan_order_any">Cualquier pedido abierto</string>
+    <string name="scan_simulate">Simular escaneo (demo)</string>
+    <string name="scan_manual">Ingresar código manualmente</string>
+    <string name="scan_manual_title">Ingresa el código de lote</string>
+    <string name="scan_manual_label">Código de lote</string>
+    <string name="scan_manual_hint">Ejemplo: HA-09</string>
+    <string name="scan_validate">Validar código</string>
+    <string name="scan_back_to_camera">Volver a la cámara</string>
+    <string name="scan_match_title">Lote encontrado</string>
+    <string name="scan_match_message">El código coincide con un pedido abierto.</string>
+    <string name="scan_lot_summary">%1$s · %2$s kg · %3$d jabas</string>
+    <string name="scan_continue">Continuar a la inspección</string>
+    <string name="scan_again">Escanear otro código</string>
+    <string name="scan_error_title">Código no reconocido</string>
+    <string name="scan_error_message">El código no se puede leer o no está vinculado a un pedido abierto. Intenta de nuevo o escríbelo.</string>
+    <string name="scan_try_again">Intentar de nuevo</string>
+
+    <!-- Inspección -->
+    <string name="inspection_title">Inspección de calidad</string>
+    <string name="inspection_step_prepare">Preparar</string>
+    <string name="inspection_step_inspect">Inspeccionar</string>
+    <string name="inspection_step_report">Reporte</string>
+    <string name="inspection_reinspection">Reinspección requerida</string>
+    <string name="inspection_lot">Lote %1$s</string>
+    <string name="inspection_crates">%1$d jabas × %2$d kg</string>
+
+    <string name="inspection_section_visual">Calidad visual y calibre</string>
+    <string name="inspection_visual_score">Puntaje visual</string>
+    <string name="inspection_score_value">%1$d / 5</string>
+    <string name="inspection_cd_score">Puntaje %1$d de 5</string>
+    <string name="inspection_grade_a">Grado A · condición de exportación</string>
+    <string name="inspection_grade_b">Grado B · condición estándar, requiere revisión</string>
+    <string name="inspection_calibers">Calibres presentes en el lote</string>
+    <string name="inspection_caliber">Calibre %1$d · ~%2$d g</string>
+    <string name="inspection_calibers_required">Selecciona al menos un calibre</string>
+
+    <string name="inspection_section_measurements">Mediciones</string>
+    <string name="inspection_core_temp">Temperatura de pulpa</string>
+    <string name="inspection_moisture">Humedad de pulpa</string>
+    <string name="inspection_defects">Defectos y merma</string>
+    <string name="inspection_range">Aceptado %1$s–%2$s %3$s</string>
+    <string name="inspection_max">Aceptado hasta %1$s %2$s</string>
+    <string name="inspection_out_of_range">Fuera del rango aceptado</string>
+    <plurals name="inspection_issues">
+        <item quantity="one">%1$d dato por corregir</item>
+        <item quantity="many">%1$d datos por corregir</item>
+        <item quantity="other">%1$d datos por corregir</item>
+    </plurals>
+
+    <string name="inspection_section_notes">Notas de inspección</string>
+    <string name="inspection_notes_hint">Firmeza, piel, cajas dañadas…</string>
+    <string name="inspection_notes_count">%1$d / %2$d</string>
+
+    <string name="inspection_fix_before_submit">Corrige los campos marcados para continuar</string>
+    <string name="inspection_save_offline">Guardar en el teléfono</string>
+    <string name="inspection_saved_offline">Guardado en este teléfono. Se sincronizará cuando tengas conexión.</string>
+    <string name="inspection_review">Revisar reporte</string>
+</resources>

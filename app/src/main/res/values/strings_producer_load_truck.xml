@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Load truck at the farm (producer) -->
+    <string name="load_title">Load truck</string>
+    <string name="load_subtitle">Order #%1$s · %2$s</string>
+    <string name="load_not_found">We could not find this order.</string>
+
+    <string name="load_truck_label">Assigned truck</string>
+    <string name="load_quality_approved">Quality approved</string>
+    <string name="load_eta">Arrives at %1$s</string>
+    <string name="load_pickup_window">Pickup window %1$s – %2$s</string>
+
+    <string name="load_driver_label">Driver</string>
+    <string name="load_call_driver">Call %1$s</string>
+
+    <string name="load_section_cargo">Cargo</string>
+    <string name="load_total">Total to load</string>
+
+    <string name="load_section_checklist">Before the truck leaves</string>
+    <string name="load_checklist_hint">Check every item to confirm the dispatch.</string>
+    <string name="load_checklist_progress">%1$d of %2$d checked</string>
+    <string name="load_check_crates">Crates counted and match the order</string>
+    <string name="load_check_labels">Lot labels are visible on every pallet</string>
+    <string name="load_check_cooling">Truck cooling is on and at the right temperature</string>
+    <string name="load_check_cooling_range">Truck cooling is between %1$s °C and %2$s °C</string>
+    <string name="load_check_guide">Driver signed the dispatch guide</string>
+
+    <string name="load_blocked_title">This order is not ready to load</string>
+    <string name="load_blocked_quality">The quality report is not approved yet</string>
+    <string name="load_blocked_truck">The distributor has not assigned a truck yet</string>
+
+    <string name="load_confirm">Confirm dispatch</string>
+    <string name="load_confirm_dialog_title">Dispatch order #%1$s?</string>
+    <string name="load_confirm_dialog_message">The order will be marked as in transit and the distributor will see that the truck left the farm.</string>
+    <string name="load_confirm_dialog_yes">Yes, dispatch</string>
+
+    <string name="load_dispatched_title">Truck dispatched</string>
+    <string name="load_dispatched_message">Order #%1$s is on its way to %2$s</string>
+    <string name="load_dispatched_at">Left the farm %1$s</string>
+    <string name="load_in_transit">In transit</string>
+    <string name="load_done">Done</string>
+</resources>

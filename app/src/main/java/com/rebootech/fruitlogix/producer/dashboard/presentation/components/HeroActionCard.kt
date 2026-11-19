@@ -1,9 +1,6 @@
 package com.rebootech.fruitlogix.producer.dashboard.presentation.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,150 +9,155 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
+import com.rebootech.fruitlogix.producer.orderManagement.domain.model.StockShortage
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
-import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
-import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
+/**
+ * Highlighted "next action" card (inverseSurface). One main action (accept, Lima pill)
+ * and one text action (view details), both full width for easy tapping in the field.
+ */
 @Composable
 fun HeroActionCard(
     order: Order?,
-    shortageWarning: String?,
+    shortage: StockShortage?,
     onAcceptClick: (Order) -> Unit,
     onReviewDetailsClick: (Order) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val colors = FruitLogixTheme.colors
+
     FruitLogixCard(
-        variant = CardVariant.White,
+        variant = CardVariant.Dark,
+        shape = FruitLogixTheme.shapes.HeroCard,
         modifier = modifier.fillMaxWidth()
     ) {
-        if (order == null) {
-            Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            if (order == null) {
                 Text(
-                    text = "Todo al día",
-                    fontFamily = PoppinsFontFamily,
-                    fontWeight = FontWeight.Bold,
+                    text = stringResource(R.string.producer_home_all_caught_up_title),
                     style = FruitLogixTheme.typography.titleMedium,
-                    color = FruitLogixTheme.colors.textOnLight
+                    color = scheme.inverseOnSurface
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
                 Text(
-                    text = "No tienes pedidos pendientes de respuesta.",
+                    text = stringResource(R.string.producer_home_all_caught_up_body),
                     style = FruitLogixTheme.typography.bodyMedium,
-                    color = FruitLogixTheme.colors.textMuted
+                    color = colors.onInverseSurfaceVariant
                 )
+                return@Column
             }
-        } else {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                // Franja izquierda lima de 6dp
-                Box(
-                    modifier = Modifier
-                        .width(6.dp)
-                        .height(180.dp)
-                        .background(FruitLogixTheme.colors.primary)
+
+            val hoursLeft = order.respondByHoursLeft ?: 2
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatusBadge(
+                    text = stringResource(R.string.producer_home_next_action),
+                    type = StatusBadgeType.HIGHLIGHT,
+                    maxLines = 1,
+                    softWrap = false
                 )
-
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // Badge y cuenta regresiva
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StatusBadge(
-                            text = "ACCION URGENTE",
-                            type = StatusBadgeType.HIGHLIGHT,
-                            icon = {
-                                AppIcon(
-                                    id = R.drawable.ic_alert_diamond,
-                                    contentDescription = null,
-                                    tint = FruitLogixTheme.colors.primary,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            AppIcon(
-                                id = R.drawable.ic_schedule,
-                                contentDescription = null,
-                                tint = FruitLogixTheme.colors.textOnLight,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "${order.respondByHoursLeft ?: 2} h restantes",
-                                style = FruitLogixTheme.typography.labelSmall,
-                                color = FruitLogixTheme.colors.textOnLight,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Pedido ${order.id} • ${order.clientName}",
-                        fontFamily = PoppinsFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        style = FruitLogixTheme.typography.titleMedium,
-                        color = FruitLogixTheme.colors.textOnLight
+                Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AppIcon(
+                        id = R.drawable.ic_schedule,
+                        contentDescription = null,
+                        tint = colors.warning,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
                     )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    val itemsSummary = order.items.joinToString(" + ") { "${it.productName} ${it.kg} kg" }
+                    Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xxs))
                     Text(
-                        text = "$itemsSummary — responder en ${order.respondByHoursLeft ?: 2} h",
-                        style = FruitLogixTheme.typography.bodySmall,
-                        color = FruitLogixTheme.colors.textMuted
+                        text = stringResource(R.string.producer_home_hours_left, hoursLeft),
+                        style = FruitLogixTheme.typography.labelMedium,
+                        color = colors.warning,
+                        maxLines = 1
                     )
-
-                    if (shortageWarning != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "⚠ $shortageWarning",
-                            style = FruitLogixTheme.typography.bodySmall,
-                            color = FruitLogixTheme.colors.warning,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        SecondaryButton(
-                            text = "Ver detalles",
-                            onClick = { onReviewDetailsClick(order) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        PrimaryButton(
-                            text = "Aceptar Pedido",
-                            onClick = { onAcceptClick(order) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+
+            Text(
+                text = stringResource(R.string.producer_home_order_title, order.id),
+                style = FruitLogixTheme.typography.titleMedium,
+                color = scheme.inversePrimary
+            )
+            Text(
+                text = order.clientName,
+                style = FruitLogixTheme.typography.titleMedium,
+                color = scheme.inverseOnSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
+
+            Text(
+                text = order.items.joinToString(" · ") { "${it.productName} ${it.kg} kg" },
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = colors.onInverseSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.producer_home_reply_within, hoursLeft),
+                style = FruitLogixTheme.typography.bodySmall,
+                color = colors.onInverseSurfaceVariant
+            )
+
+            if (shortage != null) {
+                Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AppIcon(
+                        id = R.drawable.ic_warning,
+                        contentDescription = null,
+                        tint = colors.warning,
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
+                    )
+                    Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+                    Text(
+                        text = stringResource(
+                            R.string.producer_orders_short_by,
+                            shortage.shortKg,
+                            shortage.productName
+                        ),
+                        style = FruitLogixTheme.typography.labelMedium,
+                        color = colors.warning
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
+
+            PrimaryButton(
+                text = stringResource(R.string.producer_orders_btn_accept),
+                onClick = { onAcceptClick(order) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            TextActionButton(
+                text = stringResource(R.string.producer_orders_btn_view_details),
+                onClick = { onReviewDetailsClick(order) },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

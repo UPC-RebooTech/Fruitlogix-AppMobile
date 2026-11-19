@@ -1,19 +1,27 @@
 package com.rebootech.fruitlogix.producer.paymentManagement.presentation
 
-enum class PayoutFilter { ALL, PENDING, COMPLETED }
+import com.rebootech.fruitlogix.producer.paymentManagement.domain.model.Payout
 
-data class PayoutItem(
-    val id: String,
-    val concept: String,
-    val date: String,
-    val amount: Double,
-    val isPending: Boolean
-)
+enum class PayoutFilter { ALL, PENDING, PAID }
 
+/** Payouts state: data only, formatted by the screen in the selected language. */
 data class ProducerPayoutsUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val totalPendingAmount: Double = 0.0,
     val totalPaidThisMonth: Double = 0.0,
+    val overdueAmount: Double = 0.0,
     val selectedFilter: PayoutFilter = PayoutFilter.ALL,
-    val payouts: List<PayoutItem> = emptyList()
-)
+    val allPayouts: List<Payout> = emptyList()
+) {
+    val payouts: List<Payout>
+        get() = allPayouts.filter { matches(it, selectedFilter) }
+
+    fun count(filter: PayoutFilter): Int = allPayouts.count { matches(it, filter) }
+
+    private fun matches(payout: Payout, filter: PayoutFilter): Boolean = when (filter) {
+        PayoutFilter.ALL -> true
+        // Pending includes overdue: both are still to be collected
+        PayoutFilter.PENDING -> payout.status != com.rebootech.fruitlogix.producer.paymentManagement.domain.model.PayoutStatus.PAID
+        PayoutFilter.PAID -> payout.status == com.rebootech.fruitlogix.producer.paymentManagement.domain.model.PayoutStatus.PAID
+    }
+}

@@ -3,36 +3,83 @@ package com.rebootech.fruitlogix.shared.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import com.rebootech.fruitlogix.shared.ui.theme.isOnDarkSurface
 
 enum class StatusBadgeType {
+    /** Delivered, approved, on time (Maduro) */
     SUCCESS,
+
+    /** Needs attention, due today, delay (Mango) */
     WARNING,
+
+    /** Rejected, overdue, critical (Granada) */
     DANGER,
+
+    /** Informational, in transit, cold chain (Glaciar) */
     INFO,
+
+    /** Pending, draft, neutral states (Menta) */
     NEUTRAL,
+
+    /** Ready, featured (Lima) */
     HIGHLIGHT
 }
 
+private data class BadgeColors(val container: Color, val content: Color, val dot: Color)
+
+@Composable
+private fun badgeColors(type: StatusBadgeType, onDark: Boolean): BadgeColors {
+    val c = FruitLogixTheme.colors
+    val scheme = MaterialTheme.colorScheme
+    return if (onDark) {
+        val accent = when (type) {
+            StatusBadgeType.SUCCESS -> c.success
+            StatusBadgeType.WARNING -> c.warning
+            StatusBadgeType.DANGER -> c.dangerStrong
+            StatusBadgeType.INFO -> c.info
+            StatusBadgeType.NEUTRAL -> c.textMuted
+            StatusBadgeType.HIGHLIGHT -> c.primary
+        }
+        BadgeColors(container = accent.copy(alpha = 0.18f), content = accent, dot = accent)
+    } else {
+        when (type) {
+            StatusBadgeType.SUCCESS -> BadgeColors(c.successContainer, c.onSuccessContainer, c.successContent)
+            StatusBadgeType.WARNING -> BadgeColors(c.attentionContainer, c.onAttentionContainer, c.attentionContent)
+            StatusBadgeType.DANGER -> BadgeColors(scheme.errorContainer, scheme.onErrorContainer, scheme.error)
+            StatusBadgeType.INFO -> BadgeColors(c.coldContainer, c.onColdContainer, c.coldContent)
+            StatusBadgeType.NEUTRAL -> BadgeColors(scheme.secondaryContainer, scheme.onSecondaryContainer, scheme.onSurfaceVariant)
+            StatusBadgeType.HIGHLIGHT -> BadgeColors(scheme.primaryContainer, scheme.onPrimaryContainer, scheme.onPrimaryContainer)
+        }
+    }
+}
+
 /**
- * Status Badge component: pill shape, uppercase small text, translucent tinted background.
+ * Status tag: 8dp corners, leading dot (or icon) + text, so the state never depends on color alone.
+ * Colors adapt automatically to light or dark surfaces.
  *
- * @param text Badge text
- * @param type Semantic state type (SUCCESS, WARNING, DANGER, INFO, NEUTRAL, HIGHLIGHT)
- * @param modifier Modifier to apply
- * @param icon Optional leading icon composable
+ * @param text Badge text (sentence case reads better than uppercase for older users)
+ * @param type Semantic state
+ * @param icon Optional leading icon; replaces the dot when provided
+ * @param showDot Show the leading dot when there is no icon
+ * @param onDarkSurface Force the dark-surface variant; null = detect from the container
  */
 @Composable
 fun StatusBadge(
@@ -41,54 +88,41 @@ fun StatusBadge(
     modifier: Modifier = Modifier,
     maxLines: Int = Int.MAX_VALUE,
     softWrap: Boolean = true,
-    horizontalPadding: androidx.compose.ui.unit.Dp = 10.dp,
-    verticalPadding: androidx.compose.ui.unit.Dp = 4.dp,
+    horizontalPadding: Dp = 10.dp,
+    verticalPadding: Dp = 4.dp,
+    showDot: Boolean = true,
+    onDarkSurface: Boolean? = null,
     icon: (@Composable () -> Unit)? = null
 ) {
-    val (backgroundColor, textColor) = when (type) {
-        StatusBadgeType.SUCCESS -> Pair(
-            FruitLogixTheme.colors.success.copy(alpha = 0.18f),
-            FruitLogixTheme.colors.success
-        )
-        StatusBadgeType.WARNING -> Pair(
-            FruitLogixTheme.colors.warning.copy(alpha = 0.18f),
-            FruitLogixTheme.colors.warning
-        )
-        StatusBadgeType.DANGER -> Pair(
-            FruitLogixTheme.colors.dangerStrong.copy(alpha = 0.18f),
-            FruitLogixTheme.colors.dangerStrong
-        )
-        StatusBadgeType.INFO -> Pair(
-            FruitLogixTheme.colors.info.copy(alpha = 0.18f),
-            FruitLogixTheme.colors.info
-        )
-        StatusBadgeType.NEUTRAL -> Pair(
-            FruitLogixTheme.colors.textMuted.copy(alpha = 0.18f),
-            FruitLogixTheme.colors.textMuted
-        )
-        StatusBadgeType.HIGHLIGHT -> Pair(
-            FruitLogixTheme.colors.primary.copy(alpha = 0.24f),
-            FruitLogixTheme.colors.primary
-        )
-    }
+    val colors = badgeColors(type, onDarkSurface ?: isOnDarkSurface())
 
     Box(
         modifier = modifier
-            .clip(FruitLogixTheme.shapes.Pill)
-            .background(backgroundColor)
+            .clip(FruitLogixTheme.shapes.Tag)
+            .background(colors.container)
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            icon?.let {
-                it()
-                Spacer(modifier = Modifier.width(4.dp))
+            when {
+                icon != null -> {
+                    icon()
+                    Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xxs))
+                }
+                showDot -> {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(colors.dot)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
             }
             Text(
-                text = text.uppercase(),
-                color = textColor,
-                style = FruitLogixTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
+                text = text,
+                color = colors.content,
+                style = FruitLogixTheme.typography.labelMedium,
                 maxLines = maxLines,
                 softWrap = softWrap
             )
@@ -96,38 +130,20 @@ fun StatusBadge(
     }
 }
 
-@Preview
+@Preview(showBackground = true, backgroundColor = 0xFFF7FAF6)
 @Composable
 private fun StatusBadgePreview() {
     FruitLogixTheme {
-        Row(
+        Column(
             modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            StatusBadge(
-                text = "Delivered",
-                type = StatusBadgeType.SUCCESS
-            )
-            StatusBadge(
-                text = "Customs Delay",
-                type = StatusBadgeType.WARNING
-            )
-            StatusBadge(
-                text = "Overdue",
-                type = StatusBadgeType.DANGER
-            )
-            StatusBadge(
-                text = "In Transit",
-                type = StatusBadgeType.INFO
-            )
-            StatusBadge(
-                text = "Draft",
-                type = StatusBadgeType.NEUTRAL
-            )
-            StatusBadge(
-                text = "Ready to load",
-                type = StatusBadgeType.HIGHLIGHT
-            )
+            StatusBadge(text = "Entregado", type = StatusBadgeType.SUCCESS)
+            StatusBadge(text = "Vence hoy", type = StatusBadgeType.WARNING)
+            StatusBadge(text = "Rechazado", type = StatusBadgeType.DANGER)
+            StatusBadge(text = "En ruta", type = StatusBadgeType.INFO)
+            StatusBadge(text = "Pendiente", type = StatusBadgeType.NEUTRAL)
+            StatusBadge(text = "Listo para cargar", type = StatusBadgeType.HIGHLIGHT)
         }
     }
 }

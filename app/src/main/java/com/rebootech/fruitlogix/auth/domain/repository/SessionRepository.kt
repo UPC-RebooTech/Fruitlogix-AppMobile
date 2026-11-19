@@ -1,11 +1,10 @@
 package com.rebootech.fruitlogix.auth.domain.repository
 
-import com.rebootech.fruitlogix.auth.domain.model.UserRole
-import kotlinx.coroutines.flow.Flow
+import com.rebootech.fruitlogix.auth.domain.model.Session
+import kotlinx.coroutines.flow.StateFlow
 
 interface SessionRepository {
-    val currentRole: Flow<UserRole?>
-    suspend fun setRole(role: UserRole)
-    suspend fun clearSession()
+    val session: StateFlow<Session?>
+    suspend fun save(session: Session, remember: Boolean)
+    suspend fun signOut()
 }
-

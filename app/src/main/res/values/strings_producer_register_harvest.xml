@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Register harvest -->
+    <string name="register_harvest_title">Register harvest</string>
+    <string name="register_harvest_subtitle">Logged %1$s · it will appear in your stock</string>
+
+    <string name="register_harvest_section_product">What did you harvest?</string>
+    <string name="register_harvest_product">Product or variety</string>
+    <string name="register_harvest_lot">Lot code</string>
+    <string name="register_harvest_lot_hint">Example: L-KEN-1111</string>
+    <string name="register_harvest_lot_suggest">Suggest code</string>
+
+    <string name="register_harvest_section_amount">How much and where?</string>
+    <string name="register_harvest_weight">Total weight</string>
+    <string name="register_harvest_kg_suffix">kg</string>
+    <string name="register_harvest_sector">Stored in</string>
+
+    <string name="register_harvest_section_quality">Quality (optional)</string>
+    <string name="register_harvest_brix">Estimated Brix</string>
+    <string name="register_harvest_brix_suffix">°Bx</string>
+    <string name="register_harvest_notes">Notes</string>
+    <string name="register_harvest_notes_hint">Fruit condition, crew, weather…</string>
+
+    <string name="register_harvest_save">Register harvest</string>
+    <string name="register_harvest_saved">Harvest registered</string>
+
+    <string name="register_harvest_error_required">This field is required</string>
+    <string name="register_harvest_error_lot">Use at least %1$d characters</string>
+    <string name="register_harvest_error_weight">Enter a weight between 0 and %1$s kg</string>
+    <string name="register_harvest_error_brix">Brix must be between 0 and %1$s °Bx</string>
+</resources>

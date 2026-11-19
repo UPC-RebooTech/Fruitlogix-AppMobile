@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qc_title">Control de calidad</string>
+    <string name="qc_subtitle">Aprueba o rechaza lotes y sigue la fruta perdida cada mes.</string>
+    <string name="qc_tab_lots">Lotes (%1$d)</string>
+    <string name="qc_tab_shrinkage">Mermas</string>
+    <string name="qc_action_field">Inspección en campo</string>
+    <string name="qc_action_voice">Reportar por voz</string>
+    <string name="qc_filter_all">Todos</string>
+    <string name="qc_status_pending">Pendiente</string>
+    <string name="qc_status_approved">Aprobado</string>
+    <string name="qc_status_rejected">Rechazado</string>
+    <string name="qc_pending_sync">Sin sincronizar</string>
+    <string name="qc_from_producer">De %1$s</string>
+    <string name="qc_order">Pedido %1$s</string>
+    <string name="qc_temp">Temperatura %1$s</string>
+    <string name="qc_humidity">Humedad %1$d%%</string>
+    <string name="qc_range">rango %1$s</string>
+    <string name="qc_source_field">Inspección en campo · %1$s</string>
+    <string name="qc_source_voice">Incidencia por voz · %1$s</string>
+    <string name="qc_voice_note">Nota de voz (%1$s)</string>
+    <string name="qc_rejected_because">Rechazado: %1$s</string>
+    <string name="qc_approve">Aprobar</string>
+    <string name="qc_reject">Rechazar</string>
+    <string name="qc_empty">No hay lotes con este estado.</string>
+    <string name="qc_approved_msg">Lote %1$s aprobado</string>
+    <string name="qc_rejected_msg">Lote %1$s rechazado</string>
+
+    <!-- US10 -->
+    <string name="qc_reject_title">Rechazar el lote %1$s</string>
+    <string name="qc_reject_message">Elige por qué se rechaza el lote. El productor verá el motivo.</string>
+    <string name="qc_reason_bruised">Fruta golpeada</string>
+    <string name="qc_reason_temperature">Fuera de temperatura</string>
+    <string name="qc_reason_undersize">Calibre menor</string>
+    <string name="qc_reason_decay">Pudrición u hongos</string>
+    <string name="qc_reason_other">Otro</string>
+    <string name="qc_reason_note">Detalle</string>
+    <string name="qc_reason_note_placeholder">ej. 3 pallets con fruta golpeada</string>
+    <string name="qc_reject_confirm">Rechazar lote</string>
+    <string name="qc_error_reason">Elige un motivo</string>
+    <string name="qc_error_note">Escribe el detalle de \"Otro\"</string>
+
+    <!-- US53 -->
+    <string name="qc_field_message">Funciona sin señal: se guarda en el teléfono y se envía cuando haya conexión.</string>
+    <string name="qc_field_lot">Código del lote</string>
+    <string name="qc_field_lot_placeholder">ej. LOT-FX-1040-FRESA</string>
+    <string name="qc_field_product">Producto</string>
+    <string name="qc_field_temp">Temperatura (°C)</string>
+    <string name="qc_field_humidity" formatted="false">Humedad (%)</string>
+    <string name="qc_field_save">Guardar inspección</string>
+    <string name="qc_field_saved">Inspección guardada. Se enviará cuando haya señal.</string>
+    <string name="qc_error_lot">Ingresa el código del lote</string>
+    <string name="qc_error_product">Ingresa el producto</string>
+    <string name="qc_error_temp">Ingresa una temperatura entre 0 y 40 °C</string>
+    <string name="qc_error_humidity">Ingresa una humedad entre 0 y 100</string>
+
+    <!-- US57 -->
+    <string name="qc_voice_message">Graba una nota de voz de al menos 1 segundo; se adjunta al lote.</string>
+    <string name="qc_voice_description">¿Qué pasó?</string>
+    <string name="qc_voice_description_placeholder">ej. Cajas mojadas en el piso del camión</string>
+    <string name="qc_voice_start">Empezar a grabar</string>
+    <string name="qc_voice_stop">Detener grabación</string>
+    <string name="qc_voice_recording">Grabando… %1$s</string>
+    <string name="qc_voice_recorded">Nota de voz lista (%1$s)</string>
+    <string name="qc_voice_idle">Toca para grabar</string>
+    <string name="qc_voice_too_short">La grabación duró menos de 1 segundo y se descartó. Inténtalo otra vez.</string>
+    <string name="qc_voice_save">Reportar incidencia</string>
+    <string name="qc_voice_saved">Incidencia reportada con nota de voz</string>
+    <string name="qc_error_description">Describe el problema</string>
+    <string name="qc_error_recording">Primero graba una nota de voz</string>
+
+    <!-- US73 -->
+    <string name="qc_shrink_total">Fruta perdida</string>
+    <string name="qc_shrink_cost">Impacto económico</string>
+    <string name="qc_shrink_kg">%1$s kg</string>
+    <string name="qc_shrink_empty_title">Sin mermas en este mes</string>
+    <string name="qc_shrink_empty_message">Todas las entregas del periodo conservaron el 100% de su fruta.</string>
+    <string name="qc_stage_harvest">Cosecha</string>
+    <string name="qc_stage_transport">Transporte</string>
+    <string name="qc_stage_reception">Recepción</string>
+    <string name="qc_cause_thermal">Excursión térmica</string>
+    <string name="qc_cause_damage">Daño mecánico en cajas</string>
+    <string name="qc_cause_undersize">Calibre menor al estándar</string>
+    <string name="qc_cause_delay">Demora en la ruta</string>
+    <string name="qc_shrink_line">−%1$s kg · %2$s</string>
+</resources>

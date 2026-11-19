@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reportes de calidad del productor -->
+    <string name="producer_reports_title">Reportes de calidad</string>
+    <string name="producer_reports_subtitle">Historial de inspecciones por pedido · %1$s</string>
+
+    <!-- KPIs -->
+    <string name="producer_reports_kpi_pass_rate">Tasa de aprobación</string>
+    <string name="producer_reports_kpi_weekly_delta">%1$s esta semana</string>
+    <string name="producer_reports_kpi_sampled_today">Muestreado hoy</string>
+    <plurals name="producer_reports_kpi_crates">
+        <item quantity="one">%1$d jaba inspeccionada</item>
+        <item quantity="many">%1$d jabas inspeccionadas</item>
+        <item quantity="other">%1$d jabas inspeccionadas</item>
+    </plurals>
+
+    <!-- Búsqueda y filtros -->
+    <string name="producer_reports_search_placeholder">Buscar pedido, producto o cliente</string>
+    <string name="producer_reports_filter_all">Todos (%1$d)</string>
+    <string name="producer_reports_filter_approved">Aprobados (%1$d)</string>
+    <string name="producer_reports_filter_pending">En revisión (%1$d)</string>
+    <string name="producer_reports_filter_rejected">Rechazados (%1$d)</string>
+    <string name="producer_reports_empty">Ningún reporte coincide con tu búsqueda.</string>
+
+    <!-- Estado -->
+    <string name="producer_reports_status_approved">Aprobado</string>
+    <string name="producer_reports_status_pending">En revisión</string>
+    <string name="producer_reports_status_rejected">Rechazado</string>
+
+    <!-- Tarjeta -->
+    <string name="producer_reports_lot">Lote %1$s</string>
+    <string name="producer_reports_quarantine_alert">Defectos en %1$s%%, sobre el límite de %2$s%%. Lote en cuarentena para reclasificación.</string>
+    <string name="producer_reports_metric_visual">Visual</string>
+    <string name="producer_reports_metric_defects">Defectos</string>
+    <string name="producer_reports_metric_core_temp">Temp. pulpa</string>
+    <string name="producer_reports_metric_humidity">Humedad</string>
+    <string name="producer_reports_inspector">Inspector: %1$s</string>
+    <string name="producer_reports_action_certificate">Ver certificado</string>
+    <string name="producer_reports_action_review">Revisar</string>
+    <string name="producer_reports_action_audit">Ver auditoría</string>
+</resources>

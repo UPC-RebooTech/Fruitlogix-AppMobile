@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pedidos del productor: textos agregados en la migración al sistema de diseño -->
+    <string name="producer_orders_order_accepted">Pedido %1$s aceptado</string>
+    <string name="producer_orders_error_loading">No pudimos cargar tus pedidos.</string>
+    <string name="producer_orders_dispatched_today">hoy</string>
+
+    <!-- Accesibilidad -->
+    <string name="producer_orders_cd_close_filters">Cerrar filtros</string>
+    <string name="producer_orders_cd_chip_selected">%1$s, seleccionado</string>
+    <string name="producer_orders_cd_chip_not_selected">%1$s, no seleccionado</string>
+    <string name="producer_orders_cd_remove_filter">Quitar filtro: %1$s</string>
+    <string name="producer_orders_cd_scan_lot">Escanear lote</string>
+    <string name="producer_orders_cd_filter_orders">Filtrar pedidos</string>
+    <string name="producer_orders_cd_filters_active">Filtrar pedidos, hay filtros aplicados</string>
+    <string name="producer_orders_cd_load_truck">Cargar camión</string>
+    <plurals name="producer_orders_tile_orders">
+        <item quantity="one">%1$d pedido</item>
+        <item quantity="many">%1$d pedidos</item>
+        <item quantity="other">%1$d pedidos</item>
+    </plurals>
+</resources>

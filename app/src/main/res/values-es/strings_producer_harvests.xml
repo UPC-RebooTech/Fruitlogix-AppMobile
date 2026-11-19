@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cosechas del productor -->
+    <string name="producer_harvests_title">Control de cosechas</string>
+    <string name="producer_harvests_subtitle">Programación y rendimiento en campo</string>
+
+    <!-- Pronóstico semanal -->
+    <string name="producer_harvests_forecast_week">Pronóstico semanal · Semana %1$d</string>
+    <string name="producer_harvests_export_grade">Calidad exportación</string>
+    <string name="producer_harvests_forecast_requested">%1$s: %2$s kg solicitados</string>
+    <string name="producer_harvests_forecast_committed">Comprometido con: %1$s</string>
+    <string name="producer_harvests_forecast_fulfilled">Cumplido hasta ahora</string>
+    <string name="producer_harvests_forecast_progress">%1$s / %2$s kg (%3$d%%)</string>
+
+    <!-- Calendario -->
+    <string name="producer_harvests_schedule_title">Calendario de cosecha</string>
+    <string name="producer_harvests_upcoming_title">Próximas cosechas</string>
+    <plurals name="producer_harvests_queued">
+        <item quantity="one">%1$d programada</item>
+        <item quantity="many">%1$d programadas</item>
+        <item quantity="other">%1$d programadas</item>
+    </plurals>
+    <string name="producer_harvests_none_scheduled">No hay cosechas programadas para este día.</string>
+    <string name="producer_harvests_status_planned">Programada</string>
+    <string name="producer_harvests_est_yield">Rendimiento est.</string>
+    <string name="producer_harvests_zone">Zona</string>
+    <plurals name="producer_harvests_assigned_crew">
+        <item quantity="one">Asignado: %1$s (%2$d cosechador)</item>
+        <item quantity="many">Asignado: %1$s (%2$d cosechadores)</item>
+        <item quantity="other">Asignado: %1$s (%2$d cosechadores)</item>
+    </plurals>
+
+    <!-- Cosechas recientes -->
+    <string name="producer_harvests_recent_title">Cosechas recientes en stock</string>
+    <string name="producer_harvests_live">En vivo</string>
+    <string name="producer_harvests_logged_qty">Cantidad registrada</string>
+    <string name="producer_harvests_batch_lot">Lote</string>
+
+    <!-- Estado de cosecha -->
+    <string name="producer_harvests_status_ready">Listo para cosecha</string>
+    <string name="producer_harvests_status_ripening">En maduración</string>
+    <string name="producer_harvests_status_scheduled">Cosecha programada</string>
+    <string name="producer_harvests_status_registered">Registrado</string>
+</resources>

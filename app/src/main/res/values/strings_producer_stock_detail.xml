@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer stock lot detail -->
+    <string name="stock_detail_subtitle">%1$s · %2$s</string>
+    <string name="stock_detail_not_found">We couldn\'t find this lot.</string>
+    <string name="stock_detail_chamber_temp">%1$s °C in chamber</string>
+    <string name="stock_detail_on_hand">On hand</string>
+    <string name="stock_detail_below_min">%1$s kg below the %2$s kg minimum</string>
+    <string name="stock_detail_reserved">Reserved for orders</string>
+    <string name="stock_detail_free">Free to commit</string>
+
+    <string name="stock_detail_section_adjust">Adjust stock</string>
+    <string name="stock_detail_adjust_hint">Count the lot and set the real amount.</string>
+    <string name="stock_detail_new_amount">New amount</string>
+    <string name="stock_detail_change">Change: %1$s kg</string>
+    <string name="stock_detail_save">Save stock</string>
+    <string name="stock_detail_saved">Stock updated</string>
+    <string name="stock_detail_cd_adjust">%1$s kg</string>
+
+    <string name="stock_detail_section_threshold">Minimum stock alert</string>
+    <string name="stock_detail_threshold_hint">You get a critical stock alert below this amount.</string>
+    <string name="stock_detail_cd_threshold_down">Lower the minimum by 5 kg</string>
+    <string name="stock_detail_cd_threshold_up">Raise the minimum by 5 kg</string>
+
+    <string name="stock_detail_section_movements">Movements</string>
+    <string name="stock_detail_no_movements">No movements yet.</string>
+    <string name="stock_detail_move_intake">Harvest intake</string>
+    <string name="stock_detail_move_dispatch">Dispatch</string>
+    <string name="stock_detail_move_adjustment">Manual adjustment</string>
+    <string name="stock_detail_move_with_ref">%1$s · %2$s</string>
+</resources>

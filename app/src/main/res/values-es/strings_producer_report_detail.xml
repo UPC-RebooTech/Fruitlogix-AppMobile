@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Detalle de reporte de calidad del productor -->
+    <string name="report_detail_title">Reporte %1$s</string>
+    <string name="report_detail_cd_share">Compartir reporte</string>
+    <string name="report_detail_weight">%1$s kg · %2$s</string>
+    <plurals name="report_detail_crates">
+        <item quantity="one">%1$d jaba</item>
+        <item quantity="many">%1$d jabas</item>
+        <item quantity="other">%1$d jabas</item>
+    </plurals>
+    <string name="report_detail_inspected_by">Inspeccionado %1$s por %2$s</string>
+
+    <string name="report_detail_section_metrics">Resultados de la inspección</string>
+    <string name="report_detail_within_range">Dentro del rango</string>
+    <string name="report_detail_out_of_range">Fuera del rango</string>
+    <string name="report_detail_limit_min">Mínimo %1$s</string>
+    <string name="report_detail_limit_max">Máximo %1$s</string>
+    <string name="report_detail_limit_range">Rango %1$s–%2$s</string>
+
+    <string name="report_detail_section_notes">Notas del inspector</string>
+    <string name="report_detail_no_notes">El inspector no agregó notas.</string>
+
+    <string name="report_detail_section_trajectory">Trayectoria del lote</string>
+    <string name="report_detail_step_harvested">Cosechado</string>
+    <string name="report_detail_step_inspected">Inspeccionado</string>
+    <string name="report_detail_step_decision">Decisión del distribuidor</string>
+    <string name="report_detail_step_dispatch">Despacho</string>
+    <string name="report_detail_step_done">Completado · %1$s</string>
+    <string name="report_detail_step_waiting">Esperando al distribuidor</string>
+    <string name="report_detail_step_approved">Aprobado</string>
+    <string name="report_detail_step_rejected">Rechazado · requiere reinspección</string>
+    <string name="report_detail_step_pending">Pendiente</string>
+
+    <string name="report_detail_share">Compartir</string>
+    <string name="report_detail_export_pdf">Exportar PDF</string>
+    <string name="report_detail_export_soon">La exportación a PDF estará disponible pronto</string>
+    <string name="report_detail_share_text">Reporte de calidad FruitLogix %1$s\n%2$s · %3$s kg · Lote %4$s\nEstado: %5$s\nVisual %6$s/5 · Defectos %7$s%% · Temp. pulpa %8$s °C · Humedad %9$s%%</string>
+</resources>

@@ -28,6 +28,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
@@ -40,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -72,10 +74,10 @@ private enum class DateFilterOption {
     CUSTOM
 }
 
-private val SelectedChipBg = Color(0xFF364C13)
-private val UnselectedChipBg = Color(0xFFEAF3E7)
-private val BadgeSelectedBg = Color(0xFFC8E060)
-private val BadgeUnselectedBg = Color(0xFFD6E3D3)
+private val SelectedChipBg: Color @Composable get() = MaterialTheme.colorScheme.secondary
+private val UnselectedChipBg: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainerLow
+private val BadgeSelectedBg: Color @Composable get() = MaterialTheme.colorScheme.primaryContainer
+private val BadgeUnselectedBg: Color @Composable get() = MaterialTheme.colorScheme.surfaceContainerHigh
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -180,10 +182,10 @@ fun OrderFilterSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        containerColor = FruitLogixTheme.colors.white,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         scrimColor = Color.Black.copy(alpha = 0.5f),
         dragHandle = {
-            BottomSheetDefaults.DragHandle(color = Color(0xFFDDE5D9))
+            BottomSheetDefaults.DragHandle(color = MaterialTheme.colorScheme.outlineVariant)
         },
         modifier = modifier
     ) {
@@ -207,20 +209,20 @@ fun OrderFilterSheet(
                             text = stringResource(R.string.producer_orders_filter_title),
                             style = FruitLogixTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.textOnLight
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Box(
                             modifier = Modifier
                                 .clip(FruitLogixTheme.shapes.Pill)
-                                .background(FruitLogixTheme.colors.primary)
+                                .background(MaterialTheme.colorScheme.primaryContainer)
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.producer_orders_filter_active_count, totalActiveCount),
                                 style = FruitLogixTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = FruitLogixTheme.colors.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
                     }
@@ -230,11 +232,12 @@ fun OrderFilterSheet(
                     Text(
                         text = stringResource(R.string.producer_orders_filter_subtitle),
                         style = FruitLogixTheme.typography.bodySmall,
-                        color = Color(0xFF6E7D72)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 // Close Button (Touch target >= 48dp)
+                val closeDescription = stringResource(R.string.producer_orders_cd_close_filters)
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -243,7 +246,7 @@ fun OrderFilterSheet(
                             role = Role.Button
                         )
                         .semantics {
-                            contentDescription = "Close filters"
+                            contentDescription = closeDescription
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -251,13 +254,13 @@ fun OrderFilterSheet(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(FruitLogixTheme.colors.surfaceTint),
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         AppIcon(
                             id = R.drawable.ic_close,
                             contentDescription = stringResource(R.string.producer_orders_filter_close),
-                            tint = FruitLogixTheme.colors.textOnLight,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -288,14 +291,14 @@ fun OrderFilterSheet(
                         AppIcon(
                             id = R.drawable.ic_schedule,
                             contentDescription = null,
-                            tint = FruitLogixTheme.colors.textOnLight,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = stringResource(R.string.producer_orders_filter_date_range),
                             style = FruitLogixTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.textOnLight
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -359,8 +362,9 @@ fun OrderFilterSheet(
                 // Date banner card
                 val dateDisplayRange = draftDateRange
                 val dateBannerText = if (dateDisplayRange != null) {
-                    val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
-                    val yearFormatter = DateTimeFormatter.ofPattern("yyyy", Locale.getDefault())
+                    val locale = LocalConfiguration.current.locales.get(0)
+                    val formatter = DateTimeFormatter.ofPattern("MMM dd", locale)
+                    val yearFormatter = DateTimeFormatter.ofPattern("yyyy", locale)
                     "${dateDisplayRange.start.format(formatter)} – ${dateDisplayRange.end.format(formatter)}, ${dateDisplayRange.end.format(yearFormatter)}"
                 } else {
                     stringResource(R.string.producer_orders_filter_date_all_time)
@@ -370,8 +374,8 @@ fun OrderFilterSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF0F6EE))
-                        .border(1.dp, Color(0xFFDCE8D8), RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
                         .clickable { showCustomDatePicker = true }
                         .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
@@ -395,14 +399,14 @@ fun OrderFilterSheet(
                                 text = dateBannerText,
                                 style = FruitLogixTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = FruitLogixTheme.colors.textOnLight
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
                         AppIcon(
                             id = R.drawable.ic_edit,
                             contentDescription = stringResource(R.string.producer_orders_filter_date_custom_range),
-                            tint = Color(0xFF6E7D72),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -425,14 +429,14 @@ fun OrderFilterSheet(
                         AppIcon(
                             id = R.drawable.ic_dispatch_truck,
                             contentDescription = null,
-                            tint = FruitLogixTheme.colors.textOnLight,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = stringResource(R.string.producer_orders_filter_order_status),
                             style = FruitLogixTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.textOnLight
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -442,7 +446,7 @@ fun OrderFilterSheet(
                             draftStatuses.size
                         ),
                         style = FruitLogixTheme.typography.bodySmall,
-                        color = Color(0xFF6E7D72)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -506,14 +510,14 @@ fun OrderFilterSheet(
                         AppIcon(
                             id = R.drawable.ic_warehouse,
                             contentDescription = null,
-                            tint = FruitLogixTheme.colors.textOnLight,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
                             text = stringResource(R.string.producer_orders_filter_client_destination),
                             style = FruitLogixTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = FruitLogixTheme.colors.textOnLight
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -542,8 +546,8 @@ fun OrderFilterSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(FruitLogixTheme.colors.surfaceLight)
-                        .border(1.dp, Color(0xFFDCE8D8), RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 ) {
                     val isAllClientsChecked = draftClientIds.isEmpty() || draftClientIds.size == availableClients.size
 
@@ -571,13 +575,13 @@ fun OrderFilterSheet(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(FruitLogixTheme.colors.surfaceTint),
+                                    .background(MaterialTheme.colorScheme.secondaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
                                 AppIcon(
                                     id = R.drawable.ic_warehouse,
                                     contentDescription = null,
-                                    tint = FruitLogixTheme.colors.textOnLight,
+                                    tint = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -586,7 +590,7 @@ fun OrderFilterSheet(
                                 text = stringResource(R.string.producer_orders_filter_all_clients),
                                 style = FruitLogixTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = FruitLogixTheme.colors.textOnLight
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -602,7 +606,7 @@ fun OrderFilterSheet(
                             colors = CheckboxDefaults.colors(
                                 checkedColor = SelectedChipBg,
                                 checkmarkColor = Color.White,
-                                uncheckedColor = Color(0xFFA0B2A6)
+                                uncheckedColor = MaterialTheme.colorScheme.outline
                             )
                         )
                     }
@@ -620,7 +624,7 @@ fun OrderFilterSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)
-                                .background(Color(0xFFE2EBE0))
+                                .background(MaterialTheme.colorScheme.surfaceContainer)
                         )
 
                         Row(
@@ -646,7 +650,7 @@ fun OrderFilterSheet(
                                     modifier = Modifier
                                         .size(32.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFFE4EDE1)),
+                                        .background(MaterialTheme.colorScheme.surfaceContainer),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     AppIcon(
@@ -662,7 +666,7 @@ fun OrderFilterSheet(
                                         text = client,
                                         style = FruitLogixTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = FruitLogixTheme.colors.textOnLight
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
                                         text = stringResource(
@@ -670,7 +674,7 @@ fun OrderFilterSheet(
                                             activeOrdersCount
                                         ),
                                         style = FruitLogixTheme.typography.bodySmall,
-                                        color = Color(0xFF6E7D72)
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -687,7 +691,7 @@ fun OrderFilterSheet(
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = SelectedChipBg,
                                     checkmarkColor = Color.White,
-                                    uncheckedColor = Color(0xFFA0B2A6)
+                                    uncheckedColor = MaterialTheme.colorScheme.outline
                                 )
                             )
                         }
@@ -703,10 +707,10 @@ fun OrderFilterSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(FruitLogixTheme.colors.white)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                     .border(
                         width = 1.dp,
-                        color = Color(0xFFE2EBE0),
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)
                     )
                     .padding(horizontal = 20.dp, vertical = 14.dp)
@@ -739,14 +743,14 @@ fun OrderFilterSheet(
                             AppIcon(
                                 id = R.drawable.ic_diagnostic,
                                 contentDescription = null,
-                                tint = FruitLogixTheme.colors.textOnLight,
+                                tint = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = stringResource(R.string.producer_orders_filter_clear),
                                 style = FruitLogixTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = FruitLogixTheme.colors.textOnLight
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -757,7 +761,7 @@ fun OrderFilterSheet(
                             .weight(0.62f)
                             .height(50.dp)
                             .clip(FruitLogixTheme.shapes.Pill)
-                            .background(FruitLogixTheme.colors.primary)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .clickable {
                                 val appliedFilters = initialFilters.copy(
                                     statuses = draftStatuses,
@@ -783,12 +787,12 @@ fun OrderFilterSheet(
                                 ),
                                 style = FruitLogixTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = FruitLogixTheme.colors.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             AppIcon(
                                 id = R.drawable.ic_arrow_forward,
                                 contentDescription = null,
-                                tint = FruitLogixTheme.colors.onPrimary,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -808,7 +812,11 @@ private fun FilterPillChip(
     count: Int? = null
 ) {
     val bg = if (isSelected) SelectedChipBg else UnselectedChipBg
-    val textColor = if (isSelected) Color.White else FruitLogixTheme.colors.textOnLight
+    val textColor = if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurface
+    val chipDescription = stringResource(
+        if (isSelected) R.string.producer_orders_cd_chip_selected else R.string.producer_orders_cd_chip_not_selected,
+        label
+    )
 
     Box(
         modifier = modifier
@@ -819,7 +827,7 @@ private fun FilterPillChip(
                 role = Role.Checkbox
             )
             .semantics {
-                contentDescription = "$label, ${if (isSelected) "selected" else "not selected"}"
+                contentDescription = chipDescription
             },
         contentAlignment = Alignment.Center
     ) {
@@ -863,7 +871,7 @@ private fun FilterPillChip(
                             text = count.toString(),
                             style = TextStyleForBadge(),
                             fontWeight = FontWeight.Bold,
-                            color = if (isSelected) FruitLogixTheme.colors.onPrimary else FruitLogixTheme.colors.textOnLight
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }

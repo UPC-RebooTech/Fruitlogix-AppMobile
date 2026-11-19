@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +59,7 @@ fun ActiveFilterChipsRow(
 
     // Date range pill
     if (filters.dateRange != null) {
-        val formatter = DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault())
+        val formatter = DateTimeFormatter.ofPattern("d MMM", LocalConfiguration.current.locales[0])
         val dateText = "${filters.dateRange.start.format(formatter)} – ${filters.dateRange.end.format(formatter)}"
         pills.add(
             SimpleActiveFilterPill(
@@ -143,7 +145,7 @@ private fun ActiveFilterPillItem(
         modifier = Modifier
             .height(34.dp)
             .clip(FruitLogixTheme.shapes.Pill)
-            .background(FruitLogixTheme.colors.surfaceTint)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
             .padding(horizontal = 10.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -153,7 +155,7 @@ private fun ActiveFilterPillItem(
             AppIcon(
                 id = iconRes,
                 contentDescription = null,
-                tint = FruitLogixTheme.colors.textOnLight,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(14.dp)
             )
 
@@ -161,8 +163,8 @@ private fun ActiveFilterPillItem(
 
             Text(
                 text = label,
-                style = FruitLogixTheme.typography.labelSmall,
-                color = FruitLogixTheme.colors.textOnLight,
+                style = FruitLogixTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1
             )
@@ -178,8 +180,8 @@ private fun ActiveFilterPillItem(
             ) {
                 AppIcon(
                     id = R.drawable.ic_close,
-                    contentDescription = "Remove filter",
-                    tint = FruitLogixTheme.colors.textOnLight,
+                    contentDescription = stringResource(R.string.producer_orders_cd_remove_filter, label),
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(12.dp)
                 )
             }

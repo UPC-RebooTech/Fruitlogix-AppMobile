@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Producer quality report detail -->
+    <string name="report_detail_title">Report %1$s</string>
+    <string name="report_detail_cd_share">Share report</string>
+    <string name="report_detail_weight">%1$s kg · %2$s</string>
+    <plurals name="report_detail_crates">
+        <item quantity="one">%1$d crate</item>
+        <item quantity="other">%1$d crates</item>
+    </plurals>
+    <string name="report_detail_inspected_by">Inspected %1$s by %2$s</string>
+
+    <string name="report_detail_section_metrics">Inspection results</string>
+    <string name="report_detail_within_range">Within range</string>
+    <string name="report_detail_out_of_range">Out of range</string>
+    <string name="report_detail_limit_min">Minimum %1$s</string>
+    <string name="report_detail_limit_max">Maximum %1$s</string>
+    <string name="report_detail_limit_range">Range %1$s–%2$s</string>
+
+    <string name="report_detail_section_notes">Inspector notes</string>
+    <string name="report_detail_no_notes">The inspector did not add notes.</string>
+
+    <string name="report_detail_section_trajectory">Lot trajectory</string>
+    <string name="report_detail_step_harvested">Harvested</string>
+    <string name="report_detail_step_inspected">Inspected</string>
+    <string name="report_detail_step_decision">Distributor decision</string>
+    <string name="report_detail_step_dispatch">Dispatch</string>
+    <string name="report_detail_step_done">Completed · %1$s</string>
+    <string name="report_detail_step_waiting">Waiting for the distributor</string>
+    <string name="report_detail_step_approved">Approved</string>
+    <string name="report_detail_step_rejected">Rejected · re-inspection needed</string>
+    <string name="report_detail_step_pending">Pending</string>
+
+    <string name="report_detail_share">Share</string>
+    <string name="report_detail_export_pdf">Export PDF</string>
+    <string name="report_detail_export_soon">PDF export will be available soon</string>
+    <string name="report_detail_share_text">FruitLogix quality report %1$s\n%2$s · %3$s kg · Lot %4$s\nStatus: %5$s\nVisual %6$s/5 · Defects %7$s%% · Core temp %8$s °C · Humidity %9$s%%</string>
+</resources>

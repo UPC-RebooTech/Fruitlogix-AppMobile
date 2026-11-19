@@ -16,10 +16,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +32,12 @@ import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.CardVariant
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import com.rebootech.fruitlogix.shared.ui.theme.PoppinsFontFamily
 
 @Composable
@@ -38,7 +45,7 @@ fun PendingAllCaughtUpCard(
     distributorName: String,
     inShedCount: Int,
     lastAcceptedOrder: Order?,
-    lastAcceptedTime: String?,
+    lastAcceptedTime: LocalTime?,
     onViewInPrep: () -> Unit,
     onCheckStock: () -> Unit,
     modifier: Modifier = Modifier
@@ -64,13 +71,13 @@ fun PendingAllCaughtUpCard(
                         modifier = Modifier
                             .size(80.dp)
                             .clip(CircleShape)
-                            .background(FruitLogixTheme.colors.surfaceTint),
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         AppIcon(
                             id = R.drawable.ic_task_check,
                             contentDescription = null,
-                            tint = FruitLogixTheme.colors.textOnLight,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.size(36.dp)
                         )
                     }
@@ -80,13 +87,13 @@ fun PendingAllCaughtUpCard(
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)
-                            .background(FruitLogixTheme.colors.primary),
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
                         AppIcon(
                             id = R.drawable.ic_verified,
                             contentDescription = null,
-                            tint = FruitLogixTheme.colors.onPrimary,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(14.dp)
                         )
                     }
@@ -99,7 +106,7 @@ fun PendingAllCaughtUpCard(
                     fontFamily = PoppinsFontFamily,
                     fontWeight = FontWeight.Bold,
                     style = FruitLogixTheme.typography.titleLarge,
-                    color = FruitLogixTheme.colors.textOnLight,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
@@ -109,7 +116,7 @@ fun PendingAllCaughtUpCard(
                     text = stringResource(R.string.producer_orders_caught_up_subtitle),
                     style = FruitLogixTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
-                    color = FruitLogixTheme.colors.textMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
 
@@ -118,7 +125,7 @@ fun PendingAllCaughtUpCard(
                 Text(
                     text = stringResource(R.string.producer_orders_caught_up_desc, distributorName),
                     style = FruitLogixTheme.typography.bodySmall,
-                    color = FruitLogixTheme.colors.textMuted,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
@@ -128,75 +135,39 @@ fun PendingAllCaughtUpCard(
         if (lastAcceptedOrder != null) {
             RecentActivityCard(
                 order = lastAcceptedOrder,
-                timeText = lastAcceptedTime ?: "09:15 AM"
+                timeText = lastAcceptedTime?.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(LocalConfiguration.current.locales[0])).orEmpty()
             )
         }
 
-        // Bottom Action Buttons
+        // Bottom actions: secondary filled + text action, both full width
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xxs)
         ) {
-            // Primary button: View In Preparation (N)
-            Button(
+            SecondaryButton(
+                text = stringResource(R.string.producer_orders_btn_view_in_prep, inShedCount),
                 onClick = onViewInPrep,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = FruitLogixTheme.colors.surfaceDark
-                ),
-                shape = FruitLogixTheme.shapes.Pill,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
                     AppIcon(
                         id = R.drawable.ic_orders,
                         contentDescription = null,
-                        tint = FruitLogixTheme.colors.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.producer_orders_btn_view_in_prep, inShedCount),
-                        color = FruitLogixTheme.colors.textOnDark,
-                        fontWeight = FontWeight.Bold,
-                        style = FruitLogixTheme.typography.labelMedium
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
                     )
                 }
-            }
-
-            // Secondary button: Check Farm Stock
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(FruitLogixTheme.shapes.Pill)
-                    .background(FruitLogixTheme.colors.surfaceTint)
-                    .clickable(onClick = onCheckStock),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
+            )
+            TextActionButton(
+                text = stringResource(R.string.producer_orders_btn_check_stock),
+                onClick = onCheckStock,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
                     AppIcon(
                         id = R.drawable.ic_warehouse,
                         contentDescription = null,
-                        tint = FruitLogixTheme.colors.textOnLight,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.producer_orders_btn_check_stock),
-                        color = FruitLogixTheme.colors.textOnLight,
-                        fontWeight = FontWeight.Bold,
-                        style = FruitLogixTheme.typography.labelMedium
+                        modifier = Modifier.size(FruitLogixTheme.sizing.iconSm)
                     )
                 }
-            }
+            )
         }
     }
 }
@@ -210,7 +181,7 @@ private fun RecentActivityCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(FruitLogixTheme.shapes.Card)
-            .background(FruitLogixTheme.colors.surfaceTint.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(14.dp)
     ) {
         Row(verticalAlignment = Alignment.Top) {
@@ -218,13 +189,13 @@ private fun RecentActivityCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(FruitLogixTheme.colors.white),
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest),
                 contentAlignment = Alignment.Center
             ) {
                 AppIcon(
                     id = R.drawable.ic_orders,
                     contentDescription = null,
-                    tint = FruitLogixTheme.colors.textOnLight,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -239,14 +210,14 @@ private fun RecentActivityCard(
                 ) {
                     Text(
                         text = stringResource(R.string.producer_orders_recent_activity),
-                        style = FruitLogixTheme.typography.labelSmall,
+                        style = FruitLogixTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = FruitLogixTheme.colors.textMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = timeText,
-                        style = FruitLogixTheme.typography.labelSmall,
-                        color = FruitLogixTheme.colors.textMuted
+                        style = FruitLogixTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -256,7 +227,7 @@ private fun RecentActivityCard(
                     text = stringResource(R.string.producer_orders_activity_accepted, order.id),
                     style = FruitLogixTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = FruitLogixTheme.colors.textOnLight
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -265,7 +236,7 @@ private fun RecentActivityCard(
                 Text(
                     text = itemsText,
                     style = FruitLogixTheme.typography.bodySmall,
-                    color = FruitLogixTheme.colors.textMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

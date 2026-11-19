@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stock del productor -->
+    <string name="producer_stock_title">Stock en fundo</string>
+    <string name="producer_stock_subtitle">Inventario de campo y cámaras locales</string>
+
+    <string name="producer_stock_kpi_available">Disponible</string>
+    <string name="producer_stock_kpi_active_lots">Lotes activos</string>
+    <string name="producer_stock_kpi_critical">Críticos</string>
+
+    <string name="producer_stock_tab_inventory">Inventario (%1$d)</string>
+    <string name="producer_stock_tab_harvests">Cosechas (%1$d)</string>
+
+    <string name="producer_stock_status_healthy">Saludable</string>
+    <string name="producer_stock_status_critical">Crítico</string>
+    <string name="producer_stock_capacity">de %1$s kg de capacidad</string>
+    <string name="producer_stock_location">Ubicación: %1$s</string>
+    <string name="producer_stock_variety">Variedad: %1$s</string>
+    <string name="producer_stock_cd_decrease">Quitar 10 kg de %1$s</string>
+    <string name="producer_stock_cd_increase">Agregar 10 kg a %1$s</string>
+
+    <string name="producer_stock_register_harvest">Registrar cosecha</string>
+</resources>

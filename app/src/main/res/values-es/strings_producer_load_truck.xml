@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cargar camión en el fundo (productor) -->
+    <string name="load_title">Cargar camión</string>
+    <string name="load_subtitle">Pedido #%1$s · %2$s</string>
+    <string name="load_not_found">No encontramos este pedido.</string>
+
+    <string name="load_truck_label">Camión asignado</string>
+    <string name="load_quality_approved">Calidad aprobada</string>
+    <string name="load_eta">Llega a las %1$s</string>
+    <string name="load_pickup_window">Ventana de recojo %1$s – %2$s</string>
+
+    <string name="load_driver_label">Conductor</string>
+    <string name="load_call_driver">Llamar a %1$s</string>
+
+    <string name="load_section_cargo">Carga</string>
+    <string name="load_total">Total a cargar</string>
+
+    <string name="load_section_checklist">Antes de que salga el camión</string>
+    <string name="load_checklist_hint">Marca cada punto para confirmar el despacho.</string>
+    <string name="load_checklist_progress">%1$d de %2$d revisados</string>
+    <string name="load_check_crates">Cajas contadas y coinciden con el pedido</string>
+    <string name="load_check_labels">Etiquetas de lote visibles en cada pallet</string>
+    <string name="load_check_cooling">Frío del camión encendido y a la temperatura correcta</string>
+    <string name="load_check_cooling_range">Frío del camión entre %1$s °C y %2$s °C</string>
+    <string name="load_check_guide">El conductor firmó la guía de despacho</string>
+
+    <string name="load_blocked_title">Este pedido aún no se puede cargar</string>
+    <string name="load_blocked_quality">El reporte de calidad todavía no está aprobado</string>
+    <string name="load_blocked_truck">El distribuidor todavía no asignó un camión</string>
+
+    <string name="load_confirm">Confirmar despacho</string>
+    <string name="load_confirm_dialog_title">¿Despachar el pedido #%1$s?</string>
+    <string name="load_confirm_dialog_message">El pedido quedará en tránsito y el distribuidor verá que el camión salió del fundo.</string>
+    <string name="load_confirm_dialog_yes">Sí, despachar</string>
+
+    <string name="load_dispatched_title">Camión despachado</string>
+    <string name="load_dispatched_message">El pedido #%1$s va en camino a %2$s</string>
+    <string name="load_dispatched_at">Salió del fundo %1$s</string>
+    <string name="load_in_transit">En tránsito</string>
+    <string name="load_done">Listo</string>
+</resources>
