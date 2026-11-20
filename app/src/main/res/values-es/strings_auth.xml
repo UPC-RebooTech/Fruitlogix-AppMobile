@@ -60,6 +60,8 @@
     <string name="signup_invitation_label">Código de invitación (opcional)</string>
     <string name="signup_invitation_help">Tu distribuidor te da este código para vincular sus cuentas.</string>
     <string name="signup_terms">Acepto los Términos del servicio y la Política de privacidad</string>
+    <string name="signup_open_terms">Términos y Condiciones</string>
+    <string name="signup_open_privacy">Política de Privacidad</string>
     <string name="signup_submit">Crear cuenta</string>
     <string name="signup_have_account">¿Ya tienes una cuenta?</string>
     <string name="signup_sign_in">Iniciar sesión</string>

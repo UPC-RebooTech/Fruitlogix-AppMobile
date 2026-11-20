@@ -55,6 +55,10 @@ import com.rebootech.fruitlogix.shared.ui.components.LimeProgressBar
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import com.rebootech.fruitlogix.shared.core.locale.AppLocale
 
 /**
  * Create account in three short steps. Saving the session at the end makes RootNavHost
@@ -305,6 +309,9 @@ private fun ColumnScope.AccessStep(state: SignUpUiState, viewModel: SignUpViewMo
     val scheme = MaterialTheme.colorScheme
     val spacing = FruitLogixTheme.spacing
     val focusManager = LocalFocusManager.current
+    val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val legalLanguage = AppLocale.toTag(AppLocale.current(context))
 
     RoleChip(state.role)
     StepTitle(stringResource(R.string.signup_account_title), stringResource(R.string.signup_account_subtitle))
@@ -375,6 +382,32 @@ private fun ColumnScope.AccessStep(state: SignUpUiState, viewModel: SignUpViewMo
         enabled = !state.isLoading,
         isError = state.termsError != null
     )
+
+    Spacer(modifier = Modifier.height(spacing.xs))
+
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(spacing.xs)
+    ) {
+        TextActionButton(
+            text = stringResource(R.string.signup_open_terms),
+            onClick = {
+                uriHandler.openUri(
+                    "https://upc-rebootech.github.io/Fruitlogix-website-v2/terminos.html?lang=$legalLanguage"
+                )
+            }
+        )
+
+        TextActionButton(
+            text = stringResource(R.string.signup_open_privacy),
+            onClick = {
+                uriHandler.openUri(
+                    "https://upc-rebootech.github.io/Fruitlogix-website-v2/privacidad.html?lang=$legalLanguage"
+                )
+            }
+        )
+    }
+
     state.termsError?.let {
         Text(stringResource(it), style = FruitLogixTheme.typography.bodySmall, color = scheme.error)
     }
