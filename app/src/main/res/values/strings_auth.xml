@@ -60,6 +60,8 @@
     <string name="signup_invitation_label">Invitation code (optional)</string>
     <string name="signup_invitation_help">Your distributor gives you this code to link your accounts.</string>
     <string name="signup_terms">I accept the Terms of Service and the Privacy Policy</string>
+    <string name="signup_open_terms">Terms of Service</string>
+    <string name="signup_open_privacy">Privacy Policy</string>
     <string name="signup_submit">Create account</string>
     <string name="signup_have_account">Already have an account?</string>
     <string name="signup_sign_in">Sign in</string>
