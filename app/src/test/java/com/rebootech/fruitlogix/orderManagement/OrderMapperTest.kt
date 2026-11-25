@@ -1,10 +1,12 @@
 package com.rebootech.fruitlogix.orderManagement
 
 import com.rebootech.fruitlogix.distributor.orderManagement.data.OrderMapper
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.CatalogProduct
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDraft
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator.QuantityProblem
 import com.rebootech.fruitlogix.shared.core.network.OrderItemResponseDto
 import com.rebootech.fruitlogix.shared.core.network.OrderResponseDto
 import org.junit.Assert.assertEquals
@@ -28,7 +30,10 @@ class OrderMapperTest {
         createdAt = "2026-11-13T07:07:35.4166119+00:00"
     )
 
-    private fun active(dto: OrderResponseDto) = (OrderMapper.map(dto, lima) as OrderMapper.Mapped.Active).order
+    /** Client accounts known to the app (GET /users). */
+    private val clientNames: (Int?) -> String? = { id -> if (id == 101) "Supermercados Lima Norte" else null }
+
+    private fun active(dto: OrderResponseDto) = (OrderMapper.map(dto, clientNames, lima) as OrderMapper.Mapped.Active).order
 
     @Test
     fun quantity_isTheRealKg() {
@@ -57,9 +62,9 @@ class OrderMapperTest {
         assertEquals(OrderStatus.PENDING, active(swaggerOrder).status)
         assertEquals(OrderStatus.IN_PREPARATION, active(swaggerOrder.copy(status = "InPreparation")).status)
         assertEquals(OrderStatus.ON_ROUTE, active(swaggerOrder.copy(status = "InTransit")).status)
-        val delivered = OrderMapper.map(swaggerOrder.copy(status = "DeliveredWithIncidence"), lima) as OrderMapper.Mapped.Finished
+        val delivered = OrderMapper.map(swaggerOrder.copy(status = "DeliveredWithIncidence"), clientNames, lima) as OrderMapper.Mapped.Finished
         assertEquals(OrderHistoryStatus.DELIVERED, delivered.item.status)
-        val rejected = OrderMapper.map(swaggerOrder.copy(status = "Rejected"), lima) as OrderMapper.Mapped.Finished
+        val rejected = OrderMapper.map(swaggerOrder.copy(status = "Rejected"), clientNames, lima) as OrderMapper.Mapped.Finished
         assertEquals(OrderHistoryStatus.CANCELLED, rejected.item.status)
     }
 
@@ -69,7 +74,7 @@ class OrderMapperTest {
         assertEquals("", empty.productName)
         assertEquals(0.0, empty.quantityKg, 0.0)
         assertEquals(0, empty.pallets)
-        assertNull(OrderMapper.map(swaggerOrder.copy(deliveryDueDate = null), lima))
+        assertNull(OrderMapper.map(swaggerOrder.copy(deliveryDueDate = null), clientNames, lima))
         // No creation time: old enough that it can no longer be deleted
         assertFalse(active(swaggerOrder.copy(createdAt = null)).canBeDeleted())
     }
@@ -80,16 +85,29 @@ class OrderMapperTest {
     }
 
     @Test
-    fun createRequest_usesTheCatalog() {
-        val draft = OrderDraft(clientId = 103, productName = "Fresa", quantityKg = 11_200.0, deliveryDate = LocalDate.of(2026, 11, 20))
-        val request = OrderMapper.toCreateRequest(draft)!!
+    fun createRequest_usesTheChosenProduct() {
+        val product = CatalogProduct(id = 5, name = "Fresa", pricePerKg = 6.8, producerId = 2, producerName = "Juan Pérez", minOrderKg = 50.0)
+        val draft = OrderDraft(
+            clientId = 103, productId = 5, productName = "Fresa", quantityKg = 11_200.0,
+            deliveryDate = LocalDate.of(2026, 11, 20), deliveryAddress = "  Panamericana Sur Km 18.5  "
+        )
+        val request = OrderMapper.toCreateRequest(draft, product)
         assertEquals(103, request.commercialClientId)
-        assertEquals("Panamericana Sur Km 18.5, San Juan de Miraflores, Lima", request.deliveryAddress)
+        assertEquals("Panamericana Sur Km 18.5", request.deliveryAddress)
         assertEquals(5, request.items.single().productId)
         assertEquals(11_200.0, request.items.single().quantityKg, 0.0)
         assertEquals(76_160.0, request.totalAmount, 0.001)
-        assertNull(OrderMapper.toCreateRequest(draft.copy(clientId = 534)))
-        assertNull(OrderMapper.toCreateRequest(draft.copy(productName = "Palta")))
+    }
+
+    @Test
+    fun quantity_respectsMinimumAndStock() {
+        val product = CatalogProduct(id = 5, name = "Fresa", pricePerKg = 6.8, minOrderKg = 50.0, availableKg = 1_000.0)
+        assertNull(OrderValidator.quantityProblem(200.0, product))
+        assertEquals(QuantityProblem.BELOW_MINIMUM, OrderValidator.quantityProblem(10.0, product))
+        assertEquals(QuantityProblem.ABOVE_STOCK, OrderValidator.quantityProblem(1_500.0, product))
+        assertEquals(QuantityProblem.INVALID, OrderValidator.quantityProblem(null, product))
+        assertFalse(OrderValidator.isValidAddress("Av"))
+        assertTrue(OrderValidator.isValidAddress("Av. Tambo 123"))
     }
 
     @Test

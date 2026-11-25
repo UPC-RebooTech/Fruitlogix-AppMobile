@@ -26,13 +26,18 @@ data class PlannedHarvest(
     val status: HarvestStatus = HarvestStatus.REGISTERED,
     val brix: Double? = null,
     /** Free text written by the producer (data, not UI text). */
-    val notes: String? = null
+    val notes: String? = null,
+    /** Harvest batch id on the server (POST /harvest-batches), null when it was saved without connection. */
+    val remoteId: Int? = null
 ) {
     // Bridge properties used by the Home "Next harvest" card
     val productName: String get() = fruitName
     val expectedKg: Int get() = weightKg
     val crewName: String get() = crewOrTransport
 }
+
+/** Result of logging a harvest; serverMessage is the server's own text when it refused it. */
+data class HarvestSaveResult(val ok: Boolean, val serverMessage: String? = null)
 
 /** Upcoming harvest planned in the field. */
 data class ScheduledHarvest(
@@ -42,7 +47,19 @@ data class ScheduledHarvest(
     val estimatedYieldKg: Int,
     val zone: String,
     val crewName: String,
-    val pickers: Int
+    val pickers: Int,
+    val notes: String? = null
+)
+
+/** What the producer fills in to plan a harvest (POST /harvest-plans). */
+data class HarvestPlanDraft(
+    val fruitType: String,
+    val scheduledFor: LocalDateTime,
+    val estimatedYieldKg: Double,
+    val zone: String,
+    val crewName: String,
+    val pickers: Int,
+    val notes: String? = null
 )
 
 /** Weekly demand forecast for the main product. */

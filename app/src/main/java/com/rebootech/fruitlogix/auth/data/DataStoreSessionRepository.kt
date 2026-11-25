@@ -43,6 +43,10 @@ class DataStoreSessionRepository(
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
 
     init {
+        // The server answered 401 (token expired, invalid or user removed): back to sign in
+        scope.launch {
+            RetrofitClient.unauthorized.collect { if (_session.value != null) signOut() }
+        }
         scope.launch {
             try {
                 val prefs = context.sessionDataStore.data.first()

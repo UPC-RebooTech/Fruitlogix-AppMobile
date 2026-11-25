@@ -216,4 +216,11 @@
     <string name="auth_logout_dialog_cancel">Cancel</string>
     <!-- Auth Login Strings -->
     <!-- Auth Sign Up Strings -->
+    <string name="producer_orders_reject">Reject order</string>
+    <string name="producer_orders_reject_title">Reject %1$s?</string>
+    <string name="producer_orders_reject_message">The distributor and the client will see the reason.</string>
+    <string name="producer_orders_reject_reason">Reason</string>
+    <string name="producer_orders_reject_placeholder">e.g. No size 8 stock this week</string>
+    <string name="producer_orders_reject_confirm">Reject</string>
+    <string name="producer_orders_reject_failed">Could not reject the order. Check your connection and try again.</string>
 </resources>

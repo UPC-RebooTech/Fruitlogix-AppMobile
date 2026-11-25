@@ -13,9 +13,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,6 +79,8 @@ fun ProducerOrderDetailScreen(
     val scheme = MaterialTheme.colorScheme
     val spacing = FruitLogixTheme.spacing
     var showAcceptDialog by rememberSaveable { mutableStateOf(false) }
+    var showRejectDialog by rememberSaveable { mutableStateOf(false) }
+    val rejectFailed by viewModel.rejectFailed.collectAsState()
     val cleanId = orderId.removePrefix("#")
 
     Column(
@@ -133,9 +139,22 @@ fun ProducerOrderDetailScreen(
                 onAccept = { showAcceptDialog = true },
                 onInspect = { onInspect(cleanId) },
                 onLoadTruck = { onLoadTruck(cleanId) },
+                onReject = { showRejectDialog = true },
+                rejectFailed = rejectFailed,
                 onOpenChat = { onOpenChat(cleanId) }
             )
         }
+    }
+
+    if (showRejectDialog) {
+        RejectOrderDialog(
+            orderId = cleanId,
+            onConfirm = { reason ->
+                showRejectDialog = false
+                viewModel.rejectOrder(reason, onDone = onNavigateBack)
+            },
+            onDismiss = { showRejectDialog = false }
+        )
     }
 
     if (showAcceptDialog) {
@@ -353,6 +372,8 @@ private fun BottomActions(
     onAccept: () -> Unit,
     onInspect: () -> Unit,
     onLoadTruck: () -> Unit,
+    onReject: () -> Unit,
+    rejectFailed: Boolean,
     onOpenChat: () -> Unit
 ) {
     val spacing = FruitLogixTheme.spacing
@@ -367,6 +388,9 @@ private fun BottomActions(
     }
 
     Column(modifier = Modifier.padding(horizontal = spacing.sm, vertical = spacing.xs)) {
+        if (rejectFailed) {
+            Text(stringResource(R.string.producer_orders_reject_failed), style = FruitLogixTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+        }
         if (primary != null) {
             PrimaryButton(
                 text = stringResource(primary.first),
@@ -378,6 +402,13 @@ private fun BottomActions(
                 onClick = onOpenChat,
                 modifier = Modifier.fillMaxWidth()
             )
+            if (order.status == OrderStatus.PENDING || order.status == OrderStatus.IN_PREPARATION) {
+                TextActionButton(
+                    text = stringResource(R.string.producer_orders_reject),
+                    onClick = onReject,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         } else {
             SecondaryButton(
                 text = stringResource(R.string.order_detail_message),
@@ -395,4 +426,32 @@ private fun statusBadge(status: OrderStatus): Pair<Int, StatusBadgeType> = when 
     OrderStatus.DELIVERED -> R.string.producer_orders_chip_delivered to StatusBadgeType.SUCCESS
     OrderStatus.REJECTED -> R.string.producer_orders_chip_rejected to StatusBadgeType.DANGER
     OrderStatus.CANCELLED -> R.string.producer_orders_chip_cancelled to StatusBadgeType.NEUTRAL
+}
+
+/** Reject with a reason: the server requires it and the distributor and client read it. */
+@Composable
+private fun RejectOrderDialog(orderId: String, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+    var reason by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.producer_orders_reject_title, orderId), style = FruitLogixTheme.typography.titleLarge) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                Text(stringResource(R.string.producer_orders_reject_message), style = FruitLogixTheme.typography.bodyMedium)
+                LabeledTextField(
+                    label = stringResource(R.string.producer_orders_reject_reason),
+                    value = reason,
+                    onValueChange = { reason = it.take(200) },
+                    placeholder = stringResource(R.string.producer_orders_reject_placeholder),
+                    capitalization = KeyboardCapitalization.Sentences
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(reason) }, enabled = reason.isNotBlank()) {
+                Text(stringResource(R.string.producer_orders_reject_confirm), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } }
+    )
 }

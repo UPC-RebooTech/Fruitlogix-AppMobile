@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -35,6 +37,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.producer.qualityControl.stock.data.ProducerProductSync
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockMovement
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.model.StockMovementType
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockItemModel
@@ -48,8 +51,10 @@ import com.rebootech.fruitlogix.shared.ui.components.LimeProgressBar
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
+import kotlinx.coroutines.launch
 import com.rebootech.fruitlogix.shared.ui.format.formatTimeAgo
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
@@ -89,6 +94,8 @@ fun ProducerStockDetailScreen(
 
         var target by rememberSaveable(item.id) { mutableIntStateOf(item.availableKg) }
         val savedMessage = stringResource(R.string.stock_detail_saved)
+        val scope = rememberCoroutineScope()
+        var busy by remember { mutableStateOf(false) }
 
         Column(
             modifier = Modifier
@@ -107,12 +114,33 @@ fun ProducerStockDetailScreen(
             AdjustSection(current = item.availableKg, target = target, onTargetChange = { target = it })
             ThresholdSection(item)
             MovementsSection(StockRepository.movements[item.id].orEmpty())
+
+            // Server product: clients only see it while it is active
+            if (item.remoteId != null) {
+                val failedText = stringResource(R.string.prod_product_save_failed)
+                TextActionButton(
+                    text = stringResource(if (item.isActive) R.string.prod_product_deactivate else R.string.prod_product_reactivate),
+                    enabled = !busy,
+                    onClick = {
+                        busy = true
+                        scope.launch {
+                            val result = ProducerProductSync.setActive(item, !item.isActive)
+                            busy = false
+                            if (!result.ok) {
+                                Toast.makeText(context, result.serverMessage ?: failedText, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
         }
 
         PrimaryButton(
             text = stringResource(R.string.stock_detail_save),
             onClick = {
                 StockRepository.updateStockKg(item.id, target)
+                StockRepository.stockItems.find { it.id == item.id }?.let(ProducerProductSync::pushKg)
                 Toast.makeText(context, savedMessage, Toast.LENGTH_SHORT).show()
                 onNavigateBack()
             },

@@ -185,6 +185,14 @@ fun EditProfileScreen(
             }
         }
 
+        state.serverError?.let { message ->
+            Text(
+                text = message.ifBlank { stringResource(R.string.profile_save_failed) },
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = scheme.error,
+                modifier = Modifier.padding(horizontal = spacing.sm)
+            )
+        }
         PrimaryButton(
             text = stringResource(R.string.profile_save),
             onClick = viewModel::onSave,

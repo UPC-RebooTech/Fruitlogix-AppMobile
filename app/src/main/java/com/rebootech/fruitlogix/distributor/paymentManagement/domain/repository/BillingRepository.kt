@@ -1,6 +1,7 @@
 ﻿package com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository
 
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceSaveResult
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.PricePoint
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.ProposedCreditNote
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.PurchaseSummary
@@ -13,8 +14,8 @@ interface BillingRepository {
 
     fun getInvoiceById(invoiceId: String): Invoice?
 
-    /** Adds a new invoice (e.g. the automatic one of US66). */
-    suspend fun addInvoice(invoice: Invoice)
+    /** Sends a new invoice to the server (e.g. the automatic one of US66). Its code comes from the server. */
+    suspend fun addInvoice(invoice: Invoice): InvoiceSaveResult
 
     suspend fun approveCreditNote(noteId: String, amount: Double)
 
@@ -27,9 +28,9 @@ interface BillingRepository {
     fun purchaseClients(): List<String>
     fun purchaseSummary(clientName: String, period: SummaryPeriod): PurchaseSummary?
 
-    /** Next free invoice number. */
-    fun nextInvoiceId(): String
+    /** Client accounts that can be invoiced (GET /users). */
+    fun clientNames(): List<String> = emptyList()
 
-    /** Pulls invoices from the server and merges them; does nothing when offline. */
+    /** Reads invoices and orders from the server again. */
     suspend fun refresh() {}
 }

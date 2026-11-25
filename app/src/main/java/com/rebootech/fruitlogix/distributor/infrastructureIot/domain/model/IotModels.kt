@@ -11,7 +11,7 @@ data class SensorReading(
 )
 
 /**
- * A reefer or warehouse sensor. Truck sensors carry the fleet [unitId] (FL-102…), so Fleet,
+ * A reefer or warehouse sensor. Truck sensors carry the fleet [unitId], so Fleet,
  * Dispatch detail and Home read the same temperature for the same truck.
  */
 data class IotDevice(

@@ -17,15 +17,19 @@ data class SignInRequestDto(
     val password: String
 )
 
+/** role: CommercialClient, Producer or Distributor (this app sends Producer or Distributor). */
 data class SignUpRequestDto(
     val username: String,
-    val password: String
+    val password: String,
+    val role: String? = null
 )
 
 data class AuthenticatedUserDto(
     val id: Int,
     val username: String?,
-    val token: String?
+    val token: String?,
+    /** CommercialClient, Producer, Distributor or Admin. Not inside the JWT: keep it with the token. */
+    val role: String? = null
 )
 
 // ─── 2. Order Management (Contratos reales de Swagger) ──────────────────────
@@ -76,46 +80,19 @@ data class OrderResponseDto(
     val notes: String? = null,
     val cancellationReason: String? = null,
     val createdAt: String? = null,
-    val items: List<OrderItemResponseDto>? = null
+    val items: List<OrderItemResponseDto>? = null,
+    val updatedAt: String? = null,
+    val deliveredAt: String? = null,
+    val receivedAt: String? = null,
+    val reception: OrderReceptionDto? = null,
+    val batchId: Int? = null,
+    val producerName: String? = null,
+    /** Company name of the client's profile, or their username (CAMBIOS-API 12.1). */
+    val commercialClientName: String? = null
 )
 
 data class AssignProducerRequestDto(
     val producerId: Int
-)
-
-// ─── 3. Quality Control (QualityInspections en Swagger) ─────────────────────
-data class TechnicalParametersDto(
-    val temperatureCelsius: Double,
-    val humidityPercent: Double,
-    val brixDegrees: Double = 12.0
-)
-
-data class QualityChecklistDto(
-    val packagingIntact: Boolean = true,
-    val labelingCorrect: Boolean = true,
-    val pestFree: Boolean = true,
-    val coldChainMaintained: Boolean = true
-)
-
-data class CreateQualityInspectionRequestDto(
-    val batchId: Int,
-    val notes: String,
-    val visualInspection: String, // "APPROVED" | "REJECTED" | "OBSERVED"
-    val technicalParameters: TechnicalParametersDto,
-    val checklist: QualityChecklistDto
-)
-
-data class QualityInspectionResponseDto(
-    val id: Int? = null,
-    val batchId: Int? = null,
-    val notes: String? = null,
-    val visualInspection: String? = null,
-    val status: String? = null,
-    val temperatureCelsius: Double? = null,
-    val humidityPercent: Double? = null,
-    val technicalParameters: TechnicalParametersDto? = null,
-    val checklist: QualityChecklistDto? = null,
-    val createdAt: String? = null
 )
 
 // ─── 4. Logistics & Deliveries ──────────────────────────────────────────────
@@ -130,7 +107,10 @@ data class CreateDeliveryRequestDto(
     val routeDestination: String,
     val routeDistanceKm: Double,
     /** ISO date-time, e.g. 2026-11-13T15:30:00 */
-    val estimatedTimeOfArrival: String
+    val estimatedTimeOfArrival: String,
+    /** With ids the server takes the names, phone, plate and type from /drivers and /vehicles. */
+    val driverId: Int? = null,
+    val vehicleId: Int? = null
 )
 
 /** ReportDelayResource: the server only stores the reason and sets the status to Delayed. */
@@ -138,7 +118,7 @@ data class ReportDelayRequestDto(
     val reason: String
 )
 
-/** DeliveryResource. currentStatus: PendingDispatch, InTransit, Delayed, Delivered or Failed. */
+/** DeliveryResource. currentStatus: PendingDispatch, InTransit, Delayed, Arrived, Delivered or Failed. */
 data class DeliveryResponseDto(
     val id: Int,
     val orderId: Int? = null,
@@ -150,7 +130,10 @@ data class DeliveryResponseDto(
     val routeDestination: String? = null,
     val routeDistanceKm: Double? = null,
     val estimatedTimeOfArrival: String? = null,
-    val currentStatus: String? = null
+    val currentStatus: String? = null,
+    val dispatchedAt: String? = null,
+    val arrivedAt: String? = null,
+    val deliveredAt: String? = null
 )
 
 /** TrackingLogResource: GPS position and reefer readings of a delivery. */
@@ -327,17 +310,6 @@ interface FruitLogixApiService {
         @Body body: AssignProducerRequestDto
     ): Response<OrderResponseDto>
 
-    // B. Quality Control
-    @POST("quality-inspections")
-    suspend fun createQualityInspection(
-        @Body request: CreateQualityInspectionRequestDto
-    ): Response<QualityInspectionResponseDto>
-
-    @GET("quality-inspections/batch/{batchId}")
-    suspend fun getQualityInspectionsByBatch(
-        @Path("batchId") batchId: Int
-    ): Response<List<QualityInspectionResponseDto>>
-
     // D. Logistics & Deliveries
     @GET("deliveries")
     suspend fun getDeliveries(): Response<List<DeliveryResponseDto>>
@@ -395,4 +367,141 @@ interface FruitLogixApiService {
         @Body request: CreateInvoiceRequestDto
     ): Response<InvoiceResponseDto>
 
+
+    // ── Orders: producer decision, harvest lot, cancel and reception ──
+    /** action "accept" (Pending with producer → InPreparation) or "reject" (needs reason). */
+    @PATCH("orders/{id}/status")
+    suspend fun updateOrderStatus(@Path("id") id: Int, @Body body: UpdateOrderStatusRequestDto): Response<OrderResponseDto>
+
+    @PATCH("orders/{id}/batch")
+    suspend fun assignOrderBatch(@Path("id") id: Int, @Body body: AssignOrderBatchRequestDto): Response<OrderResponseDto>
+
+    /** Use it when DELETE answers 409 (the order already has a delivery, invoice or payment). */
+    @PATCH("orders/{id}/cancel")
+    suspend fun cancelOrder(@Path("id") id: Int, @Body body: CancelOrderRequestDto): Response<OrderResponseDto>
+
+    /** Only for InTransit orders (409 otherwise). Moves the order to Delivered and its delivery too. */
+    @POST("orders/{id}/reception")
+    suspend fun confirmOrderReception(@Path("id") id: Int, @Body body: ConfirmReceptionRequestDto): Response<OrderResponseDto>
+
+    // ── Deliveries: detail, events, arrival, checkpoints, reassignment, tracking ──
+    @GET("deliveries/{id}")
+    suspend fun getDelivery(@Path("id") id: Int): Response<DeliveryResponseDto>
+
+    @GET("deliveries/order/{orderId}")
+    suspend fun getDeliveriesByOrder(@Path("orderId") orderId: Int): Response<List<DeliveryResponseDto>>
+
+    @GET("deliveries/{id}/events")
+    suspend fun getDeliveryEvents(@Path("id") id: Int): Response<List<DeliveryEventDto>>
+
+    /** Only from InTransit or Delayed (409 otherwise). */
+    @POST("deliveries/{id}/arrive")
+    suspend fun arriveDelivery(@Path("id") id: Int, @Body body: ArriveDeliveryRequestDto): Response<DeliveryResponseDto>
+
+    /** Before the arrival (409 after Arrived, Delivered or Failed). */
+    @PATCH("deliveries/{id}/assignment")
+    suspend fun updateDeliveryAssignment(@Path("id") id: Int, @Body body: UpdateDeliveryAssignmentRequestDto): Response<DeliveryResponseDto>
+
+    /** Only while InTransit or Delayed. */
+    @POST("deliveries/{id}/checkpoints")
+    suspend fun addDeliveryCheckpoint(@Path("id") id: Int, @Body body: AddCheckpointRequestDto): Response<DeliveryEventDto>
+
+    /** Inside the client's warehouse radius an InTransit/Delayed delivery becomes Arrived (geofence). */
+    @POST("tracking-logs")
+    suspend fun createTrackingLog(@Body body: CreateTrackingLogRequestDto): Response<TrackingLogResponseDto>
+
+    // ── Products (catalog) ──
+    @GET("products")
+    suspend fun getProducts(
+        @Query("producerId") producerId: Int? = null,
+        @Query("fruitType") fruitType: String? = null,
+        @Query("available") available: Boolean? = null
+    ): Response<List<ProductDto>>
+
+    @POST("products")
+    suspend fun createProduct(@Body body: SaveProductRequestDto): Response<ProductDto>
+
+    @PUT("products/{id}")
+    suspend fun updateProduct(@Path("id") id: Int, @Body body: SaveProductRequestDto): Response<ProductDto>
+
+    /** Deactivates the product (it is not erased). Reactivate with PUT isActive = true. */
+    @DELETE("products/{id}")
+    suspend fun deleteProduct(@Path("id") id: Int): Response<Unit>
+
+    // ── Producer profile of the signed-in Producer (404 = not created yet) ──
+    @GET("producers/me")
+    suspend fun getMyProducerProfile(): Response<ProducerResourceDto>
+
+    /** Same call as [createProducer], but keeps the error body (409: the account already has a profile). */
+    @POST("producers")
+    suspend fun createMyProducerProfile(@Body producer: SaveProducerRequestDto): Response<ProducerResourceDto>
+
+    @PUT("producers/{id}")
+    suspend fun updateMyProducerProfile(@Path("id") id: Int, @Body producer: SaveProducerRequestDto): Response<ProducerResourceDto>
+
+    // ── Harvest batches and quality inspections ──
+    /** Not filtered by the server: filter by producerId in the app. */
+    @GET("harvest-batches")
+    suspend fun getHarvestBatches(): Response<List<HarvestBatchDto>>
+
+    @POST("harvest-batches")
+    suspend fun createHarvestBatch(@Body body: CreateHarvestBatchRequestDto): Response<HarvestBatchDto>
+
+    @PATCH("harvest-batches/{id}/status")
+    suspend fun updateHarvestBatchStatus(@Path("id") id: Int, @Body body: UpdateHarvestBatchStatusRequestDto): Response<HarvestBatchDto>
+
+    @POST("quality-inspections")
+    suspend fun createQualityInspection(@Body body: QualityInspectionRequestDto): Response<QualityInspectionDto>
+
+    @GET("quality-inspections/batch/{batchId}")
+    suspend fun getQualityInspectionsByBatch(@Path("batchId") batchId: Int): Response<List<QualityInspectionDto>>
+
+    // ── Incidents and users ──
+    @GET("incidents")
+    suspend fun getIncidents(): Response<List<IncidentDto>>
+
+    @POST("incidents")
+    suspend fun createIncident(@Body body: CreateIncidentRequestDto): Response<IncidentDto>
+
+    /** A Distributor sees every account (id and username), used to pick the client of an order. */
+    @GET("users")
+    suspend fun getUsers(): Response<List<UserDto>>
+    // ── Fleet: drivers and vehicles (Distributor and Admin; others get 403) ──
+    @GET("drivers")
+    suspend fun getDrivers(): Response<List<DriverDto>>
+
+    @POST("drivers")
+    suspend fun createDriver(@Body body: SaveDriverRequestDto): Response<DriverDto>
+
+    @PUT("drivers/{id}")
+    suspend fun updateDriver(@Path("id") id: Int, @Body body: SaveDriverRequestDto): Response<DriverDto>
+
+    /** 409 when the driver is on an active delivery. */
+    @DELETE("drivers/{id}")
+    suspend fun deleteDriver(@Path("id") id: Int): Response<Unit>
+
+    @GET("vehicles")
+    suspend fun getVehicles(): Response<List<VehicleDto>>
+
+    @POST("vehicles")
+    suspend fun createVehicle(@Body body: SaveVehicleRequestDto): Response<VehicleDto>
+
+    @PUT("vehicles/{id}")
+    suspend fun updateVehicle(@Path("id") id: Int, @Body body: SaveVehicleRequestDto): Response<VehicleDto>
+
+    @DELETE("vehicles/{id}")
+    suspend fun deleteVehicle(@Path("id") id: Int): Response<Unit>
+
+    // ── Planned harvests (Producer: their own; Distributor: all, filter by producerId) ──
+    @GET("harvest-plans")
+    suspend fun getHarvestPlans(@Query("producerId") producerId: Int? = null): Response<List<HarvestPlanDto>>
+
+    @POST("harvest-plans")
+    suspend fun createHarvestPlan(@Body body: SaveHarvestPlanRequestDto): Response<HarvestPlanDto>
+
+    @PUT("harvest-plans/{id}")
+    suspend fun updateHarvestPlan(@Path("id") id: Int, @Body body: SaveHarvestPlanRequestDto): Response<HarvestPlanDto>
+
+    @DELETE("harvest-plans/{id}")
+    suspend fun deleteHarvestPlan(@Path("id") id: Int): Response<Unit>
 }

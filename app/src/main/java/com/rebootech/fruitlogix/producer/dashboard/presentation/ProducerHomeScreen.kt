@@ -44,6 +44,7 @@ import com.rebootech.fruitlogix.producer.dashboard.presentation.components.Upcom
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.ProducerTask
 import com.rebootech.fruitlogix.producer.infrastructureIot.ProducerInfrastructureIotRoutes
 import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
+import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
@@ -162,10 +163,12 @@ private fun HomeContent(
 
         // 1. Greeting, farm and date
         item {
+            // Name and farm of the producer profile (the same one shown in My account)
+            val profile by FakeProfileRepository.instance.profile.collectAsState()
             GreetingHeader(
                 dayPart = uiState.dayPart,
-                userName = uiState.userName,
-                farmName = uiState.farmName,
+                userName = firstName(profile.fullName).ifBlank { uiState.userName },
+                farmName = uiState.farmName.ifBlank { profile.farmName },
                 today = uiState.today
             )
         }
@@ -475,3 +478,6 @@ private fun KpiGrid(summary: DashboardSummary) {
 
 @Composable
 private fun currentLocale(): Locale = LocalConfiguration.current.locales.get(0)
+
+/** "Carlos Alberto Mendoza Quispe" → "Carlos"; the whole text when it is a single word. */
+internal fun firstName(fullName: String): String = fullName.trim().split(' ').firstOrNull { it.isNotBlank() }.orEmpty()

@@ -59,4 +59,5 @@
     <string name="dist_home_fleet_eta">Llega %1$s</string>
     <string name="dist_home_fleet_delay">Retraso %1$s</string>
     <string name="dist_home_fleet_reefer">Cámara %1$s</string>
+    <string name="dist_home_fleet_empty">No hay viajes en ruta ahora.</string>
 </resources>

@@ -61,4 +61,15 @@
     <string name="inspection_save_offline">Save on phone</string>
     <string name="inspection_saved_offline">Saved on this phone. It will sync when you are online.</string>
     <string name="inspection_review">Review report</string>
+    <string name="inspection_ph">pH</string>
+    <string name="inspection_brix">Sugar (Brix)</string>
+    <string name="inspection_section_damage">Damage found</string>
+    <string name="inspection_damage_stains">Stains</string>
+    <string name="inspection_damage_bruises">Bruises</string>
+    <string name="inspection_damage_deformations">Deformations</string>
+    <string name="inspection_damage_rot">Rot</string>
+    <string name="inspection_section_checklist">Preparation before loading</string>
+    <string name="inspection_check_dry_cleaning">Dry cleaning done</string>
+    <string name="inspection_check_packaging">Packaging material checked</string>
+    <string name="inspection_check_sealing">Boxes sealed</string>
 </resources>

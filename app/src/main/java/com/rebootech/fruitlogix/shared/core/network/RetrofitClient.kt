@@ -2,9 +2,13 @@ package com.rebootech.fruitlogix.shared.core.network
 
 import android.util.Log
 import com.rebootech.fruitlogix.BuildConfig
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -30,6 +34,14 @@ object RetrofitClient {
     @Volatile
     var jwtToken: String? = null
 
+    private val _unauthorized = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /**
+     * Emits when the server answers 401 to a call that carried a token (expired, invalid or the user no
+     * longer exists). The session listens to it and signs out, so the person goes back to sign in.
+     */
+    val unauthorized: SharedFlow<Unit> = _unauthorized.asSharedFlow()
+
     private val _syncStatus = MutableStateFlow(BackendSyncStatus.CONNECTING)
     val syncStatus: StateFlow<BackendSyncStatus> = _syncStatus.asStateFlow()
 
@@ -47,10 +59,11 @@ object RetrofitClient {
     private val authInterceptor = Interceptor { chain ->
         val builder = chain.request().newBuilder()
             .header("Accept", "application/json")
-        jwtToken?.takeIf { it.isNotBlank() }?.let { token ->
-            builder.header("Authorization", "Bearer $token")
-        }
-        chain.proceed(builder.build())
+        val token = jwtToken?.takeIf { it.isNotBlank() }
+        token?.let { builder.header("Authorization", "Bearer $it") }
+        val response = chain.proceed(builder.build())
+        if (response.code == 401 && token != null) _unauthorized.tryEmit(Unit)
+        response
     }
 
     // Only the request line and status in debug builds: bodies would print passwords and tokens

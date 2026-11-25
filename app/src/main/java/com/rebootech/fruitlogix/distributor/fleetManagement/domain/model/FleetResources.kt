@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 enum class DriverStatus { AVAILABLE, ON_ROUTE, OFF_DUTY }
 
-/** A driver of the distributor. Same people as the Fleet trips (FL-102, FL-408, FL-219). */
+/** A driver of the distributor (saved on this phone until the server has drivers). */
 data class Driver(
     val id: String,
     val name: String,

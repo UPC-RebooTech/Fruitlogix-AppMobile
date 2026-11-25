@@ -143,8 +143,9 @@ object ArrivalRules {
     const val AT_GATE_KM = 0.5
 
     fun isArriving(dispatch: ActiveDispatch): Boolean =
-        dispatch.deliveryState == DeliveryState.ON_ROUTE && dispatch.remainingKm <= ARRIVALS_RADIUS_KM
+        dispatch.deliveryState == DeliveryState.ON_ROUTE && (dispatch.arrivedAt != null || dispatch.remainingKm <= ARRIVALS_RADIUS_KM)
 
+    /** At the gate: the server says it arrived (manual or geofence), or it is closer than [AT_GATE_KM]. */
     fun isAtGate(dispatch: ActiveDispatch): Boolean =
-        isArriving(dispatch) && dispatch.remainingKm <= AT_GATE_KM
+        isArriving(dispatch) && (dispatch.arrivedAt != null || dispatch.remainingKm <= AT_GATE_KM)
 }

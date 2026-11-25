@@ -70,6 +70,9 @@ fun CreateOrderScreen(
         )
         OrderFormFields(
             form = state.form,
+            clients = state.clients,
+            products = state.products,
+            onAddressChange = viewModel::onAddressChange,
             onClientChange = viewModel::onClientChange,
             onProductChange = viewModel::onProductChange,
             onQuantityChange = viewModel::onQuantityChange,
@@ -79,9 +82,9 @@ fun CreateOrderScreen(
             onProducerChange = viewModel::onProducerChange
         )
         Spacer(modifier = Modifier.height(spacing.xs))
-        state.error?.let { message ->
+        (state.serverError ?: state.error?.let { stringResource(it) })?.let { message ->
             Text(
-                text = stringResource(message),
+                text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = scheme.error,
                 modifier = Modifier.fillMaxWidth()

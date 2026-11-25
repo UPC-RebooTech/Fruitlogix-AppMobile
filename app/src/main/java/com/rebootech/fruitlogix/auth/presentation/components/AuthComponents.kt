@@ -1,6 +1,7 @@
 package com.rebootech.fruitlogix.auth.presentation.components
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -61,16 +64,17 @@ fun AuthBrand(modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(64.dp)
                 .clip(FruitLogixTheme.shapes.IconBox)
                 .background(scheme.inverseSurface),
             contentAlignment = Alignment.Center
         ) {
-            AppIcon(
-                id = R.drawable.ic_fruitlogix_brand,
+            // The FruitLogix logo (lime apple on the dark brand box)
+            Image(
+                painter = painterResource(R.drawable.fruitlogix_logo),
                 contentDescription = stringResource(R.string.iam_brand_cd),
-                tint = Color.Unspecified,
-                modifier = Modifier.size(36.dp)
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(46.dp)
             )
         }
         Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.inner))

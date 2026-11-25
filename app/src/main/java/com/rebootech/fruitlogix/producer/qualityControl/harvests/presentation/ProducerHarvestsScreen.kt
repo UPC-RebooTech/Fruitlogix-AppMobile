@@ -24,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,8 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatRelativeDateTime
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -87,11 +90,14 @@ fun harvestStatusBadge(status: HarvestStatus): StatusBadgeType = when (status) {
 fun ProducerHarvestsScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToRegisterHarvest: () -> Unit = {},
+    onNavigateToScheduleHarvest: () -> Unit = {},
     onNavigateToInventory: () -> Unit = onNavigateBack,
     modifier: Modifier = Modifier
 ) {
     val repository = FakeHarvestRepository.instance
     val harvestList by repository.recentHarvests.collectAsState()
+    // The producer's own batches on the server
+    LaunchedEffect(Unit) { repository.refresh() }
     val scheduled by repository.scheduledHarvests.collectAsState()
     val forecast = repository.weeklyForecast
 
@@ -155,7 +161,7 @@ fun ProducerHarvestsScreen(
             }
 
             // Weekly forecast (highlighted, dark)
-            item {
+            if (forecast != null) item {
                 FruitLogixCard(
                     variant = CardVariant.Dark,
                     shape = FruitLogixTheme.shapes.HeroCard,
@@ -259,6 +265,13 @@ fun ProducerHarvestsScreen(
                     )
                 )
             }
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.plan_title),
+                    onClick = onNavigateToScheduleHarvest,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             if (visibleScheduled.isEmpty()) {
                 item {
                     Text(
@@ -280,6 +293,14 @@ fun ProducerHarvestsScreen(
                     trailing = stringResource(R.string.producer_harvests_live),
                     trailingIsLive = true
                 )
+            }
+            if (harvestList.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = stringResource(R.string.producer_harvests_empty_title),
+                        message = stringResource(R.string.producer_harvests_empty_message)
+                    )
+                }
             }
             items(harvestList, key = { it.id }) { harvest ->
                 RecentHarvestCard(harvest = harvest, numberFormat = numberFormat)

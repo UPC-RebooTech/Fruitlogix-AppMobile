@@ -5,6 +5,7 @@ import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Che
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DeliveryState
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.LotStageType
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.rules.LotTraceability
+import com.rebootech.fruitlogix.shared.core.network.DeliveryEventDto
 import com.rebootech.fruitlogix.shared.core.network.DeliveryResponseDto
 import com.rebootech.fruitlogix.shared.core.network.TrackingLogResponseDto
 import org.junit.Assert.assertEquals
@@ -64,18 +65,43 @@ class DeliveryMapperTest {
     @Test
     fun delayed_countsMinutesOnlyAfterTheEta() {
         val late = serverDelivery.copy(currentStatus = "Delayed", estimatedTimeOfArrival = "2026-11-13T09:15:00")
-        assertEquals(45, DeliveryMapper.toDispatch(late, "FX-1045", "Fresa", 14, null, null, now).delayMinutes)
+        assertEquals(45, DeliveryMapper.toDispatch(late, "FX-1045", "Fresa", 14, null, null, now = now).delayMinutes)
         val stillOnTime = serverDelivery.copy(currentStatus = "Delayed")
-        assertEquals(0, DeliveryMapper.toDispatch(stillOnTime, "FX-1045", "Fresa", 14, null, null, now).delayMinutes)
+        assertEquals(0, DeliveryMapper.toDispatch(stillOnTime, "FX-1045", "Fresa", 14, null, null, now = now).delayMinutes)
     }
 
     @Test
-    fun deliveredOnThisPhone_isKeptUntilTheServerKnows() {
-        val first = DeliveryMapper.toDispatch(serverDelivery, "FX-1045", "Fresa", 14, null, null, now)
-        val delivered = first.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = now)
-        val again = DeliveryMapper.toDispatch(serverDelivery, "FX-1045", "Fresa", 14, null, delivered, now)
-        assertEquals(DeliveryState.DELIVERED, again.deliveryState)
-        assertEquals(now, again.deliveredAt)
+    fun delivered_comesFromTheServer() {
+        val first = DeliveryMapper.toDispatch(serverDelivery, "FX-1045", "Fresa", 14, null, null, now = now)
+        // A copy marked delivered on this phone does not win over the server state
+        val local = first.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = now)
+        assertEquals(DeliveryState.ON_ROUTE, DeliveryMapper.toDispatch(serverDelivery, "FX-1045", "Fresa", 14, null, local, now = now).deliveryState)
+        val done = serverDelivery.copy(currentStatus = "Delivered", deliveredAt = "2026-11-13T09:55:00")
+        val trip = DeliveryMapper.toDispatch(done, "FX-1045", "Fresa", 14, null, local, now = now)
+        assertEquals(DeliveryState.DELIVERED, trip.deliveryState)
+        assertEquals(LocalDateTime.of(2026, 11, 13, 9, 55), trip.deliveredAt)
+    }
+
+    @Test
+    fun arrived_closesTheRouteAndKeepsTheArrivalTime() {
+        val arrived = serverDelivery.copy(currentStatus = "Arrived", arrivedAt = "2026-11-13T09:40:00")
+        val trip = DeliveryMapper.toDispatch(arrived, "FX-1045", "Fresa", 14, null, null, now = now)
+        assertEquals(DeliveryState.ON_ROUTE, trip.deliveryState)
+        assertEquals(LocalDateTime.of(2026, 11, 13, 9, 40), trip.arrivedAt)
+        assertEquals(trip.totalKm, trip.travelledKm, 0.0)
+    }
+
+    @Test
+    fun serverCheckpoints_areShownInOrder_andZeroGpsIsIgnored() {
+        val events = listOf(
+            DeliveryEventDto(type = "Checkpoint", name = "Peaje Lurín", occurredAt = "2026-11-13T09:00:00"),
+            DeliveryEventDto(type = "Delay", note = "Tráfico", occurredAt = "2026-11-13T08:30:00"),
+            DeliveryEventDto(type = "Checkpoint", name = "Km 40", occurredAt = "2026-11-13T08:00:00")
+        )
+        val noSignal = TrackingLogResponseDto(deliveryId = 12, latitude = 0.0, longitude = 0.0)
+        val trip = DeliveryMapper.toDispatch(serverDelivery, "FX-1045", "Fresa", 14, noSignal, null, events, now)
+        assertEquals(listOf("Lima Central Hub", "Km 40", "Peaje Lurín", "Mercados Lima Sur"), trip.checkpoints.map { it.name })
+        assertNull(DeliveryMapper.position(0.0, 0.0))
     }
 
     @Test

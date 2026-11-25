@@ -1,5 +1,22 @@
 package com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DeliveryState
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.AssignmentSheetContent
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.FleetChoice
+import com.rebootech.fruitlogix.distributor.DistributorDependencies
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.DriverStatus
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.VehicleStatus
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.CheckpointSheetContent
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.PositionSheetContent
+import com.rebootech.fruitlogix.shared.core.location.CurrentLocation
+import com.rebootech.fruitlogix.shared.core.location.GeoPoint
+import kotlinx.coroutines.launch
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -93,6 +110,21 @@ fun DispatchDetailScreen(
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     val item = state.item
+    val scope = rememberCoroutineScope()
+    var pendingGps by remember { mutableStateOf<((GeoPoint?) -> Unit)?>(null) }
+    val locationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        val callback = pendingGps
+        pendingGps = null
+        scope.launch { callback?.invoke(CurrentLocation.get(context)) }
+    }
+    /** Runs [block] with the phone's position (null without permission or signal). */
+    val withGps: ((GeoPoint?) -> Unit) -> Unit = { block ->
+        if (CurrentLocation.hasPermission(context)) scope.launch { block(CurrentLocation.get(context)) }
+        else {
+            pendingGps = block
+            locationPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -141,7 +173,7 @@ fun DispatchDetailScreen(
     }
 
     if (item != null && state.sheet != null) {
-        ActionSheet(state, item, viewModel, onShare = { shareCertificate(context, it) })
+        ActionSheet(state, item, viewModel, withGps = withGps, onShare = { shareCertificate(context, it) })
     }
 }
 
@@ -428,13 +460,35 @@ private fun ActionsSection(state: DispatchDetailUiState, d: ActiveDispatch, onOp
             d.reeferCheckedAt?.let { stringResource(R.string.dispatch_action_reefer_done, formatRelativeDateTime(it)) }
                 ?: stringResource(R.string.dispatch_action_reefer_pending)
         ) { onOpen(DispatchSheet.REEFER) }
-        if (d.isActive) {
+        val onServer = d.remoteId != null
+        val onRoad = d.deliveryState == DeliveryState.ON_ROUTE && d.arrivedAt == null
+        if (d.isActive && d.arrivedAt == null) {
             ActionRow(R.drawable.ic_schedule, stringResource(R.string.dispatch_action_delay), stringResource(R.string.dispatch_action_delay_sub, formatTime(today.atTime(d.eta)))) {
                 onOpen(DispatchSheet.DELAY)
             }
-            ActionRow(R.drawable.ic_receipt, stringResource(R.string.dispatch_action_delivery), stringResource(R.string.dispatch_action_delivery_sub)) {
+            if (onRoad) {
+                ActionRow(R.drawable.ic_truck_pin, stringResource(R.string.dispatch_action_checkpoint), stringResource(R.string.dispatch_action_checkpoint_sub)) {
+                    onOpen(DispatchSheet.CHECKPOINT)
+                }
+            }
+            if (onRoad && onServer) {
+                ActionRow(R.drawable.ic_gps, stringResource(R.string.dispatch_action_position), stringResource(R.string.dispatch_action_position_sub)) {
+                    onOpen(DispatchSheet.POSITION)
+                }
+            }
+            ActionRow(R.drawable.ic_fleet_driver, stringResource(R.string.dispatch_action_assignment), stringResource(R.string.dispatch_action_assignment_sub, d.driver.name, d.plate)) {
+                onOpen(DispatchSheet.ASSIGNMENT)
+            }
+            ActionRow(
+                R.drawable.ic_receipt,
+                stringResource(R.string.dispatch_action_delivery),
+                stringResource(if (onServer) R.string.dispatch_action_arrival_sub else R.string.dispatch_action_delivery_sub)
+            ) {
                 onOpen(DispatchSheet.DELIVERY)
             }
+        }
+        if (d.isActive && d.arrivedAt != null) {
+            ArrivedNotice(d.arrivedAt)
         }
         ActionRow(
             R.drawable.ic_shield_check,
@@ -444,6 +498,27 @@ private fun ActionsSection(state: DispatchDetailUiState, d: ActiveDispatch, onOp
         ) { onOpen(DispatchSheet.CERTIFICATE) }
         ActionRow(R.drawable.ic_link, stringResource(R.string.dispatch_action_trace), stringResource(R.string.dispatch_action_trace_sub)) {
             onOpen(DispatchSheet.TRACEABILITY)
+        }
+    }
+}
+
+/** The truck is at the client: the trip closes when the client confirms the reception in their app. */
+@Composable
+private fun ArrivedNotice(arrivedAt: java.time.LocalDateTime) {
+    val colors = FruitLogixTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(FruitLogixTheme.shapes.Button)
+            .background(colors.coldContainer)
+            .padding(FruitLogixTheme.spacing.inner),
+        verticalAlignment = Alignment.Top
+    ) {
+        AppIcon(id = R.drawable.ic_logistics_arrive, contentDescription = null, tint = colors.coldContent, modifier = Modifier.size(FruitLogixTheme.sizing.iconSm))
+        Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
+        Column {
+            Text(stringResource(R.string.dispatch_arrived_title, formatRelativeDateTime(arrivedAt)), style = FruitLogixTheme.typography.titleSmall, color = colors.onColdContainer)
+            Text(stringResource(R.string.dispatch_arrived_message), style = FruitLogixTheme.typography.bodyMedium, color = colors.onColdContainer)
         }
     }
 }
@@ -486,12 +561,13 @@ private fun ActionSheet(
     state: DispatchDetailUiState,
     item: DispatchItem,
     viewModel: DispatchDetailViewModel,
+    withGps: ((GeoPoint?) -> Unit) -> Unit,
     onShare: (ColdChainCertificate) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     val d = item.dispatch
     val sheet = state.sheet ?: return
-    val error = state.sheetError?.let { res -> state.sheetErrorArg?.let { stringResource(res, it) } ?: stringResource(res) }
+    val error = state.sheetErrorText ?: state.sheetError?.let { res -> state.sheetErrorArg?.let { stringResource(res, it) } ?: stringResource(res) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val title = stringResource(
         when (sheet) {
@@ -501,6 +577,9 @@ private fun ActionSheet(
             DispatchSheet.DELIVERY -> R.string.dispatch_action_delivery
             DispatchSheet.CERTIFICATE -> R.string.dispatch_action_certificate
             DispatchSheet.TRACEABILITY -> R.string.dispatch_action_trace
+            DispatchSheet.CHECKPOINT -> R.string.dispatch_action_checkpoint
+            DispatchSheet.POSITION -> R.string.dispatch_action_position
+            DispatchSheet.ASSIGNMENT -> R.string.dispatch_action_assignment
         }
     )
 
@@ -528,11 +607,34 @@ private fun ActionSheet(
                 DispatchSheet.DELIVERY -> DeliverySheetContent(
                     destinationName = d.destinationName,
                     error = error,
-                    onConfirm = viewModel::confirmDelivery,
+                    onConfirm = { proof -> withGps { p -> viewModel.confirmDelivery(proof, p?.latitude, p?.longitude) } },
                     onReject = viewModel::rejectDelivery
                 )
                 DispatchSheet.CERTIFICATE -> CertificateSheetContent(certificate = state.certificate, onShare = onShare)
                 DispatchSheet.TRACEABILITY -> TraceabilitySheetContent(dispatch = d)
+                DispatchSheet.CHECKPOINT -> CheckpointSheetContent(error = error, busy = state.busy) { name, note, gps ->
+                    if (gps) withGps { p -> viewModel.addCheckpoint(name, note, p?.latitude, p?.longitude) }
+                    else viewModel.addCheckpoint(name, note, null, null)
+                }
+                DispatchSheet.POSITION -> PositionSheetContent(currentCelsius = item.celsius, error = error, busy = state.busy) { celsius, humidity ->
+                    withGps { p -> viewModel.sendPosition(p?.latitude, p?.longitude, celsius, humidity) }
+                }
+                DispatchSheet.ASSIGNMENT -> {
+                    // Registered drivers and trucks that are free (from /drivers and /vehicles)
+                    val fleetResources = DistributorDependencies.driverRepository(LocalContext.current)
+                    val drivers by fleetResources.drivers.collectAsState()
+                    val vehicles by fleetResources.vehicles.collectAsState()
+                    AssignmentSheetContent(
+                        dispatch = d, error = error, busy = state.busy,
+                        drivers = drivers.filter { it.status == DriverStatus.AVAILABLE }.mapNotNull { dr ->
+                            dr.id.toIntOrNull()?.let { FleetChoice(it, dr.name, dr.name, dr.phone) }
+                        },
+                        vehicles = vehicles.filter { it.status == VehicleStatus.AVAILABLE }.mapNotNull { v ->
+                            v.id.toIntOrNull()?.let { FleetChoice(it, "${v.unitCode} · ${v.plate}", v.plate, v.type.name) }
+                        },
+                        onSave = viewModel::changeAssignment
+                    )
+                }
             }
         }
     }

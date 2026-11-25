@@ -105,4 +105,10 @@
     <string name="inv_pdf_total">Total %1$s</string>
     <string name="inv_pdf_subject">FruitLogix financial report</string>
     <string name="inv_pdf_share">Share the report</string>
+    <string name="inv_auto_error_unknown_client">“%1$s” is not a client account on the server. Choose one from the list.</string>
+    <string name="inv_save_offline">No connection. The invoice was not issued; try again when you are online.</string>
+    <string name="inv_save_failed">The server did not accept the invoice. Try again.</string>
+    <string name="inv_save_failed_reason">The server did not accept the invoice: %1$s</string>
+    <string name="inv_prices_empty">There are no orders with prices yet. Prices appear here as clients place orders.</string>
+    <string name="inv_purchases_empty">There are no client orders yet.</string>
 </resources>

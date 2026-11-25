@@ -26,7 +26,7 @@ data class Producer(
     val status: ProducerStatus = ProducerStatus.ACTIVE,
     /** RUC (11 digits); the server requires it. */
     val ruc: String = "",
-    /** Id on the FruitLogix server; null for producers that only live on this phone (samples, invites). */
+    /** Id on the FruitLogix server; null for producers that only live on this phone (offline saves, invites). */
     val remoteId: Int? = null
 )
 

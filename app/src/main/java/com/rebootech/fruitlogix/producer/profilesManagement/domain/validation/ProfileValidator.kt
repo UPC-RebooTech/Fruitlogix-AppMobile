@@ -3,7 +3,7 @@ package com.rebootech.fruitlogix.producer.profilesManagement.domain.validation
 import com.rebootech.fruitlogix.producer.profilesManagement.domain.model.ProducerProfile
 
 /** Field that failed validation, with the reason. The UI maps it to a localized message. */
-enum class ProfileField { FULL_NAME, EMAIL, PHONE, FARM_NAME, RUC, LOCATION }
+enum class ProfileField { FULL_NAME, EMAIL, PHONE, FARM_NAME, RUC, LOCATION, CROP }
 
 enum class ProfileError { REQUIRED, INVALID_EMAIL, INVALID_PHONE, INVALID_RUC }
 
@@ -11,7 +11,8 @@ object ProfileValidator {
     private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
 
     /** Returns the errors by field; empty when the profile is valid. */
-    fun validate(profile: ProducerProfile): Map<ProfileField, ProfileError> {
+    /** @param requireCrop the server needs the main crop when the profile is created. */
+    fun validate(profile: ProducerProfile, requireCrop: Boolean = false): Map<ProfileField, ProfileError> {
         val errors = mutableMapOf<ProfileField, ProfileError>()
         if (profile.fullName.isBlank()) errors[ProfileField.FULL_NAME] = ProfileError.REQUIRED
         when {
@@ -28,6 +29,9 @@ object ProfileValidator {
             errors[ProfileField.RUC] = ProfileError.INVALID_RUC
         }
         if (profile.location.isBlank()) errors[ProfileField.LOCATION] = ProfileError.REQUIRED
+        if (requireCrop && profile.crop.isBlank()) errors[ProfileField.CROP] = ProfileError.REQUIRED
+        // The server needs a phone (at least 6 characters)
+        if (requireCrop && profile.phone.isBlank()) errors[ProfileField.PHONE] = ProfileError.REQUIRED
         return errors
     }
 }

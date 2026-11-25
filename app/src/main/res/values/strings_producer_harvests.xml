@@ -39,4 +39,16 @@
     <string name="producer_harvests_status_ripening">Ripening</string>
     <string name="producer_harvests_status_scheduled">Harvest scheduled</string>
     <string name="producer_harvests_status_registered">Registered</string>
+    <string name="producer_harvests_empty_title">No harvests yet</string>
+    <string name="producer_harvests_empty_message">Log a harvest and it is saved as a lot on the server.</string>
+    <string name="plan_title">Schedule a harvest</string>
+    <string name="plan_subtitle">The distributor sees your planned harvests</string>
+    <string name="plan_when">Date and time</string>
+    <string name="plan_error_past">Choose a date and time that has not passed.</string>
+    <string name="plan_yield">Estimated yield (kg)</string>
+    <string name="plan_zone">Zone or plot</string>
+    <string name="plan_crew">Crew</string>
+    <string name="plan_pickers">Pickers</string>
+    <string name="plan_submit">Schedule harvest</string>
+    <string name="plan_save_failed">Could not schedule the harvest. Try again.</string>
 </resources>

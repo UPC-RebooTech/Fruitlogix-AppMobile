@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.data.FakeHarvestRepository
+import com.rebootech.fruitlogix.producer.qualityControl.stock.data.ProducerProductSync
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockItemModel
 import com.rebootech.fruitlogix.producer.qualityControl.stock.domain.repository.StockRepository
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
@@ -43,8 +45,10 @@ import com.rebootech.fruitlogix.shared.ui.components.CompactKpiTile
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixCard
 import com.rebootech.fruitlogix.shared.ui.components.LimeProgressBar
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 
@@ -58,9 +62,12 @@ fun ProducerStockScreen(
     onNavigateToDetail: (String) -> Unit,
     onNavigateToRegisterHarvest: () -> Unit,
     onNavigateToHarvestsTab: () -> Unit,
+    onNavigateToNewProduct: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val stockList = StockRepository.stockItems
+    // The producer's own products on the server (GET /products)
+    LaunchedEffect(Unit) { ProducerProductSync.refresh() }
     val harvests by FakeHarvestRepository.instance.recentHarvests.collectAsState()
     val scheme = MaterialTheme.colorScheme
     val spacing = FruitLogixTheme.spacing
@@ -141,13 +148,35 @@ fun ProducerStockScreen(
                 }
             }
 
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.prod_product_new),
+                    onClick = onNavigateToNewProduct,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             // Inventory lots (light)
+            if (stockList.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = stringResource(R.string.producer_stock_empty_title),
+                        message = stringResource(R.string.producer_stock_empty_message)
+                    )
+                }
+            }
             items(stockList, key = { it.id }) { stock ->
                 InventoryCardItem(
                     item = stock,
                     numberFormat = numberFormat,
-                    onIncrement = { StockRepository.updateStockKg(stock.id, stock.availableKg + 10) },
-                    onDecrement = { StockRepository.updateStockKg(stock.id, stock.availableKg - 10) },
+                    onIncrement = {
+                        StockRepository.updateStockKg(stock.id, stock.availableKg + 10)
+                        ProducerProductSync.pushKg(stock)
+                    },
+                    onDecrement = {
+                        StockRepository.updateStockKg(stock.id, stock.availableKg - 10)
+                        ProducerProductSync.pushKg(stock)
+                    },
                     onClick = { onNavigateToDetail(stock.id) }
                 )
             }
@@ -232,9 +261,17 @@ fun InventoryCardItem(
                     Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.xxs))
                     StatusBadge(
                         text = stringResource(
-                            if (isCritical) R.string.producer_stock_status_critical else R.string.producer_stock_status_healthy
+                            when {
+                                !item.isActive -> R.string.prod_product_inactive
+                                isCritical -> R.string.producer_stock_status_critical
+                                else -> R.string.producer_stock_status_healthy
+                            }
                         ),
-                        type = if (isCritical) StatusBadgeType.DANGER else StatusBadgeType.SUCCESS,
+                        type = when {
+                            !item.isActive -> StatusBadgeType.NEUTRAL
+                            isCritical -> StatusBadgeType.DANGER
+                            else -> StatusBadgeType.SUCCESS
+                        },
                         maxLines = 1,
                         softWrap = false
                     )

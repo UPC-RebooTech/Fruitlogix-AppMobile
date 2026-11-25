@@ -25,53 +25,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
-import kotlin.math.sin
 
+/**
+ * Sensors, alerts and cold-chain limits. There is no sample data: devices and alerts stay empty until
+ * the IoT endpoints (/io-t-devices, /alerts) are aligned with the app. The limits per fruit are the
+ * usual cold-chain ranges, replaced by the server's /alert-rules when it has them.
+ */
 class FakeIotRepository : IotRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val now = LocalDateTime.now()
 
-    private val history: Map<String, List<TemperatureReading>> = mapOf(
-        "FL-102" to steady(fromMinutes = 360, base = 0.75, amplitude = 0.15) + TemperatureReading(0, 0.8),
-        "FL-408" to steady(fromMinutes = 300, base = 5.2, amplitude = 0.15, until = 54) + listOf(
-            TemperatureReading(45, 5.1),
-            TemperatureReading(36, 5.3),
-            TemperatureReading(27, 5.6),
-            TemperatureReading(18, 5.9),
-            TemperatureReading(9, 6.1),
-            TemperatureReading(0, 6.4)
-        ),
-        "FL-219" to (steady(fromMinutes = 600, base = 11.3, amplitude = 0.25) + TemperatureReading(0, 11.4))
-            .map { if (it.minutesAgo == 240) it.copy(celsius = 13.4) else it }
-    )
+    /** Readings by fleet unit. Empty until the IoT endpoints are aligned (no sample data). */
+    private val history: Map<String, List<TemperatureReading>> = emptyMap()
 
-    private val _devices = MutableStateFlow(
-        listOf(
-            IotDevice("TH-408", unitId = "FL-408", location = null, status = DeviceStatus.ONLINE, batteryPercent = 64,
-                lastReading = SensorReading(6.4, 88.0, now)),
-            IotDevice("TH-102", unitId = "FL-102", location = null, status = DeviceStatus.ONLINE, batteryPercent = 81,
-                lastReading = SensorReading(0.8, 92.0, now.minusMinutes(1))),
-            IotDevice("TH-219", unitId = "FL-219", location = null, status = DeviceStatus.LOW_BATTERY, batteryPercent = 14,
-                lastReading = SensorReading(11.4, 86.0, now.minusMinutes(2))),
-            IotDevice("TH-09", unitId = null, location = "Lima Central Hub · Cámara 2", status = DeviceStatus.OFFLINE,
-                batteryPercent = 37, lastReading = SensorReading(3.1, 90.0, now.minusMinutes(47))),
-            IotDevice("ENV-08", unitId = null, location = "Lima Central Hub · Muelle B", status = DeviceStatus.ONLINE,
-                batteryPercent = 96, lastReading = SensorReading(4.2, 80.0, now.minusMinutes(1)))
-        )
-    )
+    private val _devices = MutableStateFlow<List<IotDevice>>(emptyList())
     override val devices: StateFlow<List<IotDevice>> = _devices.asStateFlow()
 
-    private val _alerts = MutableStateFlow(
-        listOf(
-            IotAlert("alt-1", deviceId = "TH-408", unitId = "FL-408", kind = AlertKind.TEMP_RISK,
-                severity = AlertSeverity.CRITICAL, createdAt = now.minusMinutes(10), value = 6.4, limit = 7.0),
-            IotAlert("alt-2", deviceId = "TH-219", unitId = "FL-219", kind = AlertKind.LOW_BATTERY,
-                severity = AlertSeverity.WARNING, createdAt = now.minusMinutes(25), value = 14.0),
-            IotAlert("alt-3", deviceId = "TH-09", unitId = null, kind = AlertKind.SENSOR_OFFLINE,
-                severity = AlertSeverity.WARNING, createdAt = now.minusMinutes(47))
-        )
-    )
+    private val _alerts = MutableStateFlow<List<IotAlert>>(emptyList())
     override val alerts: StateFlow<List<IotAlert>> = _alerts.asStateFlow()
 
     private val _thresholds = MutableStateFlow(
@@ -227,11 +197,5 @@ class FakeIotRepository : IotRepository {
 
     private companion object {
         const val CALIBRATION_MS = 2_000L
-
-        fun steady(fromMinutes: Int, base: Double, amplitude: Double, until: Int = 10): List<TemperatureReading> =
-            (fromMinutes downTo until step 10).map { minutes ->
-                val wave = sin(minutes / 37.0) * amplitude
-                TemperatureReading(minutes, ((base + wave) * 10).toInt() / 10.0)
-            }
     }
 }

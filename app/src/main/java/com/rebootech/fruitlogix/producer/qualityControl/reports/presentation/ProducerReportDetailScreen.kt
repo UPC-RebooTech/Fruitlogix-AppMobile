@@ -72,7 +72,18 @@ fun ProducerReportDetailScreen(
     val report = remember(reportId) {
         QualityReportRepository.reports.find {
             it.id.removePrefix("#").trim() == cleanId || it.orderNumber.removePrefix("#").trim() == cleanId
-        } ?: QualityReportRepository.reports.first()
+        }
+    }
+    if (report == null) {
+        Column(modifier = modifier.padding(spacing.sm)) {
+            BackHeader(title = "", onBack = onNavigateBack)
+            Text(
+                text = stringResource(R.string.report_detail_not_found),
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = scheme.onSurfaceVariant
+            )
+        }
+        return
     }
 
     val (statusRes, badgeType) = statusBadge(report.status)

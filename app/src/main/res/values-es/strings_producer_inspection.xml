@@ -62,4 +62,15 @@
     <string name="inspection_save_offline">Guardar en el teléfono</string>
     <string name="inspection_saved_offline">Guardado en este teléfono. Se sincronizará cuando tengas conexión.</string>
     <string name="inspection_review">Revisar reporte</string>
+    <string name="inspection_ph">pH</string>
+    <string name="inspection_brix">Azúcar (Brix)</string>
+    <string name="inspection_section_damage">Daños encontrados</string>
+    <string name="inspection_damage_stains">Manchas</string>
+    <string name="inspection_damage_bruises">Magulladuras</string>
+    <string name="inspection_damage_deformations">Deformaciones</string>
+    <string name="inspection_damage_rot">Pudrición</string>
+    <string name="inspection_section_checklist">Preparación antes de cargar</string>
+    <string name="inspection_check_dry_cleaning">Limpieza en seco hecha</string>
+    <string name="inspection_check_packaging">Material de empaque revisado</string>
+    <string name="inspection_check_sealing">Cajas selladas</string>
 </resources>

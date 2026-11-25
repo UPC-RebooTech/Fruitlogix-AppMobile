@@ -61,6 +61,7 @@ import com.rebootech.fruitlogix.shared.ui.components.TextActionButton
 import com.rebootech.fruitlogix.shared.ui.format.formatDecimal
 import com.rebootech.fruitlogix.shared.ui.format.formatTimeAgo
 import com.rebootech.fruitlogix.shared.ui.components.whiteCard
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 
 /**
@@ -140,6 +141,14 @@ fun SensorsAlertsScreen(
 
             // 2. Sensors and battery (US45 / US63)
             item { SectionHeader(title = stringResource(R.string.sensors_section_devices)) }
+            if (state.devices.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = stringResource(R.string.sensors_devices_empty_title),
+                        message = stringResource(R.string.sensors_devices_empty_message)
+                    )
+                }
+            }
             items(state.devices, key = { it.id }) { device ->
                 DeviceCard(device = device, onCalibrate = { viewModel.calibrate(device.id) })
             }

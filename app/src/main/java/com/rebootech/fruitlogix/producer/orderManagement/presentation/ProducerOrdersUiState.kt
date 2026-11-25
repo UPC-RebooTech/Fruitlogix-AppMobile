@@ -25,6 +25,6 @@ data class ProducerOrdersUiState(
     val snackbarMessage: String? = null,
     val lastAcceptedOrder: Order? = null,
     val lastAcceptedTime: LocalTime? = null,
-    val distributorName: String = "Carlos Mendoza",
+    val distributorName: String = "",
     val showFilterSheet: Boolean = false
 )
