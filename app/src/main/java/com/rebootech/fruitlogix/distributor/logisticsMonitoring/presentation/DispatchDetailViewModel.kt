@@ -239,14 +239,14 @@ class DispatchDetailViewModel(
     }
 
     /** Before the arrival: another driver or truck takes the trip. */
-    fun changeAssignment(driverName: String, driverPhone: String, plate: String, vehicleType: String) {
+    fun changeAssignment(driverName: String, driverPhone: String, plate: String, vehicleType: String, driverId: Int? = null, vehicleId: Int? = null) {
         if (driverName.isBlank() || plate.isBlank()) {
             sheetError(R.string.assignment_error_required)
             return
         }
         send {
             finish(
-                fleet.changeAssignment(unitId, driverName, driverPhone, plate, vehicleType),
+                fleet.changeAssignment(unitId, driverName, driverPhone, plate, vehicleType, driverId, vehicleId),
                 UiText.StringResource(R.string.assignment_saved, arrayOf(driverName.trim()))
             )
         }

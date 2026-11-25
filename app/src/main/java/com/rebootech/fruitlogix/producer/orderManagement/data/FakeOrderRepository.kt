@@ -145,8 +145,8 @@ class FakeOrderRepository : OrderRepository {
         _orders.update { list -> list.map { if (it.id == orderId) block(it) else it } }
 
     /**
-     * OrderResource → producer order. The server does not share the client's name with a producer,
-     * so the client is shown by its number. Unknown statuses are kept as pending.
+     * OrderResource → producer order. The client is shown by commercialClientName, or by its number
+     * when the server has no name. Unknown statuses are kept as pending.
      */
     private fun map(
         dto: OrderResponseDto,
@@ -182,7 +182,7 @@ class FakeOrderRepository : OrderRepository {
         } ?: previous?.assignedTruck
         return Order(
             id = "FX-$id",
-            clientName = "#${dto.commercialClientId ?: "?"}",
+            clientName = dto.commercialClientName?.takeIf { it.isNotBlank() } ?: "#${dto.commercialClientId ?: "?"}",
             distributorName = previous?.distributorName.orEmpty(),
             items = dto.items.orEmpty().mapIndexed { index, item ->
                 OrderItem(

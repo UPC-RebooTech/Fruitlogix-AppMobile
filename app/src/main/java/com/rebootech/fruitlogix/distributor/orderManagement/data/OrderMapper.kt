@@ -42,7 +42,7 @@ internal object OrderMapper {
         val items = dto.items.orEmpty()
         val kg = items.sumOf { it.quantityKg ?: 0.0 }
         val product = items.firstOrNull()?.productName.orEmpty()
-        val client = clientName(dto.commercialClientId).orEmpty()
+        val client = dto.commercialClientName?.takeIf { it.isNotBlank() } ?: clientName(dto.commercialClientId).orEmpty()
 
         val finished = when (dto.status?.lowercase(Locale.ROOT)) {
             "delivered", "deliveredwithincidence" -> OrderHistoryStatus.DELIVERED

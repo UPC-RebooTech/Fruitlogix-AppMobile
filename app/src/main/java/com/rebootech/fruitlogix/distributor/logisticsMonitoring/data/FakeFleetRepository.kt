@@ -148,7 +148,7 @@ class FakeFleetRepository(
         }
     }
 
-    override suspend fun changeAssignment(unitId: String, driverName: String, driverPhone: String, plate: String, vehicleType: String): FleetActionResult {
+    override suspend fun changeAssignment(unitId: String, driverName: String, driverPhone: String, plate: String, vehicleType: String, driverId: Int?, vehicleId: Int?): FleetActionResult {
         val trip = dispatch(unitId) ?: return FleetActionResult(false)
         val remoteId = trip.remoteId
         if (remoteId == null) {
@@ -166,7 +166,9 @@ class FakeFleetRepository(
             driverName = driverName.trim().takeIf { it.isNotBlank() && it != trip.driver.name },
             driverPhone = driverPhone.trim().takeIf { it.isNotBlank() && it != trip.driver.phone },
             vehiclePlate = plate.trim().uppercase().takeIf { it.isNotBlank() && it != trip.plate },
-            vehicleType = vehicleType.trim().takeIf { it.isNotBlank() && it != trip.truckModel }
+            vehicleType = vehicleType.trim().takeIf { it.isNotBlank() && it != trip.truckModel },
+            driverId = driverId,
+            vehicleId = vehicleId
         )
         return callServer { RetrofitClient.api.updateDeliveryAssignment(remoteId, body) }
     }

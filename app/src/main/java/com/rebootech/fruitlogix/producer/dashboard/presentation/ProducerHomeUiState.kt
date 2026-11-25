@@ -22,7 +22,7 @@ data class ProducerHomeUiState(
     val isOffline: Boolean = false,
     val errorMessage: UiText? = null,
     val dayPart: DayPart = DayPart.MORNING,
-    val userName: String = "Alexandra",
+    val userName: String = "",
     val farmName: String = "",
     val today: LocalDate = LocalDate.now(),
     val heroOrder: Order? = null,

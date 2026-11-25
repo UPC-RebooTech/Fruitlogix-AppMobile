@@ -31,8 +31,9 @@ interface FleetRepository {
     suspend fun addCheckpoint(unitId: String, name: String, note: String?, latitude: Double?, longitude: Double?): FleetActionResult =
         FleetActionResult(ok = false, onServer = false)
 
-    /** Changes the driver or the truck before the arrival. Blank values are not sent. */
-    suspend fun changeAssignment(unitId: String, driverName: String, driverPhone: String, plate: String, vehicleType: String): FleetActionResult =
+    /** Changes the driver or the truck before the arrival. Blank values are not sent.
+     * With [driverId] or [vehicleId] (from /drivers and /vehicles) the server takes the names from them. */
+    suspend fun changeAssignment(unitId: String, driverName: String, driverPhone: String, plate: String, vehicleType: String, driverId: Int? = null, vehicleId: Int? = null): FleetActionResult =
         FleetActionResult(ok = false, onServer = false)
 
     /** GPS position with the reefer reading (tracking). Inside the client's warehouse it becomes "arrived". */

@@ -163,10 +163,12 @@ private fun HomeContent(
 
         // 1. Greeting, farm and date
         item {
+            // Name and farm of the producer profile (the same one shown in My account)
+            val profile by FakeProfileRepository.instance.profile.collectAsState()
             GreetingHeader(
                 dayPart = uiState.dayPart,
-                userName = uiState.userName,
-                farmName = uiState.farmName.ifBlank { FakeProfileRepository.instance.profile.collectAsState().value.farmName },
+                userName = firstName(profile.fullName).ifBlank { uiState.userName },
+                farmName = uiState.farmName.ifBlank { profile.farmName },
                 today = uiState.today
             )
         }
@@ -476,3 +478,6 @@ private fun KpiGrid(summary: DashboardSummary) {
 
 @Composable
 private fun currentLocale(): Locale = LocalConfiguration.current.locales.get(0)
+
+/** "Carlos Alberto Mendoza Quispe" → "Carlos"; the whole text when it is a single word. */
+internal fun firstName(fullName: String): String = fullName.trim().split(' ').firstOrNull { it.isNotBlank() }.orEmpty()

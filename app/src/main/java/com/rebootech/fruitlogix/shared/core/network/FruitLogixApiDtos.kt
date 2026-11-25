@@ -49,7 +49,9 @@ data class UpdateDeliveryAssignmentRequestDto(
     val driverName: String? = null,
     val driverPhone: String? = null,
     val vehiclePlate: String? = null,
-    val vehicleType: String? = null
+    val vehicleType: String? = null,
+    val driverId: Int? = null,
+    val vehicleId: Int? = null
 )
 
 /** POST /deliveries/{id}/checkpoints. Latitude and longitude go together or not at all. */
@@ -198,3 +200,79 @@ data class CreateIncidentRequestDto(
 
 /** UserResource: a Distributor sees every user; the others only themselves. */
 data class UserDto(val id: Int, val username: String? = null)
+
+// ─── Fleet (CAMBIOS-API 12.2–12.4) ─────────────────────────────────────────
+
+/** DriverResource. licenseClass: A-IIb, A-IIIa, A-IIIb, A-IIIc. status: Available, OnRoute, OffDuty. */
+data class DriverDto(
+    val id: Int,
+    val name: String? = null,
+    val phone: String? = null,
+    val licenseClass: String? = null,
+    val licenseExpiry: String? = null,
+    val coldChainCertified: Boolean? = null,
+    val status: String? = null,
+    val restUntil: String? = null
+)
+
+/** POST /drivers and PUT /drivers/{id} (PUT replaces every field; restUntil null clears it). */
+data class SaveDriverRequestDto(
+    val name: String,
+    val phone: String?,
+    val licenseClass: String,
+    val licenseExpiry: String,
+    val coldChainCertified: Boolean,
+    val status: String?,
+    val restUntil: String?
+)
+
+/** VehicleResource. type: HeavyReefer, ReeferTruck, MediumReeferVan, LightReefer. status: Available, OnRoute, Maintenance. */
+data class VehicleDto(
+    val id: Int,
+    val unitCode: String? = null,
+    val plate: String? = null,
+    val type: String? = null,
+    val capacityKg: Double? = null,
+    val minCelsius: Double? = null,
+    val maxCelsius: Double? = null,
+    val status: String? = null
+)
+
+/** POST /vehicles and PUT /vehicles/{id}. Plate ABC-123, unique (409 when repeated). */
+data class SaveVehicleRequestDto(
+    val unitCode: String,
+    val plate: String,
+    val type: String,
+    val capacityKg: Double,
+    val minCelsius: Double,
+    val maxCelsius: Double,
+    val status: String?
+)
+
+// ─── Planned harvests (CAMBIOS-API 12.5) ───────────────────────────────────
+
+/** HarvestPlanResource. scheduledFor may come in UTC. */
+data class HarvestPlanDto(
+    val id: Int,
+    val producerId: Int? = null,
+    val producerName: String? = null,
+    val fruitType: String? = null,
+    val scheduledFor: String? = null,
+    val estimatedYieldKg: Double? = null,
+    val zone: String? = null,
+    val crewName: String? = null,
+    val pickers: Int? = null,
+    val notes: String? = null
+)
+
+/** POST /harvest-plans and PUT /harvest-plans/{id}. For a Producer the server ignores producerId. */
+data class SaveHarvestPlanRequestDto(
+    val fruitType: String,
+    val scheduledFor: String,
+    val estimatedYieldKg: Double,
+    val zone: String,
+    val crewName: String,
+    val pickers: Int,
+    val notes: String? = null,
+    val producerId: Int? = null
+)

@@ -58,6 +58,7 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatRelativeDateTime
 import com.rebootech.fruitlogix.shared.ui.components.EmptyState
+import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -89,6 +90,7 @@ fun harvestStatusBadge(status: HarvestStatus): StatusBadgeType = when (status) {
 fun ProducerHarvestsScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToRegisterHarvest: () -> Unit = {},
+    onNavigateToScheduleHarvest: () -> Unit = {},
     onNavigateToInventory: () -> Unit = onNavigateBack,
     modifier: Modifier = Modifier
 ) {
@@ -261,6 +263,13 @@ fun ProducerHarvestsScreen(
                         visibleScheduled.size,
                         visibleScheduled.size
                     )
+                )
+            }
+            item {
+                SecondaryButton(
+                    text = stringResource(R.string.plan_title),
+                    onClick = onNavigateToScheduleHarvest,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
             if (visibleScheduled.isEmpty()) {

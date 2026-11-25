@@ -8,6 +8,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DeliveryState
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.AssignmentSheetContent
+import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.FleetChoice
+import com.rebootech.fruitlogix.distributor.DistributorDependencies
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.DriverStatus
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.VehicleStatus
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.CheckpointSheetContent
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.components.PositionSheetContent
 import com.rebootech.fruitlogix.shared.core.location.CurrentLocation
@@ -615,7 +619,22 @@ private fun ActionSheet(
                 DispatchSheet.POSITION -> PositionSheetContent(currentCelsius = item.celsius, error = error, busy = state.busy) { celsius, humidity ->
                     withGps { p -> viewModel.sendPosition(p?.latitude, p?.longitude, celsius, humidity) }
                 }
-                DispatchSheet.ASSIGNMENT -> AssignmentSheetContent(dispatch = d, error = error, busy = state.busy, onSave = viewModel::changeAssignment)
+                DispatchSheet.ASSIGNMENT -> {
+                    // Registered drivers and trucks that are free (from /drivers and /vehicles)
+                    val fleetResources = DistributorDependencies.driverRepository(LocalContext.current)
+                    val drivers by fleetResources.drivers.collectAsState()
+                    val vehicles by fleetResources.vehicles.collectAsState()
+                    AssignmentSheetContent(
+                        dispatch = d, error = error, busy = state.busy,
+                        drivers = drivers.filter { it.status == DriverStatus.AVAILABLE }.mapNotNull { dr ->
+                            dr.id.toIntOrNull()?.let { FleetChoice(it, dr.name, dr.name, dr.phone) }
+                        },
+                        vehicles = vehicles.filter { it.status == VehicleStatus.AVAILABLE }.mapNotNull { v ->
+                            v.id.toIntOrNull()?.let { FleetChoice(it, "${v.unitCode} · ${v.plate}", v.plate, v.type.name) }
+                        },
+                        onSave = viewModel::changeAssignment
+                    )
+                }
             }
         }
     }

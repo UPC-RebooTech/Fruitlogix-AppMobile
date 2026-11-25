@@ -1,6 +1,7 @@
 package com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.repository
 
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestForecast
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestPlanDraft
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestSaveResult
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.ScheduledHarvest
@@ -30,6 +31,12 @@ interface HarvestRepository {
         notes: String? = null
     ): HarvestSaveResult
 
-    /** Reads the producer's own harvest batches from the server again. */
+    /** Plans a harvest on the server (POST /harvest-plans). */
+    suspend fun schedule(draft: HarvestPlanDraft): HarvestSaveResult = HarvestSaveResult(false)
+
+    /** Removes a planned harvest (DELETE /harvest-plans/{id}). */
+    suspend fun cancelPlan(id: String): HarvestSaveResult = HarvestSaveResult(false)
+
+    /** Reads the producer's own harvest batches and planned harvests from the server again. */
     suspend fun refresh() {}
 }

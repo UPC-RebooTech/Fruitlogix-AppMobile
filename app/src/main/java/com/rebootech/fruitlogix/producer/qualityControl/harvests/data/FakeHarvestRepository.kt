@@ -3,6 +3,7 @@ package com.rebootech.fruitlogix.producer.qualityControl.harvests.data
 import com.rebootech.fruitlogix.producer.orderManagement.data.FakeOrderRepository
 import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestForecast
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestPlanDraft
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestSaveResult
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestStatus
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
@@ -11,6 +12,8 @@ import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.reposito
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.rules.HarvestForecastRules
 import com.rebootech.fruitlogix.shared.core.network.ApiResult
 import com.rebootech.fruitlogix.shared.core.network.CreateHarvestBatchRequestDto
+import com.rebootech.fruitlogix.shared.core.network.HarvestPlanDto
+import com.rebootech.fruitlogix.shared.core.network.SaveHarvestPlanRequestDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
 import com.rebootech.fruitlogix.shared.core.network.apiCall
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +26,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -32,9 +37,9 @@ class FakeHarvestRepository : HarvestRepository {
 
     override val recentHarvests: StateFlow<List<PlannedHarvest>> = _recentHarvests.asStateFlow()
 
-    /** Planned harvests have no server endpoint yet: the list starts empty (no sample data). */
-    override val scheduledHarvests: StateFlow<List<ScheduledHarvest>> =
-        MutableStateFlow<List<ScheduledHarvest>>(emptyList()).asStateFlow()
+    /** Planned harvests of the producer (/harvest-plans). */
+    private val _scheduled = MutableStateFlow<List<ScheduledHarvest>>(emptyList())
+    override val scheduledHarvests: StateFlow<List<ScheduledHarvest>> = _scheduled.asStateFlow()
 
     /** This week's demand from the producer's server orders (due Monday to Sunday). */
     override val weeklyForecast: HarvestForecast?
@@ -91,11 +96,67 @@ class FakeHarvestRepository : HarvestRepository {
         return HarvestSaveResult(true)
     }
 
+    override suspend fun schedule(draft: HarvestPlanDraft): HarvestSaveResult {
+        val body = SaveHarvestPlanRequestDto(
+            fruitType = draft.fruitType.trim(),
+            // With the phone's time zone (e.g. -05:00), as the server asks
+            scheduledFor = draft.scheduledFor.atZone(ZoneId.systemDefault()).toOffsetDateTime().toString(),
+            estimatedYieldKg = draft.estimatedYieldKg,
+            zone = draft.zone.trim(),
+            crewName = draft.crewName.trim(),
+            pickers = draft.pickers,
+            notes = draft.notes?.trim()?.ifBlank { null }
+        )
+        return when (val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.createHarvestPlan(body) } }) {
+            is ApiResult.Ok -> {
+                toScheduled(result.value)?.let { plan -> _scheduled.update { (it + plan).sortedBy { p -> p.scheduledFor } } }
+                HarvestSaveResult(true)
+            }
+            // 409: the producer profile does not exist yet
+            is ApiResult.Failed -> HarvestSaveResult(false, result.failure.serverMessage)
+        }
+    }
+
+    override suspend fun cancelPlan(id: String): HarvestSaveResult {
+        val remoteId = id.removePrefix(PLAN_PREFIX).toIntOrNull() ?: return HarvestSaveResult(false)
+        return when (val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.deleteHarvestPlan(remoteId) } }) {
+            is ApiResult.Ok -> {
+                _scheduled.update { list -> list.filterNot { it.id == id } }
+                HarvestSaveResult(true)
+            }
+            is ApiResult.Failed -> HarvestSaveResult(false, result.failure.serverMessage)
+        }
+    }
+
+    /** GET /harvest-plans: a Producer only receives their own, the nearest first. */
+    private suspend fun refreshPlans() {
+        val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.getHarvestPlans() } }
+        if (result is ApiResult.Ok) _scheduled.value = result.value.mapNotNull { toScheduled(it) }.sortedBy { it.scheduledFor }
+    }
+
+    private fun toScheduled(dto: HarvestPlanDto): ScheduledHarvest? {
+        val at = dto.scheduledFor?.let {
+            runCatching { OffsetDateTime.parse(it).atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
+                ?: runCatching { LocalDateTime.parse(it) }.getOrNull()
+        } ?: return null
+        return ScheduledHarvest(
+            id = "$PLAN_PREFIX${dto.id}",
+            productName = dto.fruitType.orEmpty(),
+            scheduledFor = at,
+            estimatedYieldKg = (dto.estimatedYieldKg ?: 0.0).roundToInt(),
+            zone = dto.zone.orEmpty(),
+            crewName = dto.crewName.orEmpty(),
+            pickers = dto.pickers ?: 0,
+            notes = dto.notes?.takeIf { it.isNotBlank() }
+        )
+    }
+
     /**
      * GET /harvest-batches is not filtered by the server: only the batches of this producer's
      * profile are kept. Approved batches are ready; the rest are registered.
      */
     override suspend fun refresh() {
+        refreshPlans()
         val producerId = FakeProfileRepository.instance.producerId.value ?: return
         val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.getHarvestBatches() } }
         if (result !is ApiResult.Ok) return
@@ -124,6 +185,7 @@ class FakeHarvestRepository : HarvestRepository {
     }
 
     companion object {
+        private const val PLAN_PREFIX = "plan-"
         val instance: HarvestRepository = FakeHarvestRepository()
     }
 }

@@ -107,7 +107,7 @@ class FakeBillingRepository(
             }
             (apiCall { RetrofitClient.api.getOrders() } as? ApiResult.Ok)?.value?.let { list ->
                 lines = list.flatMap { order ->
-                    val client = order.clientName?.takeIf { it.isNotBlank() }
+                    val client = order.commercialClientName?.takeIf { it.isNotBlank() }
                         ?: catalog.clientName(order.commercialClientId)
                         ?: order.commercialClientId?.let { "#$it" }
                         ?: return@flatMap emptyList()

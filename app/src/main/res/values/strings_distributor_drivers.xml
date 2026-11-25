@@ -83,4 +83,6 @@
     <string name="veh_error_capacity">Enter between 500 and 40 000 kg</string>
     <string name="veh_error_temperature">Min must be lower than max, between -30 and 30 °C</string>
     <string name="fleet_resources_on_phone">Saved on this phone: the server does not store drivers or vehicles yet.</string>
+    <string name="fleet_save_failed">The server did not accept the change. Try again.</string>
+    <string name="fleet_save_offline">No connection. Nothing was saved; try again when you are online.</string>
 </resources>

@@ -83,4 +83,6 @@
     <string name="veh_error_capacity">Ingresa entre 500 y 40 000 kg</string>
     <string name="veh_error_temperature">El mínimo debe ser menor que el máximo, entre -30 y 30 °C</string>
     <string name="fleet_resources_on_phone">Se guarda en este teléfono: el servidor aún no almacena choferes ni vehículos.</string>
+    <string name="fleet_save_failed">El servidor no aceptó el cambio. Inténtalo de nuevo.</string>
+    <string name="fleet_save_offline">Sin conexión. No se guardó nada; inténtalo cuando tengas señal.</string>
 </resources>

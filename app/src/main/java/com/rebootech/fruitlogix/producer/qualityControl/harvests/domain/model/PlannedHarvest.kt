@@ -47,7 +47,19 @@ data class ScheduledHarvest(
     val estimatedYieldKg: Int,
     val zone: String,
     val crewName: String,
-    val pickers: Int
+    val pickers: Int,
+    val notes: String? = null
+)
+
+/** What the producer fills in to plan a harvest (POST /harvest-plans). */
+data class HarvestPlanDraft(
+    val fruitType: String,
+    val scheduledFor: LocalDateTime,
+    val estimatedYieldKg: Double,
+    val zone: String,
+    val crewName: String,
+    val pickers: Int,
+    val notes: String? = null
 )
 
 /** Weekly demand forecast for the main product. */

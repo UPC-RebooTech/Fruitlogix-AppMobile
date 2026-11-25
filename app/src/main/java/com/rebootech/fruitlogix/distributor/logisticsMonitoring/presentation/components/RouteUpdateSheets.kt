@@ -2,6 +2,8 @@ package com.rebootech.fruitlogix.distributor.logisticsMonitoring.presentation.co
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +27,7 @@ import com.rebootech.fruitlogix.R
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.ActiveDispatch
 import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
+import com.rebootech.fruitlogix.shared.ui.components.SelectableChip
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.util.Locale
 
@@ -88,39 +91,66 @@ fun PositionSheetContent(currentCelsius: Double?, error: String?, busy: Boolean,
 }
 
 /** Another driver or truck takes the trip (before the arrival). Pre-filled with the current values. */
+/** A driver or truck registered in /drivers or /vehicles, offered as a one-tap choice. */
+data class FleetChoice(val id: Int, val label: String, val first: String, val second: String)
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AssignmentSheetContent(
     dispatch: ActiveDispatch,
     error: String?,
     busy: Boolean,
-    onSave: (driverName: String, driverPhone: String, plate: String, vehicleType: String) -> Unit
+    drivers: List<FleetChoice> = emptyList(),
+    vehicles: List<FleetChoice> = emptyList(),
+    onSave: (driverName: String, driverPhone: String, plate: String, vehicleType: String, driverId: Int?, vehicleId: Int?) -> Unit
 ) {
     var driver by rememberSaveable { mutableStateOf(dispatch.driver.name) }
     var phone by rememberSaveable { mutableStateOf(dispatch.driver.phone) }
     var plate by rememberSaveable { mutableStateOf(dispatch.plate) }
     var type by rememberSaveable { mutableStateOf(dispatch.truckModel) }
+    // Set when a registered driver / truck is picked; typing by hand clears it
+    var driverId by rememberSaveable { mutableStateOf<Int?>(null) }
+    var vehicleId by rememberSaveable { mutableStateOf<Int?>(null) }
     Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.sm)) {
         Text(stringResource(R.string.assignment_message), style = FruitLogixTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SheetError(error)
+        if (drivers.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                drivers.forEach { d ->
+                    SelectableChip(label = d.label, selected = driverId == d.id, onClick = {
+                        driverId = d.id; driver = d.first; phone = d.second
+                    })
+                }
+            }
+        }
         LabeledTextField(
-            label = stringResource(R.string.assignment_driver), value = driver, onValueChange = { driver = it },
+            label = stringResource(R.string.assignment_driver), value = driver, onValueChange = { driver = it; driverId = null },
             leadingIconRes = R.drawable.ic_person, capitalization = KeyboardCapitalization.Words
         )
         LabeledTextField(
-            label = stringResource(R.string.assignment_phone), value = phone, onValueChange = { phone = it },
+            label = stringResource(R.string.assignment_phone), value = phone, onValueChange = { phone = it; driverId = null },
             leadingIconRes = R.drawable.ic_call, keyboardType = KeyboardType.Phone
         )
+        if (vehicles.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                vehicles.forEach { v ->
+                    SelectableChip(label = v.label, selected = vehicleId == v.id, onClick = {
+                        vehicleId = v.id; plate = v.first; type = v.second
+                    })
+                }
+            }
+        }
         LabeledTextField(
-            label = stringResource(R.string.assignment_plate), value = plate, onValueChange = { plate = it.uppercase().take(7) },
+            label = stringResource(R.string.assignment_plate), value = plate, onValueChange = { plate = it.uppercase().take(7); vehicleId = null },
             placeholder = "ABC-123", leadingIconRes = R.drawable.ic_id, capitalization = KeyboardCapitalization.Characters
         )
         LabeledTextField(
-            label = stringResource(R.string.assignment_vehicle_type), value = type, onValueChange = { type = it },
+            label = stringResource(R.string.assignment_vehicle_type), value = type, onValueChange = { type = it; vehicleId = null },
             leadingIconRes = R.drawable.ic_fleet_truck, imeAction = ImeAction.Done
         )
         PrimaryButton(
             text = stringResource(if (busy) R.string.route_sending else R.string.assignment_save),
-            onClick = { onSave(driver, phone, plate, type) },
+            onClick = { onSave(driver, phone, plate, type, driverId, vehicleId) },
             enabled = !busy,
             modifier = Modifier.fillMaxWidth()
         )

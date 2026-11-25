@@ -86,7 +86,9 @@ data class OrderResponseDto(
     val receivedAt: String? = null,
     val reception: OrderReceptionDto? = null,
     val batchId: Int? = null,
-    val producerName: String? = null
+    val producerName: String? = null,
+    /** Company name of the client's profile, or their username (CAMBIOS-API 12.1). */
+    val commercialClientName: String? = null
 )
 
 data class AssignProducerRequestDto(
@@ -105,7 +107,10 @@ data class CreateDeliveryRequestDto(
     val routeDestination: String,
     val routeDistanceKm: Double,
     /** ISO date-time, e.g. 2026-11-13T15:30:00 */
-    val estimatedTimeOfArrival: String
+    val estimatedTimeOfArrival: String,
+    /** With ids the server takes the names, phone, plate and type from /drivers and /vehicles. */
+    val driverId: Int? = null,
+    val vehicleId: Int? = null
 )
 
 /** ReportDelayResource: the server only stores the reason and sets the status to Delayed. */
@@ -461,4 +466,42 @@ interface FruitLogixApiService {
     /** A Distributor sees every account (id and username), used to pick the client of an order. */
     @GET("users")
     suspend fun getUsers(): Response<List<UserDto>>
+    // ── Fleet: drivers and vehicles (Distributor and Admin; others get 403) ──
+    @GET("drivers")
+    suspend fun getDrivers(): Response<List<DriverDto>>
+
+    @POST("drivers")
+    suspend fun createDriver(@Body body: SaveDriverRequestDto): Response<DriverDto>
+
+    @PUT("drivers/{id}")
+    suspend fun updateDriver(@Path("id") id: Int, @Body body: SaveDriverRequestDto): Response<DriverDto>
+
+    /** 409 when the driver is on an active delivery. */
+    @DELETE("drivers/{id}")
+    suspend fun deleteDriver(@Path("id") id: Int): Response<Unit>
+
+    @GET("vehicles")
+    suspend fun getVehicles(): Response<List<VehicleDto>>
+
+    @POST("vehicles")
+    suspend fun createVehicle(@Body body: SaveVehicleRequestDto): Response<VehicleDto>
+
+    @PUT("vehicles/{id}")
+    suspend fun updateVehicle(@Path("id") id: Int, @Body body: SaveVehicleRequestDto): Response<VehicleDto>
+
+    @DELETE("vehicles/{id}")
+    suspend fun deleteVehicle(@Path("id") id: Int): Response<Unit>
+
+    // ── Planned harvests (Producer: their own; Distributor: all, filter by producerId) ──
+    @GET("harvest-plans")
+    suspend fun getHarvestPlans(@Query("producerId") producerId: Int? = null): Response<List<HarvestPlanDto>>
+
+    @POST("harvest-plans")
+    suspend fun createHarvestPlan(@Body body: SaveHarvestPlanRequestDto): Response<HarvestPlanDto>
+
+    @PUT("harvest-plans/{id}")
+    suspend fun updateHarvestPlan(@Path("id") id: Int, @Body body: SaveHarvestPlanRequestDto): Response<HarvestPlanDto>
+
+    @DELETE("harvest-plans/{id}")
+    suspend fun deleteHarvestPlan(@Path("id") id: Int): Response<Unit>
 }
