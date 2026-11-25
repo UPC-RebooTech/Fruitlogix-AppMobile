@@ -1,5 +1,6 @@
 package com.rebootech.fruitlogix.shared.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -84,14 +87,16 @@ fun FruitLogixTopBar(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(FruitLogixTheme.shapes.Pill)
-                    .background(FruitLogixTheme.colors.primary),
+                    // Dark circle with a lime ring: the lime apple would disappear on a lime fill
+                    .background(FruitLogixTheme.colors.appbar)
+                    .border(1.5.dp, FruitLogixTheme.colors.primary, FruitLogixTheme.shapes.Pill),
                 contentAlignment = Alignment.Center
             ) {
-                AppIcon(
-                    id = R.drawable.ic_sensor_waves,
+                Image(
+                    painter = painterResource(R.drawable.fruitlogix_logo),
                     contentDescription = null,
-                    tint = FruitLogixTheme.colors.onPrimary,
-                    modifier = Modifier.size(20.dp)
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(24.dp)
                 )
             }
             Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))

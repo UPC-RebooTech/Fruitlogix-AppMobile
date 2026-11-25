@@ -47,6 +47,7 @@ import com.rebootech.fruitlogix.auth.domain.model.UserRole
 import com.rebootech.fruitlogix.auth.presentation.components.AuthCheckRow
 import com.rebootech.fruitlogix.auth.presentation.components.AuthErrorBanner
 import com.rebootech.fruitlogix.auth.presentation.components.ServerWakingHint
+import com.rebootech.fruitlogix.auth.presentation.components.AuthBrand
 import com.rebootech.fruitlogix.auth.presentation.components.AuthLanguageSwitch
 import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import com.rebootech.fruitlogix.auth.presentation.components.PasswordRules
@@ -97,6 +98,9 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 AuthLanguageSwitch()
             }
+
+            Spacer(modifier = Modifier.height(spacing.xs))
+            AuthBrand()
 
             Spacer(modifier = Modifier.height(spacing.sm))
             Text(
