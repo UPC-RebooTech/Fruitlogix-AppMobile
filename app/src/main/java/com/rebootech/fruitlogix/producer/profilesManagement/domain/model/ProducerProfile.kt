@@ -15,8 +15,20 @@ data class ProducerProfile(
     val legalName: String,
     val ruc: String,
     val location: String,
-    val globalGapValidUntil: YearMonth?
+    val globalGapValidUntil: YearMonth?,
+    /** Main crop (required by the server). */
+    val crop: String = "",
+    val type: ProducerType = ProducerType.COMPANY
 )
+
+/** Legal type on the server: "Individual" (person) or "Company". */
+enum class ProducerType(val serverValue: String) { INDIVIDUAL("Individual"), COMPANY("Company") }
+
+/** Whether the signed-in producer already has a profile on the server. */
+enum class ProfileStatus { LOADING, READY, MISSING, OFFLINE }
+
+/** Outcome of saving the profile on the server; [serverMessage] is the server's own text. */
+data class ProfileSaveResult(val ok: Boolean, val serverMessage: String? = null)
 
 /** In-app notification preferences. */
 data class NotificationSettings(

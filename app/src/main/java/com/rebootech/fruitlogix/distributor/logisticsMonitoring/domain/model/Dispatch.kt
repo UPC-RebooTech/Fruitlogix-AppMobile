@@ -35,10 +35,12 @@ data class ActiveDispatch(
     val inspectedAt: LocalDateTime?,
     val departedAt: LocalDateTime?,
     val deliveredAt: LocalDateTime? = null,
+    /** The truck reached the client (server status Arrived): it waits at the gate for the reception. */
+    val arrivedAt: LocalDateTime? = null,
     val reeferCheckedAt: LocalDateTime? = null,
     val rejectionReason: String? = null,
     val checkpoints: List<Checkpoint>,
-    /** Delivery id on the FruitLogix server; null for the sample trips that only live on this phone. */
+    /** Delivery id on the FruitLogix server; null only for trips that have not reached the server. */
     val remoteId: Int? = null
 ) {
     val remainingKm: Double get() = (totalKm - travelledKm).coerceAtLeast(0.0)
@@ -76,6 +78,9 @@ enum class DeliveryState { PENDING, ON_ROUTE, DELIVERED, REJECTED }
 
 /** Why a delivery is late (US17). Shown as one-tap choices. */
 enum class DelayReason { TRAFFIC, WEIGH_STATION, ROAD_WORKS, WEATHER, MECHANICAL, OTHER }
+
+/** Outcome of a change sent to the server; [serverMessage] is the server's own text when it refused. */
+data class FleetActionResult(val ok: Boolean, val serverMessage: String? = null, val onServer: Boolean = true)
 
 /** Evidence collected at the destination (US16 signature, US52 photo, US56 GPS). */
 data class DeliveryProof(

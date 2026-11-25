@@ -25,15 +25,15 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Producers of the distributor's network.
  * - Server producers (/api/v1/producers) are read, created, edited and removed on Render.
- * - Sample producers (the names used by Orders, Fleet and Invoices) and invitations stay on this
- *   phone, so the rest of the app keeps working with or without connection.
+ * - There are no sample producers. Invitations stay on this phone (the server has no endpoint).
+ * - The distributor profile has no endpoint either: it starts with the account name only.
  * - If the server does not answer, a new or edited producer is kept on this phone only.
  */
 class FakeProfilesRepository private constructor() : ProfilesRepository {
 
     private var nextNumber = 10
 
-    private val _producers = MutableStateFlow(initialProducers())
+    private val _producers = MutableStateFlow<List<Producer>>(emptyList())
     override val producers: StateFlow<List<Producer>> = _producers.asStateFlow()
 
     /** Last server copy of each producer, so an edit keeps the fields the app does not show. */
@@ -41,12 +41,12 @@ class FakeProfilesRepository private constructor() : ProfilesRepository {
 
     private val _profile = MutableStateFlow(
         DistributorProfile(
-            fullName = "Carlos Mendoza",
-            roleTitle = "Jefe de operaciones",
-            companyHub = "Lima Central Hub · Callao",
-            email = "carlos.mendoza@fruitlogix.pe",
-            phone = "+51 987 654 321",
-            ruc = "20601234567"
+            fullName = "",
+            roleTitle = "",
+            companyHub = "",
+            email = "",
+            phone = "",
+            ruc = ""
         )
     )
     override val distributorProfile: StateFlow<DistributorProfile> = _profile.asStateFlow()
@@ -87,7 +87,7 @@ class FakeProfilesRepository private constructor() : ProfilesRepository {
         val current = _producers.value.firstOrNull { it.id == id } ?: return ProducerSaveResult.Rejected
         val remoteId = current.remoteId
         if (remoteId == null) {
-            // Sample producers only live on this phone
+            // Producers saved without connection only live on this phone
             val updated = current.withDraft(draft)
             replace(id, updated)
             return ProducerSaveResult.Saved(updated)
@@ -204,27 +204,5 @@ class FakeProfilesRepository private constructor() : ProfilesRepository {
         private const val TAG = "FruitLogix-Producers"
 
         val instance: FakeProfilesRepository by lazy { FakeProfilesRepository() }
-
-        private fun initialProducers() = listOf(
-            Producer("PROD-01", "Fundo Santa Rosa", "Fundo Santa Rosa", "Huaraz, Áncash", "Palta Hass",
-                "contacto@fundosantarosa.pe", "+51 956 410 228", ProducerEntityType.COMPANY,
-                qualityRating = 4.8, weeklyTons = 4.2, stockKg = 570, activeOrders = 1, incidents30d = 0, ruc = "20481234561"),
-            Producer("PROD-02", "Viñedos de Ica", "Viñedos de Ica", "Ica", "Uva Red Globe",
-                "ventas@vinedosdeica.pe", "+51 987 112 340", ProducerEntityType.COMPANY,
-                qualityRating = 4.9, weeklyTons = 5.4, stockKg = 800, activeOrders = 1, incidents30d = 0, ruc = "20512345672"),
-            Producer("PROD-03", "Campos del Norte", "Sector B3", "Piura", "Mango Kent",
-                "operaciones@camposdelnorte.pe", "+51 944 870 615", ProducerEntityType.COMPANY,
-                qualityRating = 4.4, weeklyTons = 3.9, stockKg = 600, activeOrders = 2, incidents30d = 1, ruc = "20456789013"),
-            Producer("PROD-04", "Agro Valle Verde", "Fundo El Paraíso", "Huaral, Lima", "Fresa",
-                "juan.quispe@vallev.pe", "+51 977 445 566", ProducerEntityType.INDIVIDUAL,
-                qualityRating = 4.5, weeklyTons = 2.1, stockKg = 150, activeOrders = 1, incidents30d = 0, ruc = "10456789014"),
-            Producer("PROD-05", "Finca Los Andes", "Finca Los Andes", "Arequipa", "Uva Red Globe",
-                "fincalosandes@agro.pe", "+51 944 332 211", ProducerEntityType.COMPANY,
-                qualityRating = 4.2, weeklyTons = 1.8, stockKg = 300, activeOrders = 0, incidents30d = 1, ruc = "20567890125"),
-            Producer("PROD-06", "Rosa Quispe", "", "Chanchamayo, Junín", "Mango Kent",
-                "", "+51 912 345 678", ProducerEntityType.INDIVIDUAL,
-                qualityRating = 0.0, weeklyTons = 0.0, stockKg = 0, activeOrders = 0, incidents30d = 0,
-                status = ProducerStatus.INVITED)
-        )
     }
 }

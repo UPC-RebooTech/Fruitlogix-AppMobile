@@ -13,6 +13,7 @@ import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Pending
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.Vehicle
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.model.VehicleDraft
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.repository.DriverRepository
+import com.rebootech.fruitlogix.distributor.fleetManagement.domain.repository.FleetSaveResult
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.rules.AssignmentRules
 import com.rebootech.fruitlogix.distributor.fleetManagement.domain.rules.FleetResourceRules
 import com.rebootech.fruitlogix.shared.core.model.UiText
@@ -66,6 +67,10 @@ class DriversVehiclesViewModel(
             local.copy(drivers = drivers, vehicles = vehicles, pending = pending)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DriversVehiclesUiState())
 
+    init {
+        viewModelScope.launch { repository.refresh() }
+    }
+
     fun onTabChange(value: ResourcesTab) = local.update { it.copy(tab = value) }
     fun onStatusChange(value: DriverStatus?) = local.update { it.copy(status = value) }
     fun openAssign() = local.update { it.copy(assigning = true, assignError = null) }
@@ -83,10 +88,11 @@ class DriversVehiclesViewModel(
             return
         }
         viewModelScope.launch {
-            val driver = repository.addDriver(draft)
+            val saved = repository.addDriver(draft)
+            if (!saved.ok) return@launch showFailure(saved)
             local.update {
                 it.copy(addingDriver = false, driverErrors = emptySet(), tab = ResourcesTab.DRIVERS, status = null,
-                    message = UiText.StringResource(R.string.drv_added, arrayOf(driver.name)))
+                    message = UiText.StringResource(R.string.drv_added, arrayOf(draft.name.trim())))
             }
         }
     }
@@ -98,21 +104,24 @@ class DriversVehiclesViewModel(
             return
         }
         viewModelScope.launch {
-            val vehicle = repository.addVehicle(draft)
+            val saved = repository.addVehicle(draft)
+            if (!saved.ok) return@launch showFailure(saved)
             local.update {
                 it.copy(addingVehicle = false, vehicleErrors = emptySet(), tab = ResourcesTab.VEHICLES,
-                    message = UiText.StringResource(R.string.veh_added, arrayOf("${vehicle.unitCode} (${vehicle.plate})")))
+                    message = UiText.StringResource(R.string.veh_added, arrayOf("${draft.unitCode.trim().uppercase()} (${FleetResourceRules.normalizePlate(draft.plate)})")))
             }
         }
     }
 
     fun markDriverAvailable(driver: Driver) = viewModelScope.launch {
-        repository.markDriverAvailable(driver.id)
+        val saved = repository.markDriverAvailable(driver.id)
+        if (!saved.ok) return@launch showFailure(saved)
         local.update { it.copy(message = UiText.StringResource(R.string.drv_now_available, arrayOf(driver.name))) }
     }
 
     fun markVehicleAvailable(vehicle: Vehicle) = viewModelScope.launch {
-        repository.markVehicleAvailable(vehicle.id)
+        val saved = repository.markVehicleAvailable(vehicle.id)
+        if (!saved.ok) return@launch showFailure(saved)
         local.update { it.copy(message = UiText.StringResource(R.string.drv_now_available, arrayOf(vehicle.unitCode))) }
     }
 
@@ -135,7 +144,8 @@ class DriversVehiclesViewModel(
                 error(R.string.asg_error_capacity, listOf(kgFormat.format(order!!.quantityKg), kgFormat.format(vehicle!!.capacityKg)))
             AssignmentRules.Error.ROUTE_KM -> error(R.string.asg_error_route_km)
             null -> if (!AssignmentRules.isValidRouteKm(routeKm)) error(R.string.asg_error_route_km) else viewModelScope.launch {
-                repository.assign(order!!.orderId, driver!!.id, vehicle!!.id, routeKm!!)
+                val saved = repository.assign(order!!.orderId, driver!!.id, vehicle!!.id, routeKm!!)
+                if (!saved.ok) return@launch showFailure(saved)
                 local.update {
                     it.copy(
                         assigning = false, assignError = null,
@@ -144,6 +154,17 @@ class DriversVehiclesViewModel(
                 }
             }
         }
+    }
+
+    /** The server refused it or did not answer: its own text, or a general one. */
+    private fun showFailure(result: FleetSaveResult) = local.update {
+        it.copy(
+            message = when {
+                result.offline -> UiText.StringResource(R.string.fleet_save_offline)
+                !result.serverMessage.isNullOrBlank() -> UiText.Plain(result.serverMessage)
+                else -> UiText.StringResource(R.string.fleet_save_failed)
+            }
+        )
     }
 
     private fun error(@StringRes res: Int, args: List<String> = emptyList()) =

@@ -10,7 +10,9 @@ import com.rebootech.fruitlogix.producer.orderManagement.ProducerPlaceholderScre
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerHarvestsScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockDetailScreen
+import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.NewProductScreen
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerRegisterHarvestScreen
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ScheduleHarvestScreen
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerReportDetailScreen
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
 import com.rebootech.fruitlogix.producer.qualityControl.inspection.presentation.ProducerInspectionScreen
@@ -33,6 +35,9 @@ fun NavGraphBuilder.producerQualityControlGraph(
             },
             onNavigateToHarvestsTab = {
                 navController.navigate(ProducerQualityControlRoutes.Harvests)
+            },
+            onNavigateToNewProduct = {
+                navController.navigate(ProducerQualityControlRoutes.NewProduct)
             }
         )
     }
@@ -50,6 +55,9 @@ fun NavGraphBuilder.producerQualityControlGraph(
     composable(route = ProducerQualityControlRoutes.Harvests) {
         ProducerHarvestsScreen(
             onNavigateBack = { navController.popBackStack() },
+            onNavigateToScheduleHarvest = {
+                navController.navigate(ProducerQualityControlRoutes.ScheduleHarvest)
+            },
             onNavigateToRegisterHarvest = {
                 navController.navigate(ProducerQualityControlRoutes.RegisterHarvest)
             },
@@ -72,6 +80,16 @@ fun NavGraphBuilder.producerQualityControlGraph(
         ProducerRegisterHarvestScreen(
             onNavigateBack = { navController.popBackStack() }
         )
+    }
+
+    // 4c. Programar cosecha
+    composable(route = ProducerQualityControlRoutes.ScheduleHarvest) {
+        ScheduleHarvestScreen(onNavigateBack = { navController.popBackStack() })
+    }
+
+    // 4b. Publicar producto en el catálogo
+    composable(route = ProducerQualityControlRoutes.NewProduct) {
+        NewProductScreen(onNavigateBack = { navController.popBackStack() })
     }
 
     // 5. Detalle de Stock por Producto

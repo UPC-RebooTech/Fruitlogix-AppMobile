@@ -112,8 +112,8 @@ class InvoicesViewModel(private val repository: BillingRepository) : ViewModel()
             AutoInvoiceRules.Result.PendingPrice -> toolError(R.string.inv_auto_pending, client.trim())
             is AutoInvoiceRules.Result.Issued -> viewModelScope.launch {
                 val today = LocalDate.now()
-                val invoice = Invoice(
-                    id = repository.nextInvoiceId(),
+                val draft = Invoice(
+                    id = "",
                     counterpartyName = client.trim(),
                     amount = result.amount,
                     issuedOn = today,
@@ -121,12 +121,19 @@ class InvoicesViewModel(private val repository: BillingRepository) : ViewModel()
                     type = InvoiceType.RECEIVABLE,
                     status = InvoiceStatus.PENDING
                 )
-                repository.addInvoice(invoice)
-                local.update {
-                    it.copy(
-                        tool = null, toolError = null, tab = InvoiceTab.COLLECT, status = null,
-                        message = UiText.StringResource(R.string.inv_auto_issued, arrayOf(invoice.id, pen(invoice.amount)))
-                    )
+                val saved = repository.addInvoice(draft)
+                val invoice = saved.invoice
+                when {
+                    saved.ok && invoice != null -> local.update {
+                        it.copy(
+                            tool = null, toolError = null, tab = InvoiceTab.COLLECT, status = null,
+                            message = UiText.StringResource(R.string.inv_auto_issued, arrayOf(invoice.id, pen(invoice.amount)))
+                        )
+                    }
+                    saved.unknownClient -> toolError(R.string.inv_auto_error_unknown_client, client.trim())
+                    saved.offline -> toolError(R.string.inv_save_offline)
+                    !saved.serverMessage.isNullOrBlank() -> toolError(R.string.inv_save_failed_reason, saved.serverMessage)
+                    else -> toolError(R.string.inv_save_failed)
                 }
             }
         }
@@ -167,6 +174,7 @@ class InvoicesViewModel(private val repository: BillingRepository) : ViewModel()
     fun priceHistory(product: String, client: String) = repository.priceHistory(product, client)
 
     val purchaseClients: List<String> get() = repository.purchaseClients()
+    val clientNames: List<String> get() = repository.clientNames()
     fun purchaseSummary(client: String, period: com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.SummaryPeriod) =
         repository.purchaseSummary(client, period)
 }

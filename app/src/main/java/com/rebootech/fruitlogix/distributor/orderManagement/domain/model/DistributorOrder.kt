@@ -20,10 +20,14 @@ data class DistributorOrder(
     val createdAt: LocalDateTime,
     /** commercialClientId on the server. */
     val clientId: Int? = null,
-    /** Order id on the server; null for the sample orders that only live on this phone. */
+    /** Order id on the server; null only for orders that have not reached the server. */
     val remoteId: Int? = null,
     /** Producer assigned on the server (assign-producer). */
-    val producerId: Int? = null
+    val producerId: Int? = null,
+    /** Name of the assigned producer, as the server sends it. */
+    val producerName: String = "",
+    /** Harvest batch linked by the producer (needed by the client to report incidents). */
+    val batchId: Int? = null
 ) {
     /** Only pending orders can be changed: once in preparation the producer is already working on it. */
     val isEditable: Boolean get() = status == OrderStatus.PENDING
@@ -43,9 +47,11 @@ data class DistributorOrder(
 /** What the distributor fills in to create or change an order. Client and product come from [OrderCatalog]. */
 data class OrderDraft(
     val clientId: Int,
+    val productId: Int,
     val productName: String,
     val quantityKg: Double,
     val deliveryDate: LocalDate,
+    val deliveryAddress: String = "",
     /** Producer (server id) to assign right after creating; the order then goes to "in preparation". */
     val producerId: Int? = null
 )

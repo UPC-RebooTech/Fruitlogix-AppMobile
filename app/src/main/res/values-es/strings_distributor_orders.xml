@@ -38,7 +38,7 @@
     <string name="dist_order_date_placeholder">Elige una fecha</string>
     <string name="dist_order_date_cd">Abrir el calendario para elegir la fecha de entrega</string>
     <string name="dist_order_date_ok">Aceptar</string>
-    <string name="dist_order_error_client">Elige un cliente</string>
+    <string name="dist_order_error_client">Elige la cuenta del cliente</string>
     <string name="dist_order_error_product">Elige un producto</string>
     <string name="dist_order_error_quantity">Ingresa entre 1 y 100 000 kg</string>
     <string name="dist_order_error_date">Elige hoy o una fecha posterior</string>
@@ -113,4 +113,21 @@
     <string name="dist_order_producer_assign_hint">El pedido pasa a \"En preparación\" y luego puede recibir chofer y camión.</string>
     <string name="dist_order_producer_assign_failed">No se pudo asignar el productor. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="dist_order_producer_assigned">Productor asignado: el pedido está en preparación</string>
+    <string name="dist_order_address">Dirección de entrega</string>
+    <string name="dist_order_address_placeholder">ej. Av. Industrial 123, Lima</string>
+    <string name="dist_order_error_address">Ingresa la dirección de entrega</string>
+    <string name="dist_order_error_below_minimum">El pedido mínimo del productor es %1$s kg</string>
+    <string name="dist_order_error_above_stock">Solo hay %1$s kg disponibles</string>
+    <string name="dist_order_product_price">S/ %1$s por kg</string>
+    <string name="dist_order_product_minimum">mínimo %1$s</string>
+    <string name="dist_order_product_available">%1$s disponibles</string>
+    <string name="dist_order_cancel">Cancelar pedido</string>
+    <string name="dist_order_cancel_title">¿Cancelar %1$s?</string>
+    <string name="dist_order_cancel_message">El cliente y el productor lo verán cancelado, con este motivo.</string>
+    <string name="dist_order_cancel_reason">Motivo</string>
+    <string name="dist_order_cancel_confirm">Cancelar pedido</string>
+    <string name="dist_order_cancelled">%1$s cancelado</string>
+    <string name="dist_order_cancel_failed">No se pudo cancelar el pedido. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="dist_order_delete_blocked">No se puede eliminar: ya tiene entrega, factura o pago. Cancélalo en su lugar.</string>
+    <string name="dist_order_producer_waiting">Esperando que el productor acepte el pedido. Luego pasa a \"En preparación\".</string>
 </resources>

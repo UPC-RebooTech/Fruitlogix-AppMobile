@@ -15,9 +15,5 @@ data class LoginUiState(
     @field:StringRes val passwordError: Int? = null,
     @field:StringRes val generalError: Int? = null,
     /** One-off message (e.g. "password recovery coming soon"). */
-    @field:StringRes val infoMessage: Int? = null,
-    /** Signed in, but this phone does not know the role yet: ask it once. */
-    val pendingRole: PendingRole? = null
+    @field:StringRes val infoMessage: Int? = null
 )
-
-data class PendingRole(val username: String, val token: String)

@@ -36,7 +36,6 @@ object HarvestValidator {
             val brix = parseDecimal(input.brix)
             if (brix == null || brix < 0.0 || brix > MAX_BRIX) errors[HarvestField.BRIX] = HarvestError.BRIX_OUT_OF_RANGE
         }
-        if (input.sector.isBlank()) errors[HarvestField.SECTOR] = HarvestError.REQUIRED
         return errors
     }
 }

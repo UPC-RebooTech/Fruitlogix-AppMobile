@@ -1,101 +1,106 @@
 package com.rebootech.fruitlogix.producer.qualityControl.reports.data
 
 import androidx.compose.runtime.mutableStateListOf
+import com.rebootech.fruitlogix.producer.orderManagement.data.FakeOrderRepository
+import com.rebootech.fruitlogix.producer.orderManagement.domain.model.Order
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityReportItem
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityStatus
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualitySummary
+import com.rebootech.fruitlogix.shared.core.network.ApiResult
+import com.rebootech.fruitlogix.shared.core.network.QualityInspectionDto
+import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
+import com.rebootech.fruitlogix.shared.core.network.apiCall
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import java.time.LocalTime
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import kotlin.math.ceil
+import kotlin.math.roundToInt
+import com.rebootech.fruitlogix.producer.orderManagement.domain.model.QualityStatus as OrderQualityStatus
 
+/**
+ * The producer's quality reports: the inspections saved on the server for the lots linked to
+ * their orders (GET /quality-inspections/batch/{batchId}). There are no sample reports.
+ * The status is the distributor's decision on the lot (Approved / Rejected / waiting).
+ */
 object QualityReportRepository {
-    private val today: LocalDate = LocalDate.now()
+    private const val CRATE_KG = 20
 
-    val summary = QualitySummary(
-        passRatePct = 92.8,
-        weeklyDeltaPct = 1.4,
-        sampledTodayKg = 1470,
-        cratesInspectedToday = 42
-    )
+    val reports = mutableStateListOf<QualityReportItem>()
 
-    val reports = mutableStateListOf(
-        QualityReportItem(
-            id = "1048", // Coincide con el orderNumber
-            orderNumber = "#1048",
-            clientName = "Supermercados Wong",
-            inspectedAt = today.atTime(LocalTime.of(10, 48)),
-            locationInfo = "Bay 3 Loading Dock",
-            status = QualityStatus.PENDING,
-            productName = "Hass Avocado",
-            weightKg = 300,
-            cratesCount = 15,
-            lotCode = "HA-882",
-            visualScore = 4.0,
-            defectsPercentage = 2.1,
-            coreTemp = 6.5,
-            humidityPercentage = 88,
-            inspectorName = "Carlos Melgar",
-            harvestedOn = today.minusDays(1)
-        ),
-        QualityReportItem(
-            id = "1041",
-            orderNumber = "#1041",
-            clientName = "Supermercados Wong",
-            inspectedAt = today.atTime(LocalTime.of(9, 15)),
-            locationInfo = "Pre-Cool Tunnel B",
-            status = QualityStatus.APPROVED,
-            productName = "Blueberries",
-            weightKg = 120,
-            cratesCount = 12,
-            lotCode = "BB-109",
-            visualScore = 5.0,
-            defectsPercentage = 0.8,
-            coreTemp = 3.5,
-            humidityPercentage = 92,
-            inspectorName = "Elena Quispe",
-            harvestedOn = today.minusDays(2),
-            inspectorNotes = "Fruta firme con pruina natural intacta. Calibre uniforme (14-16 mm). Sin bayas blandas en 3 bandejas de muestreo."
-        ),
-        QualityReportItem(
-            id = "1044",
-            orderNumber = "#1044",
-            clientName = "Mercado Central S.A.",
-            inspectedAt = today.minusDays(1).atTime(LocalTime.of(16, 30)),
-            locationInfo = "Inspection Bay 1",
-            status = QualityStatus.REJECTED,
-            productName = "Kent Mango",
-            weightKg = 400,
-            cratesCount = 20,
-            lotCode = "KM-04",
-            visualScore = 3.0,
-            defectsPercentage = 5.4,
-            coreTemp = 7.2,
-            humidityPercentage = 85,
-            inspectorName = "Carlos Melgar",
-            harvestedOn = today.minusDays(1)
-        ),
-        QualityReportItem(
-            id = "1030",
-            orderNumber = "#1030",
-            clientName = "Cencosud Retail",
-            inspectedAt = today.minusDays(13).atTime(LocalTime.of(14, 10)),
-            locationInfo = "Main Packhouse Line 2",
-            status = QualityStatus.APPROVED,
-            productName = "Red Globe Grapes",
-            weightKg = 600,
-            cratesCount = 30,
-            lotCode = "RG-402",
-            visualScore = 4.8,
-            defectsPercentage = 1.2,
-            coreTemp = 4.0,
-            humidityPercentage = 90,
-            inspectorName = "Elena Quispe",
-            harvestedOn = today.minusDays(14)
-        )
-    )
+    /** Pass rate of decided lots, its change against the previous 7 days, and today's inspections. */
+    val summary: QualitySummary
+        get() {
+            val today = LocalDate.now()
+            fun passRate(items: List<QualityReportItem>): Double {
+                val decided = items.filter { it.status != QualityStatus.PENDING }
+                return if (decided.isEmpty()) 0.0 else decided.count { it.status == QualityStatus.APPROVED } * 100.0 / decided.size
+            }
+            val lastWeek = reports.filter { !it.inspectedAt.toLocalDate().isBefore(today.minusDays(6)) }
+            val weekBefore = reports.filter {
+                val day = it.inspectedAt.toLocalDate()
+                !day.isBefore(today.minusDays(13)) && day.isBefore(today.minusDays(6))
+            }
+            val todays = reports.filter { it.inspectedAt.toLocalDate() == today }
+            return QualitySummary(
+                passRatePct = passRate(reports),
+                weeklyDeltaPct = if (weekBefore.isEmpty()) 0.0 else passRate(lastWeek) - passRate(weekBefore),
+                sampledTodayKg = todays.sumOf { it.weightKg },
+                cratesInspectedToday = todays.sumOf { it.cratesCount }
+            )
+        }
+
+    /** Reads the inspections of every order that has a lot. */
+    suspend fun refresh() {
+        val orders = FakeOrderRepository.instance.orderSnapshot().filter { it.batchId != null }
+        val items = withContext(Dispatchers.IO) {
+            orders.mapNotNull { order ->
+                val batchId = order.batchId ?: return@mapNotNull null
+                val list = (apiCall { RetrofitClient.api.getQualityInspectionsByBatch(batchId) } as? ApiResult.Ok)?.value
+                list?.maxByOrNull { it.id ?: 0 }?.let { toReport(order, batchId, it) }
+            }
+        }
+        reports.clear()
+        reports.addAll(items.sortedByDescending { it.inspectedAt })
+    }
 
     /** Adds or replaces the report of an order after the producer sends it (status PENDING). */
     fun submit(report: QualityReportItem) {
         val index = reports.indexOfFirst { it.id == report.id }
         if (index >= 0) reports[index] = report else reports.add(0, report)
+    }
+
+    private fun toReport(order: Order, batchId: Int, dto: QualityInspectionDto): QualityReportItem {
+        val kg = order.totalKg
+        return QualityReportItem(
+            id = order.id,
+            orderNumber = order.id,
+            clientName = order.clientName,
+            inspectedAt = parseDateTime(dto.createdAt) ?: LocalDateTime.now(),
+            locationInfo = "",
+            status = when (order.qualityStatus) {
+                OrderQualityStatus.APPROVED -> QualityStatus.APPROVED
+                OrderQualityStatus.REJECTED -> QualityStatus.REJECTED
+                else -> QualityStatus.PENDING
+            },
+            productName = order.items.firstOrNull()?.productName.orEmpty(),
+            weightKg = kg,
+            cratesCount = ceil(kg / CRATE_KG.toDouble()).toInt(),
+            lotCode = "LOT-$batchId",
+            visualScore = (dto.appearanceRating ?: 0).toDouble(),
+            defectsPercentage = dto.wastePercentage ?: 0.0,
+            coreTemp = dto.temperatureCelsius ?: 0.0,
+            humidityPercentage = (dto.humidityPercent ?: 0.0).roundToInt(),
+            inspectorName = dto.inspectorName.orEmpty(),
+            inspectorNotes = dto.notes?.takeIf { it.isNotBlank() }
+        )
+    }
+
+    private fun parseDateTime(value: String?): LocalDateTime? {
+        if (value.isNullOrBlank()) return null
+        return runCatching { OffsetDateTime.parse(value).atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime() }.getOrNull()
+            ?: runCatching { LocalDateTime.parse(value) }.getOrNull()
     }
 }

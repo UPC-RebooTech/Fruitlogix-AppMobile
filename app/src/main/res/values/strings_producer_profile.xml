@@ -94,4 +94,14 @@
     <string name="help_contact_messages">Open Messages</string>
     <string name="help_cd_expand">Show answer</string>
     <string name="help_cd_collapse">Hide answer</string>
+    <string name="prof_create_title">Create your producer profile</string>
+    <string name="prof_create_message">Distributors and clients see it, and it is needed before adding products, harvest lots or receiving orders.</string>
+    <string name="prof_create_type">Type</string>
+    <string name="prof_type_individual">Individual</string>
+    <string name="prof_type_company">Company</string>
+    <string name="prof_create_legal_name_person">Legal name (optional)</string>
+    <string name="prof_create_legal_name_helper">If empty, your full name is used</string>
+    <string name="profile_field_crop">Main crop</string>
+    <string name="prof_create_submit">Create profile</string>
+    <string name="profile_save_failed">Could not save it on the server. Check your connection and try again.</string>
 </resources>

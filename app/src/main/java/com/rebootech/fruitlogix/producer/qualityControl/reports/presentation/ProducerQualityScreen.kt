@@ -24,6 +24,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,6 +40,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
+import com.rebootech.fruitlogix.producer.orderManagement.data.FakeOrderRepository
+import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
 import com.rebootech.fruitlogix.producer.qualityControl.reports.data.QualityReportRepository
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.DEFECT_LIMIT_PCT
 import com.rebootech.fruitlogix.producer.qualityControl.reports.domain.QualityReportItem
@@ -55,8 +59,6 @@ import java.text.NumberFormat
 private enum class ReportFilter { ALL, APPROVED, PENDING, REJECTED }
 
 // TODO(producer): take from the producer profile when it exists.
-private const val FARM_NAME = "Fundo Santa Rosa"
-
 /**
  * Producer quality reports.
  * Card rule: the two summary numbers are dark KPI tiles; reports are light list cards.
@@ -69,7 +71,13 @@ fun ProducerQualityScreen(
     var selectedFilter by rememberSaveable { mutableStateOf(ReportFilter.ALL) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
+    // The inspections saved on the server for the lots of the producer's orders
+    LaunchedEffect(Unit) {
+        FakeOrderRepository.instance.refresh()
+        QualityReportRepository.refresh()
+    }
     val allReports = QualityReportRepository.reports
+    val farmName = FakeProfileRepository.instance.profile.collectAsState().value.farmName
     val summary = QualityReportRepository.summary
     val scheme = MaterialTheme.colorScheme
     val spacing = FruitLogixTheme.spacing
@@ -104,7 +112,7 @@ fun ProducerQualityScreen(
                     color = scheme.onBackground
                 )
                 Text(
-                    text = stringResource(R.string.producer_reports_subtitle, FARM_NAME),
+                    text = stringResource(R.string.producer_reports_subtitle, farmName),
                     style = FruitLogixTheme.typography.bodyMedium,
                     color = scheme.onSurfaceVariant
                 )

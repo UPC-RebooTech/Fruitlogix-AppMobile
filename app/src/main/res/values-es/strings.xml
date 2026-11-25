@@ -201,4 +201,11 @@
     <string name="auth_logout_dialog_cancel">Cancelar</string>
     <!-- Auth Login Strings -->
     <!-- Auth Sign Up Strings -->
+    <string name="producer_orders_reject">Rechazar pedido</string>
+    <string name="producer_orders_reject_title">¿Rechazar %1$s?</string>
+    <string name="producer_orders_reject_message">El distribuidor y el cliente verán el motivo.</string>
+    <string name="producer_orders_reject_reason">Motivo</string>
+    <string name="producer_orders_reject_placeholder">ej. Sin stock de calibre 8 esta semana</string>
+    <string name="producer_orders_reject_confirm">Rechazar</string>
+    <string name="producer_orders_reject_failed">No se pudo rechazar el pedido. Revisa tu conexión e inténtalo de nuevo.</string>
 </resources>

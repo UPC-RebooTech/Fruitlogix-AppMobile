@@ -41,4 +41,16 @@
     <string name="producer_harvests_status_ripening">En maduración</string>
     <string name="producer_harvests_status_scheduled">Cosecha programada</string>
     <string name="producer_harvests_status_registered">Registrado</string>
+    <string name="producer_harvests_empty_title">Aún no hay cosechas</string>
+    <string name="producer_harvests_empty_message">Registra una cosecha y se guarda como lote en el servidor.</string>
+    <string name="plan_title">Programar una cosecha</string>
+    <string name="plan_subtitle">El distribuidor ve tus cosechas programadas</string>
+    <string name="plan_when">Fecha y hora</string>
+    <string name="plan_error_past">Elige una fecha y hora que no haya pasado.</string>
+    <string name="plan_yield">Rendimiento estimado (kg)</string>
+    <string name="plan_zone">Zona o parcela</string>
+    <string name="plan_crew">Cuadrilla</string>
+    <string name="plan_pickers">Recolectores</string>
+    <string name="plan_submit">Programar cosecha</string>
+    <string name="plan_save_failed">No se pudo programar la cosecha. Inténtalo de nuevo.</string>
 </resources>

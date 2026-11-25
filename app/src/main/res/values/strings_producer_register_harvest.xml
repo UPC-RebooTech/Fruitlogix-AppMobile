@@ -28,4 +28,5 @@
     <string name="register_harvest_error_lot">Use at least %1$d characters</string>
     <string name="register_harvest_error_weight">Enter a weight between 0 and %1$s kg</string>
     <string name="register_harvest_error_brix">Brix must be between 0 and %1$s °Bx</string>
+    <string name="register_harvest_save_failed">Could not log the harvest. Try again.</string>
 </resources>

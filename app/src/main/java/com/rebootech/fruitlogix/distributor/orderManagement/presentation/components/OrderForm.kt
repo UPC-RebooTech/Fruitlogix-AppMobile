@@ -38,20 +38,25 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.rebootech.fruitlogix.R
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderCatalog
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.CatalogProduct
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.CommercialClient
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDraft
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
 import com.rebootech.fruitlogix.distributor.orderManagement.presentation.formatLongDate
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
 import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import com.rebootech.fruitlogix.shared.ui.components.SelectableChip
+import com.rebootech.fruitlogix.shared.ui.format.formatKg
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
+import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.util.Locale
 
 /** A producer of the network that exists on the server (its id is what the server needs). */
 data class ProducerOption(val id: Int, val name: String)
@@ -59,16 +64,22 @@ data class ProducerOption(val id: Int, val name: String)
 /** Form values shared by create and edit. Errors are string resources. */
 data class OrderFormState(
     val clientId: Int? = null,
+    val productId: Int? = null,
+    /** Shown when editing an order whose product is not in the catalog. */
     val productName: String = "",
     /** Kilograms, as typed. */
     val quantity: String = "",
     val deliveryDate: LocalDate? = null,
-    /** Optional producer to assign when creating (server id). */
+    val deliveryAddress: String = "",
+    /** Optional producer to assign when the product has none (server id). */
     val producerId: Int? = null,
     @field:StringRes val clientError: Int? = null,
     @field:StringRes val productError: Int? = null,
     @field:StringRes val quantityError: Int? = null,
-    @field:StringRes val dateError: Int? = null
+    /** Value for the quantity error (the minimum or the available kg). */
+    val quantityErrorArg: String? = null,
+    @field:StringRes val dateError: Int? = null,
+    @field:StringRes val addressError: Int? = null
 ) {
     val estimatedPallets: Int?
         get() = OrderValidator.parseKg(quantity)
@@ -79,48 +90,70 @@ data class OrderFormState(
      * Returns the draft when everything is valid, otherwise this form with its errors.
      * @param onlyDate server orders: only the delivery date is checked (the rest cannot change).
      */
-    fun validate(onlyDate: Boolean = false): Pair<OrderFormState, OrderDraft?> {
+    fun validate(clients: List<CommercialClient>, products: List<CatalogProduct>, onlyDate: Boolean = false): Pair<OrderFormState, OrderDraft?> {
         val kg = OrderValidator.parseKg(quantity)
+        val product = products.firstOrNull { it.id == productId }
+        val quantityProblem = if (onlyDate) null else OrderValidator.quantityProblem(kg, product)
+        val kgFormat = NumberFormat.getNumberInstance(Locale.getDefault()).apply { maximumFractionDigits = 1 }
         val checked = copy(
-            clientError = if (onlyDate || OrderValidator.isValidClient(clientId)) null else R.string.dist_order_error_client,
-            productError = if (onlyDate || OrderValidator.isValidProduct(productName)) null else R.string.dist_order_error_product,
-            quantityError = if (onlyDate || OrderValidator.isValidQuantity(kg)) null else R.string.dist_order_error_quantity,
-            dateError = if (OrderValidator.isValidDeliveryDate(deliveryDate)) null else R.string.dist_order_error_date
+            clientError = if (onlyDate || clients.any { it.id == clientId }) null else R.string.dist_order_error_client,
+            productError = if (onlyDate || product != null) null else R.string.dist_order_error_product,
+            quantityError = when (quantityProblem) {
+                null -> null
+                OrderValidator.QuantityProblem.INVALID -> R.string.dist_order_error_quantity
+                OrderValidator.QuantityProblem.BELOW_MINIMUM -> R.string.dist_order_error_below_minimum
+                OrderValidator.QuantityProblem.ABOVE_STOCK -> R.string.dist_order_error_above_stock
+            },
+            quantityErrorArg = when (quantityProblem) {
+                OrderValidator.QuantityProblem.BELOW_MINIMUM -> kgFormat.format(product!!.minOrderKg)
+                OrderValidator.QuantityProblem.ABOVE_STOCK -> kgFormat.format(product!!.availableKg ?: 0.0)
+                else -> null
+            },
+            dateError = if (OrderValidator.isValidDeliveryDate(deliveryDate)) null else R.string.dist_order_error_date,
+            addressError = if (onlyDate || OrderValidator.isValidAddress(deliveryAddress)) null else R.string.dist_order_error_address
         )
         val ok = checked.clientError == null && checked.productError == null &&
-            checked.quantityError == null && checked.dateError == null
+            checked.quantityError == null && checked.dateError == null && checked.addressError == null
         return checked to if (ok) {
             OrderDraft(
                 clientId = clientId ?: 0,
-                productName = productName.trim(),
+                productId = product?.id ?: 0,
+                productName = product?.name ?: productName,
                 quantityKg = kg ?: 0.0,
                 deliveryDate = deliveryDate!!,
-                producerId = producerId
+                deliveryAddress = deliveryAddress.trim(),
+                producerId = producerId.takeIf { product?.producerId == null }
             )
         } else null
     }
 }
 
 /**
- * Client and product are picked from the catalog (the server needs their ids); quantity in kg.
+ * Client accounts and products come from the server (their ids are what it needs); quantity in kg.
+ * Catalog products already bring their producer; the producer choice is only offered for products
+ * without one.
  * @param contentEnabled false on server orders: only the delivery date can change there.
  * @param producers when not null, an optional "Producer" choice is shown (create only).
  */
 @Composable
 fun OrderFormFields(
     form: OrderFormState,
-    onClientChange: (Int) -> Unit,
-    onProductChange: (String) -> Unit,
+    clients: List<CommercialClient>,
+    products: List<CatalogProduct>,
+    onClientChange: (CommercialClient) -> Unit,
+    onProductChange: (CatalogProduct) -> Unit,
     onQuantityChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
+    onAddressChange: (String) -> Unit,
     enabled: Boolean = true,
     contentEnabled: Boolean = enabled,
     producers: List<ProducerOption>? = null,
     onProducerChange: (Int?) -> Unit = {},
-    /** Shown instead of the client chips when the order's client is not in the catalog. */
+    /** Shown instead of the client chips on orders whose content cannot change. */
     currentClientLabel: String? = null
 ) {
     val spacing = FruitLogixTheme.spacing
+    val selectedProduct = products.firstOrNull { it.id == form.productId }
     Column(verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
         ChoiceField(
             label = stringResource(R.string.dist_order_client),
@@ -129,29 +162,41 @@ fun OrderFormFields(
             if (!contentEnabled && currentClientLabel != null) {
                 SelectableChip(label = currentClientLabel, selected = true, onClick = {})
             } else {
-                OrderCatalog.clients.forEach { client ->
+                clients.forEach { client ->
                     SelectableChip(
                         label = client.name,
                         selected = form.clientId == client.id,
-                        onClick = { if (contentEnabled) onClientChange(client.id) }
+                        onClick = { if (contentEnabled) onClientChange(client) }
                     )
                 }
             }
         }
 
+        if (contentEnabled) {
+            LabeledTextField(
+                label = stringResource(R.string.dist_order_address),
+                value = form.deliveryAddress,
+                onValueChange = onAddressChange,
+                placeholder = stringResource(R.string.dist_order_address_placeholder),
+                leadingIconRes = R.drawable.ic_gps,
+                error = form.addressError?.let { stringResource(it) },
+                capitalization = KeyboardCapitalization.Sentences
+            )
+        }
+
         ChoiceField(
             label = stringResource(R.string.dist_order_product),
-            error = form.productError?.let { stringResource(it) }
+            error = form.productError?.let { stringResource(it) },
+            helper = selectedProduct?.let { productHelper(it) }
         ) {
-            val inCatalog = OrderCatalog.product(form.productName) != null
-            if (!contentEnabled && !inCatalog && form.productName.isNotBlank()) {
+            if (!contentEnabled && selectedProduct == null && form.productName.isNotBlank()) {
                 SelectableChip(label = form.productName, selected = true, onClick = {})
             } else {
-                OrderCatalog.products.forEach { product ->
+                products.forEach { product ->
                     SelectableChip(
-                        label = product.name,
-                        selected = form.productName.equals(product.name, ignoreCase = true),
-                        onClick = { if (contentEnabled) onProductChange(product.name) }
+                        label = if (product.producerName.isNotBlank()) "${product.name} · ${product.producerName}" else product.name,
+                        selected = form.productId == product.id,
+                        onClick = { if (contentEnabled) onProductChange(product) }
                     )
                 }
             }
@@ -163,7 +208,7 @@ fun OrderFormFields(
             onValueChange = onQuantityChange,
             placeholder = stringResource(R.string.dist_order_quantity_placeholder),
             leadingIconRes = R.drawable.ic_inventory,
-            error = form.quantityError?.let { stringResource(it) },
+            error = form.quantityError?.let { res -> form.quantityErrorArg?.let { stringResource(res, it) } ?: stringResource(res) },
             helper = form.estimatedPallets?.let { stringResource(R.string.dist_order_quantity_pallets, it) },
             enabled = contentEnabled,
             keyboardType = KeyboardType.Decimal,
@@ -177,7 +222,8 @@ fun OrderFormFields(
             enabled = enabled
         )
 
-        if (producers != null) {
+        // Catalog products bring their producer: the choice is only for products without one
+        if (producers != null && selectedProduct != null && selectedProduct.producerId == null) {
             ChoiceField(
                 label = stringResource(R.string.dist_order_producer),
                 helper = stringResource(
@@ -199,6 +245,17 @@ fun OrderFormFields(
             }
         }
     }
+}
+
+/** "S/ 4.50 per kg · minimum 50 kg · 1 200 kg available". */
+@Composable
+private fun productHelper(product: CatalogProduct): String {
+    val parts = buildList {
+        add(stringResource(R.string.dist_order_product_price, String.format(Locale.ROOT, "%.2f", product.pricePerKg)))
+        if (product.minOrderKg > 0) add(stringResource(R.string.dist_order_product_minimum, formatKg(product.minOrderKg)))
+        product.availableKg?.let { add(stringResource(R.string.dist_order_product_available, formatKg(it))) }
+    }
+    return parts.joinToString(" · ")
 }
 
 /** Label + one row of chips (scrolls sideways) + error or help text. */

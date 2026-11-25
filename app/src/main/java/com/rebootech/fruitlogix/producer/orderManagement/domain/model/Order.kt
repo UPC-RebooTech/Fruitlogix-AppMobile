@@ -44,7 +44,13 @@ data class Order(
     val pickupFrom: LocalTime? = null,
     val pickupTo: LocalTime? = null,
     val coldChainMinC: Double? = null,
-    val coldChainMaxC: Double? = null
+    val coldChainMaxC: Double? = null,
+    /** Order id on the server; null only for orders that have not reached the server. */
+    val remoteId: Int? = null,
+    /** Harvest batch linked to the order (PATCH /orders/{id}/batch). */
+    val batchId: Int? = null,
+    /** Delivery created by the distributor for this order (needed to dispatch it). */
+    val deliveryId: Int? = null
 ) {
     val totalKg: Int get() = items.sumOf { it.kg }
 

@@ -48,6 +48,9 @@ fun ProducerNavHost(
                 },
                 onNavigateToHarvestsTab = {
                     navController.navigate(route = ProducerQualityControlRoutes.Harvests)
+                },
+                onNavigateToNewProduct = {
+                    navController.navigate(route = ProducerQualityControlRoutes.NewProduct)
                 }
             )
         }

@@ -59,4 +59,5 @@
     <string name="dist_home_fleet_eta">Arrives %1$s</string>
     <string name="dist_home_fleet_delay">Delay %1$s</string>
     <string name="dist_home_fleet_reefer">Reefer %1$s</string>
+    <string name="dist_home_fleet_empty">No trips on route right now.</string>
 </resources>

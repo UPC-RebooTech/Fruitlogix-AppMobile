@@ -20,8 +20,10 @@ data class InspectionUiState(
     val coreTempOk get() = draft?.let { InspectionRules.coreTempOk(it.coreTemp) } ?: false
     val moistureOk get() = draft?.let { InspectionRules.moistureOk(it.moisture) } ?: false
     val defectsOk get() = draft?.let { InspectionRules.defectsOk(it.defects) } ?: false
+    val phOk get() = draft?.let { InspectionRules.phOk(it.ph) } ?: false
+    val brixOk get() = draft?.let { InspectionRules.brixOk(it.brix) } ?: false
     val calibersOk get() = draft?.calibers?.isNotEmpty() ?: false
-    val issues get() = listOf(coreTempOk, moistureOk, defectsOk, calibersOk).count { !it }
+    val issues get() = listOf(coreTempOk, moistureOk, defectsOk, phOk, brixOk, calibersOk).count { !it }
     val canSubmit get() = draft?.let { InspectionRules.canSubmit(it) } ?: false
 }
 
@@ -37,13 +39,15 @@ class InspectionViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     init {
         val lot = repository.lotForOrder(orderId)
         val draft = repository.draftFor(orderId) ?: lot?.let {
+            // Server lots start empty: the producer measures, nothing is pre-filled
+            fun initial(value: Double) = if (it.fromServer) "" else String.format(Locale.US, "%.1f", value)
             InspectionDraft(
                 orderId = it.orderId,
                 visualScore = it.initialVisualScore,
                 calibers = it.initialCalibers,
-                coreTemp = String.format(Locale.US, "%.1f", it.initialCoreTempC),
-                moisture = String.format(Locale.US, "%.1f", it.initialMoisturePct),
-                defects = String.format(Locale.US, "%.1f", it.initialDefectsPct),
+                coreTemp = initial(it.initialCoreTempC),
+                moisture = initial(it.initialMoisturePct),
+                defects = initial(it.initialDefectsPct),
                 notes = ""
             )
         }

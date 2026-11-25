@@ -19,6 +19,19 @@ data class Invoice(
     val orderId: String? = null
 )
 
+/** Result of sending an invoice to the server. */
+data class InvoiceSaveResult(
+    val ok: Boolean,
+    /** The invoice as the server saved it. */
+    val invoice: Invoice? = null,
+    /** The server's own text when it refused it. */
+    val serverMessage: String? = null,
+    /** No answer from the server (no signal). */
+    val offline: Boolean = false,
+    /** The name is not a client account of the server (/users). */
+    val unknownClient: Boolean = false
+)
+
 /** Why a credit note is proposed (US67). The text is built in presentation. */
 enum class CreditReason { THERMAL_EXCURSION, REJECTED_FRUIT, DAMAGED_IN_RECEPTION }
 

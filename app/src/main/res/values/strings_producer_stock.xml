@@ -20,4 +20,23 @@
     <string name="producer_stock_cd_increase">Add 10 kg to %1$s</string>
 
     <string name="producer_stock_register_harvest">Register harvest</string>
+    <string name="prod_product_new">Publish a product</string>
+    <string name="prod_product_new_subtitle">Clients order from your catalog</string>
+    <string name="prod_product_name">Product name</string>
+    <string name="prod_product_name_placeholder">E.g. Kent Mango</string>
+    <string name="prod_product_fruit_type">Fruit</string>
+    <string name="prod_product_fruit_type_placeholder">E.g. Mango</string>
+    <string name="prod_product_variety">Variety (optional)</string>
+    <string name="prod_product_price">Price per kg (S/)</string>
+    <string name="prod_product_available">Available (kg)</string>
+    <string name="prod_product_min_order">Minimum order (kg)</string>
+    <string name="prod_product_description">Description (optional)</string>
+    <string name="prod_product_publish">Publish product</string>
+    <string name="prod_product_error_number">Enter a valid number</string>
+    <string name="prod_product_save_failed">Could not save the product. Try again.</string>
+    <string name="prod_product_inactive">Inactive</string>
+    <string name="prod_product_deactivate">Deactivate product</string>
+    <string name="prod_product_reactivate">Reactivate product</string>
+    <string name="producer_stock_empty_title">No products yet</string>
+    <string name="producer_stock_empty_message">Publish a product so clients can order it. Its stock appears here.</string>
 </resources>

@@ -4,9 +4,16 @@ import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Billi
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.Invoice
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceStatus
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.InvoiceType
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.PricePoint
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.PurchaseSummary
+import com.rebootech.fruitlogix.distributor.paymentManagement.domain.model.SummaryPeriod
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAdjusters
+import java.time.YearMonth
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 /** Automatic invoice when a reception is confirmed: kilos × agreed price (US66). */
 object AutoInvoiceRules {
@@ -65,4 +72,45 @@ object InvoiceRules {
             overdueToPay = open.count { it.type == InvoiceType.PAYABLE && effectiveStatus(it, today) == InvoiceStatus.OVERDUE }
         )
     }
+}
+
+/** US68 and US69 calculated from the server orders (no sample data). */
+object PurchaseRules {
+
+    /** One item of a server order. */
+    data class Line(
+        val orderId: Int,
+        val clientName: String,
+        val productName: String,
+        val kg: Double,
+        val pricePerKg: Double,
+        val amount: Double,
+        val date: LocalDate
+    )
+
+    /** Price per kg of a product for a client, month by month (weighted by kg), oldest first. */
+    fun priceHistory(lines: List<Line>, productName: String, clientName: String): List<PricePoint> =
+        lines.filter { it.productName == productName && it.clientName == clientName && it.kg > 0 }
+            .groupBy { YearMonth.from(it.date) }
+            .map { (month, items) -> PricePoint(month, roundCents(items.sumOf { it.pricePerKg * it.kg } / items.sumOf { it.kg })) }
+            .sortedBy { it.month }
+
+    /** What a client ordered this week (from Monday) or this month; null when there is nothing. */
+    fun summary(lines: List<Line>, clientName: String, period: SummaryPeriod, today: LocalDate): PurchaseSummary? {
+        val from = when (period) {
+            SummaryPeriod.WEEK -> today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+            SummaryPeriod.MONTH -> today.withDayOfMonth(1)
+        }
+        val items = lines.filter { it.clientName == clientName && !it.date.isBefore(from) && !it.date.isAfter(today) }
+        if (items.isEmpty()) return null
+        return PurchaseSummary(
+            clientName = clientName,
+            period = period,
+            kilos = items.sumOf { it.kg }.roundToInt(),
+            amount = roundCents(items.sumOf { it.amount }),
+            orders = items.map { it.orderId }.distinct().size
+        )
+    }
+
+    private fun roundCents(value: Double) = round(value * 100) / 100
 }

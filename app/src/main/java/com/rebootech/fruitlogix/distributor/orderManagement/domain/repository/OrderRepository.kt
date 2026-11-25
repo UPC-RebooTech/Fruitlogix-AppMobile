@@ -31,6 +31,9 @@ interface OrderRepository {
      */
     suspend fun assignProducer(orderId: String, producerId: Int): Boolean = false
 
+    /** Cancels a pending or in-preparation order (PATCH /orders/{id}/cancel); it moves to the history. */
+    suspend fun cancelOrder(orderId: String, reason: String): Boolean = false
+
     fun validateLotCode(code: String): LotScanResult
 
     suspend fun confirmReception(orderId: String): Boolean

@@ -28,6 +28,8 @@ data class RegisterHarvestUiState(
     val harvestedAt: LocalDateTime = LocalDateTime.now(),
     val errors: Map<HarvestField, HarvestError> = emptyMap(),
     val isSaving: Boolean = false,
+    /** The server refused it: its own text (blank = generic message). */
+    val serverError: String? = null,
     val saved: Boolean = false
 )
 
@@ -75,8 +77,8 @@ class RegisterHarvestViewModel(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            repository.addHarvest(
+            _uiState.update { it.copy(isSaving = true, serverError = null) }
+            val result = repository.addHarvest(
                 fruitName = state.input.productName.trim(),
                 lotCode = state.input.lotCode.trim().uppercase(),
                 weightKg = HarvestValidator.parseDecimal(state.input.weightKg)?.roundToInt() ?: 0,
@@ -85,7 +87,9 @@ class RegisterHarvestViewModel(
                 brix = HarvestValidator.parseDecimal(state.input.brix),
                 notes = state.notes.trim().ifEmpty { null }
             )
-            _uiState.update { it.copy(isSaving = false, saved = true) }
+            _uiState.update {
+                it.copy(isSaving = false, saved = result.ok, serverError = if (result.ok) null else result.serverMessage ?: "")
+            }
         }
     }
 }

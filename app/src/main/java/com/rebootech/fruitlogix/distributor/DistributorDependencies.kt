@@ -9,6 +9,7 @@ import com.rebootech.fruitlogix.distributor.infrastructureIot.domain.repository.
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.data.FakeFleetRepository
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.repository.FleetRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.data.FakeOrderRepository
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderCatalogRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.distributor.paymentManagement.data.FakeBillingRepository
 import com.rebootech.fruitlogix.distributor.paymentManagement.domain.repository.BillingRepository
@@ -21,10 +22,13 @@ import com.rebootech.fruitlogix.distributor.qualityControl.domain.repository.Qua
 
 object DistributorDependencies {
     val orderRepository: OrderRepository by lazy { FakeOrderRepository.instance }
+    val orderCatalogRepository: OrderCatalogRepository by lazy { FakeOrderRepository.catalog }
     val iotRepository: IotRepository by lazy { FakeIotRepository() }
     val fleetRepository: FleetRepository by lazy { FakeFleetRepository(orderRepository) }
-    val billingRepository: BillingRepository by lazy { FakeBillingRepository.instance }
-    val qualityRepository: QualityRepository by lazy { FakeQualityRepository() }
+    val billingRepository: BillingRepository by lazy { FakeBillingRepository(orderCatalogRepository, orderRepository) }
+    val qualityRepository: QualityRepository by lazy {
+        FakeQualityRepository { id -> profilesRepository.producers.value.firstOrNull { it.remoteId == id }?.name }
+    }
     val profilesRepository: ProfilesRepository by lazy { FakeProfilesRepository.instance }
     @Volatile
     private var drivers: DriverRepository? = null

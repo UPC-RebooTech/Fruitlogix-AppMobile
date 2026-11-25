@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rebootech.fruitlogix.distributor.orderManagement.data.FakeOrderRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanResult
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,8 @@ class ScanReceptionViewModel : ViewModel() {
     val uiState: StateFlow<ScanReceptionUiState> = _uiState.asStateFlow()
 
     // TODO(scanner): replace the demo buttons with a barcode analyzer on the camera preview.
-    fun simulateValidScan() = check(FakeOrderRepository.DEMO_VALID_CODE)
+    /** Reads the label of the first server order on route, as the scanner would. */
+    fun simulateValidScan() = check(repository.orders.value.firstOrNull { it.status == OrderStatus.ON_ROUTE }?.let { "LOT-${it.id}" } ?: "LOT-")
     fun simulateDamagedScan() = check(FakeOrderRepository.DEMO_INVALID_CODE)
 
     fun onManualCodeChange(value: String) =

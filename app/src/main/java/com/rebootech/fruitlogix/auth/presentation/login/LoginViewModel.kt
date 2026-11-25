@@ -82,9 +82,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     sessionRepository.save(result.session, remember = state.keepSignedIn)
                     _uiState.update { it.copy(isLoading = false, slowServer = false) }
                 }
-                is AuthResult.NeedsRole -> _uiState.update {
-                    it.copy(isLoading = false, slowServer = false, pendingRole = PendingRole(result.username, result.token))
-                }
                 is AuthResult.Failure -> _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -94,6 +91,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         generalError = when (result.error) {
                             AuthError.Network -> R.string.iam_error_network
                             AuthError.InvalidCredentials -> R.string.login_error_credentials
+                            AuthError.WrongApp -> R.string.login_error_wrong_app
                             else -> R.string.iam_error_unknown
                         }
                     )
@@ -102,28 +100,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** First sign in on this phone: the person says whether they are a producer or a distributor. */
-    fun chooseRole(role: UserRole) {
-        val state = _uiState.value
-        val pending = state.pendingRole ?: return
-        viewModelScope.launch {
-            val session = authRepository.completeWithRole(
-                username = pending.username,
-                token = pending.token,
-                profile = AccountProfile(
-                    username = pending.username,
-                    displayName = AuthValidators.nameFromUsername(pending.username),
-                    role = role
-                )
-            )
-            sessionRepository.save(session, remember = state.keepSignedIn)
-            _uiState.update { it.copy(pendingRole = null) }
-        }
-    }
-
-    fun dismissRoleChoice() {
-        _uiState.update { it.copy(pendingRole = null) }
-    }
 
     private companion object {
         const val SLOW_SERVER_MS = 4_000L

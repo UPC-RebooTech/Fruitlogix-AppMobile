@@ -35,7 +35,7 @@ class PrefsFleetStore(context: Context) {
         val minCelsius: Double, val maxCelsius: Double, val status: String, val driverName: String?
     )
 
-    /** null when nothing was saved yet (first run): the sample fleet is used. */
+    /** null when nothing was saved yet (first run): the fleet starts empty. */
     fun loadDrivers(): List<Driver>? = read<List<DriverJson>>(KEY_DRIVERS)?.mapNotNull { it.toDriver() }
 
     fun loadVehicles(): List<Vehicle>? = read<List<VehicleJson>>(KEY_VEHICLES)?.mapNotNull { it.toVehicle() }

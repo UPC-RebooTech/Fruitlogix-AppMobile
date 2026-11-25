@@ -126,6 +126,14 @@ fun ProducerReviewResultScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 } else {
+                    state.error?.let { message ->
+                        Text(
+                            text = message.ifBlank { stringResource(R.string.profile_save_failed) },
+                            style = FruitLogixTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(bottom = spacing.xs)
+                        )
+                    }
                     PrimaryButton(
                         text = stringResource(R.string.review_send),
                         onClick = viewModel::send,
