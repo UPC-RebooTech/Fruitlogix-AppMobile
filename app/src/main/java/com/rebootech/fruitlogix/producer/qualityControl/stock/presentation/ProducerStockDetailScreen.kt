@@ -111,7 +111,7 @@ fun ProducerStockDetailScreen(
             )
 
             SummaryCard(item)
-            AdjustSection(current = item.availableKg, target = target, onTargetChange = { target = it })
+            AdjustSection(current = item.availableKg, target = target, maxCapacity = item.totalCapacityKg, onTargetChange = { target = it })
             ThresholdSection(item)
             MovementsSection(StockRepository.movements[item.id].orEmpty())
 
@@ -257,7 +257,7 @@ private fun SummaryCard(item: StockItemModel) {
 }
 
 @Composable
-private fun AdjustSection(current: Int, target: Int, onTargetChange: (Int) -> Unit) {
+private fun AdjustSection(current: Int, target: Int, maxCapacity: Int, onTargetChange: (Int) -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val numberFormat = NumberFormat.getNumberInstance(appLocale())
     val diff = target - current
@@ -289,10 +289,17 @@ private fun AdjustSection(current: Int, target: Int, onTargetChange: (Int) -> Un
         Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.inner))
         Row(horizontalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
             listOf(-10, -1, 1, 10).forEach { step ->
+                val nextValue = target + step
+                val canApply = nextValue in 0..maxCapacity
+
                 StepButton(
                     label = if (step > 0) "+$step" else "$step",
                     description = stringResource(R.string.stock_detail_cd_adjust, if (step > 0) "+$step" else "$step"),
-                    onClick = { onTargetChange((target + step).coerceAtLeast(0)) },
+                    onClick = {
+                        if (canApply) {
+                            onTargetChange(nextValue.coerceIn(0, maxCapacity))
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }

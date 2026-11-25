@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -166,16 +167,29 @@ fun ProducerStockScreen(
                 }
             }
             items(stockList, key = { it.id }) { stock ->
+                val canIncrement = (stock.availableKg + 10) <= stock.totalCapacityKg
+                val canDecrement = (stock.availableKg - 10) >= 0
+
                 InventoryCardItem(
                     item = stock,
                     numberFormat = numberFormat,
+                    canIncrement = canIncrement,
+                    canDecrement = canDecrement,
                     onIncrement = {
-                        StockRepository.updateStockKg(stock.id, stock.availableKg + 10)
-                        ProducerProductSync.pushKg(stock)
+                        if (canIncrement) {
+                            val newAmount = (stock.availableKg + 10).coerceAtMost(stock.totalCapacityKg)
+                            StockRepository.updateStockKg(stock.id, newAmount)
+                            // Se envía la copia con el valor recién actualizado
+                            ProducerProductSync.pushKg(stock.copy(availableKg = newAmount))
+                        }
                     },
                     onDecrement = {
-                        StockRepository.updateStockKg(stock.id, stock.availableKg - 10)
-                        ProducerProductSync.pushKg(stock)
+                        if (canDecrement) {
+                            val newAmount = (stock.availableKg - 10).coerceAtLeast(0)
+                            StockRepository.updateStockKg(stock.id, newAmount)
+                            // Se envía la copia con el valor recién actualizado
+                            ProducerProductSync.pushKg(stock.copy(availableKg = newAmount))
+                        }
                     },
                     onClick = { onNavigateToDetail(stock.id) }
                 )
@@ -233,12 +247,15 @@ fun InventoryCardItem(
     numberFormat: NumberFormat,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    canIncrement: Boolean,
+    canDecrement: Boolean
 ) {
     val scheme = MaterialTheme.colorScheme
     val colors = FruitLogixTheme.colors
-    val fillFraction = (item.availableKg.toFloat() / item.totalCapacityKg.toFloat()).coerceIn(0f, 1f)
-    val isCritical = item.isCritical
+    val safeCapacity = if (item.totalCapacityKg > 0) item.totalCapacityKg.toFloat() else 1f
+    val fillFraction = (item.availableKg.toFloat() / safeCapacity).coerceIn(0f, 1f)
+    val isCritical = item.availableKg <= item.minThresholdKg
 
     FruitLogixCard(
         variant = CardVariant.White,
@@ -279,6 +296,8 @@ fun InventoryCardItem(
                 Spacer(modifier = Modifier.width(FruitLogixTheme.spacing.xs))
                 KgStepper(
                     productName = item.productName,
+                    canIncrement = canIncrement,
+                    canDecrement = canDecrement,
                     onDecrement = onDecrement,
                     onIncrement = onIncrement
                 )
@@ -288,7 +307,10 @@ fun InventoryCardItem(
 
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = stringResource(R.string.producer_orders_tile_volume_format, numberFormat.format(item.availableKg)),
+                    text = stringResource(
+                        R.string.producer_orders_tile_volume_format,
+                        numberFormat.format(item.availableKg.coerceAtLeast(0))
+                    ),
                     style = FruitLogixTheme.typography.titleLarge,
                     color = if (isCritical) scheme.error else scheme.onSurface
                 )
@@ -328,6 +350,8 @@ fun InventoryCardItem(
 @Composable
 private fun KgStepper(
     productName: String,
+    canIncrement: Boolean,
+    canDecrement: Boolean,
     onDecrement: () -> Unit,
     onIncrement: () -> Unit
 ) {
@@ -342,15 +366,17 @@ private fun KgStepper(
         StepperButton(
             symbol = "−",
             description = decreaseDescription,
-            container = scheme.secondaryContainer,
-            content = scheme.onSecondaryContainer,
+            container = if (canDecrement) scheme.secondaryContainer else scheme.surfaceVariant,
+            content = if (canDecrement) scheme.onSecondaryContainer else scheme.onSurfaceVariant.copy(alpha = 0.38f),
+            enabled = canDecrement,
             onClick = onDecrement
         )
         StepperButton(
             symbol = "+",
             description = increaseDescription,
-            container = scheme.primaryContainer,
-            content = scheme.onPrimaryContainer,
+            container = if (canIncrement) scheme.primaryContainer else scheme.surfaceVariant,
+            content = if (canIncrement) scheme.onPrimaryContainer else scheme.onSurfaceVariant.copy(alpha = 0.38f),
+            enabled = canIncrement,
             onClick = onIncrement
         )
     }
@@ -362,13 +388,18 @@ private fun StepperButton(
     description: String,
     container: androidx.compose.ui.graphics.Color,
     content: androidx.compose.ui.graphics.Color,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .size(FruitLogixTheme.sizing.minTouch)
             .background(container)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(
+                role = Role.Button,
+                enabled = enabled,
+                onClick = onClick
+            )
             .clearAndSetSemantics { contentDescription = description },
         contentAlignment = Alignment.Center
     ) {
