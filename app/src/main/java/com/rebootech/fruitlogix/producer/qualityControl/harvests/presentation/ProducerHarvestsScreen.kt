@@ -57,6 +57,7 @@ import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
 import com.rebootech.fruitlogix.shared.ui.format.appLocale
 import com.rebootech.fruitlogix.shared.ui.format.formatRelativeDateTime
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 import java.time.LocalDate
@@ -158,7 +159,7 @@ fun ProducerHarvestsScreen(
             }
 
             // Weekly forecast (highlighted, dark)
-            item {
+            if (forecast != null) item {
                 FruitLogixCard(
                     variant = CardVariant.Dark,
                     shape = FruitLogixTheme.shapes.HeroCard,
@@ -283,6 +284,14 @@ fun ProducerHarvestsScreen(
                     trailing = stringResource(R.string.producer_harvests_live),
                     trailingIsLive = true
                 )
+            }
+            if (harvestList.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = stringResource(R.string.producer_harvests_empty_title),
+                        message = stringResource(R.string.producer_harvests_empty_message)
+                    )
+                }
             }
             items(harvestList, key = { it.id }) { harvest ->
                 RecentHarvestCard(harvest = harvest, numberFormat = numberFormat)

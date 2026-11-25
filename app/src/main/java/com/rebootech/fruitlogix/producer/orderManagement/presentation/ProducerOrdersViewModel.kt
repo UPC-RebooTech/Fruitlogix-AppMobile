@@ -48,7 +48,7 @@ class ProducerOrdersViewModel(
                 stockRepository.observeStock(),
                 _filters
             ) { orders, stock, filters ->
-                val distributorName = orders.firstOrNull()?.distributorName ?: "Carlos Mendoza"
+                val distributorName = orders.firstOrNull()?.distributorName.orEmpty()
                 val awaitingCount = orders.count { it.status == OrderStatus.PENDING }
                 val inShedCount = orders.count { it.status == OrderStatus.IN_PREPARATION }
                 val activeVolume = orders

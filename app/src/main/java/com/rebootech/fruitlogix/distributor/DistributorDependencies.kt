@@ -25,7 +25,7 @@ object DistributorDependencies {
     val orderCatalogRepository: OrderCatalogRepository by lazy { FakeOrderRepository.catalog }
     val iotRepository: IotRepository by lazy { FakeIotRepository() }
     val fleetRepository: FleetRepository by lazy { FakeFleetRepository(orderRepository) }
-    val billingRepository: BillingRepository by lazy { FakeBillingRepository.instance }
+    val billingRepository: BillingRepository by lazy { FakeBillingRepository(orderCatalogRepository, orderRepository) }
     val qualityRepository: QualityRepository by lazy {
         FakeQualityRepository { id -> profilesRepository.producers.value.firstOrNull { it.remoteId == id }?.name }
     }

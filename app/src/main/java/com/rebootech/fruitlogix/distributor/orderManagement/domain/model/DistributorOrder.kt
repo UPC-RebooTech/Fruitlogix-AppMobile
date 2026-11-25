@@ -20,7 +20,7 @@ data class DistributorOrder(
     val createdAt: LocalDateTime,
     /** commercialClientId on the server. */
     val clientId: Int? = null,
-    /** Order id on the server; null for the sample orders that only live on this phone. */
+    /** Order id on the server; null only for orders that have not reached the server. */
     val remoteId: Int? = null,
     /** Producer assigned on the server (assign-producer). */
     val producerId: Int? = null,

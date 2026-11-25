@@ -27,7 +27,7 @@ data class PlannedHarvest(
     val brix: Double? = null,
     /** Free text written by the producer (data, not UI text). */
     val notes: String? = null,
-    /** Harvest batch id on the server (POST /harvest-batches), null for the sample harvests. */
+    /** Harvest batch id on the server (POST /harvest-batches), null when it was saved without connection. */
     val remoteId: Int? = null
 ) {
     // Bridge properties used by the Home "Next harvest" card

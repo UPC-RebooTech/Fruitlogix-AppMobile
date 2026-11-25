@@ -39,4 +39,6 @@
     <string name="producer_harvests_status_ripening">Ripening</string>
     <string name="producer_harvests_status_scheduled">Harvest scheduled</string>
     <string name="producer_harvests_status_registered">Registered</string>
+    <string name="producer_harvests_empty_title">No harvests yet</string>
+    <string name="producer_harvests_empty_message">Log a harvest and it is saved as a lot on the server.</string>
 </resources>

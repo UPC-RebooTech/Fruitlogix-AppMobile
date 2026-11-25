@@ -40,17 +40,20 @@ import java.util.Locale
  *   rejecting and dispatching them (start-dispatch of their delivery) are sent to the server.
  * - The quality status comes from the harvest batch linked to the order: Approved/Rejected by the
  *   distributor, otherwise "in review".
- * - Sample orders (#1044…) only live on this phone, so the app works offline.
+ * - There are no sample orders: without connection the list stays as it was last read.
  */
 class FakeOrderRepository : OrderRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val _orders = MutableStateFlow(createInitialOrders())
+    private val _orders = MutableStateFlow<List<Order>>(emptyList())
 
     init {
         scope.launch { refresh() }
     }
 
     override fun observeOrders(): Flow<List<Order>> = _orders.asStateFlow()
+
+    /** The orders as last read (for the weekly forecast). */
+    fun orderSnapshot(): List<Order> = _orders.value
 
     override fun orderById(orderId: String): Order? {
         val id = orderId.removePrefix("#")
@@ -130,8 +133,8 @@ class FakeOrderRepository : OrderRepository {
             } else null
             map(dto, previous[dto.id], dto.batchId?.let { batches[it] }, delivery)
         }
-        // The server list replaces the previous server copy; sample orders stay
-        _orders.update { list -> fromServer + list.filter { it.remoteId == null } }
+        // The server list is the whole list
+        _orders.value = fromServer
     }
 
     private suspend fun deliveryFor(orderId: Int): DeliveryResponseDto? =
@@ -214,101 +217,5 @@ class FakeOrderRepository : OrderRepository {
         private const val TAG = "FruitLogix-ProducerOrders"
 
         val instance: FakeOrderRepository by lazy { FakeOrderRepository() }
-
-        private fun createInitialOrders(): List<Order> {
-            val today = LocalDate.now()
-            return listOf(
-                Order(
-                    id = "#1052",
-                    clientName = "Mercado Central S.A.",
-                    distributorName = "Carlos Mendoza",
-                    items = listOf(
-                        OrderItem(productId = "mango", productName = "Kent Mango", kg = 500, specification = "Calibre 8-10 · cajas 4 kg"),
-                        OrderItem(productId = "blueberries", productName = "Blueberries", kg = 80, specification = "Clamshells 125 g · GlobalGAP")
-                    ),
-                    dueDate = today.plusDays(2),
-                    status = OrderStatus.PENDING,
-                    respondByHoursLeft = 2,
-                    pickupFrom = LocalTime.of(8, 0),
-                    pickupTo = LocalTime.of(11, 30),
-                    coldChainMinC = 2.0,
-                    coldChainMaxC = 4.0,
-                    distributorNote = "Mantener cadena de frío para arándanos."
-                ),
-                Order(
-                    id = "#1048",
-                    clientName = "Supermercados Wong",
-                    distributorName = "Carlos Mendoza",
-                    items = listOf(
-                        OrderItem(productId = "hass", productName = "Hass Avocado", kg = 300)
-                    ),
-                    dueDate = today.plusDays(3),
-                    status = OrderStatus.IN_PREPARATION,
-                    qualityStatus = null,
-                    distributorNote = "Wong requested export grade, minimum 23% dry matter"
-                ),
-                Order(
-                    id = "#1044",
-                    clientName = "Mercado Central S.A.",
-                    distributorName = "Carlos Mendoza",
-                    items = listOf(
-                        OrderItem(productId = "mango", productName = "Kent Mango", kg = 400)
-                    ),
-                    dueDate = today.plusDays(1),
-                    status = OrderStatus.IN_PREPARATION,
-                    qualityStatus = QualityStatus.REJECTED,
-                    qualityRejectionReason = "Bruising above 4% limit · Re-grading requested",
-                    rejectionReason = "Bruising above 4% limit"
-                ),
-                Order(
-                    id = "#1041",
-                    clientName = "Supermercados Wong",
-                    distributorName = "Carlos Mendoza",
-                    items = listOf(
-                        OrderItem(productId = "blueberries", productName = "Blueberries", kg = 120)
-                    ),
-                    dueDate = today.plusDays(1),
-                    status = OrderStatus.IN_PREPARATION,
-                    qualityStatus = QualityStatus.APPROVED,
-                    assignedTruck = AssignedTruck(
-                        plate = "FL-408",
-                        vehicleType = "Reefer Truck 3.5T",
-                        driverName = "Juan Pérez",
-                        driverPhone = "+51 987 654 321",
-                        etaFormatted = "14:30"
-                    )
-                ),
-                Order(
-                    id = "#1036",
-                    clientName = "Mercado Central S.A.",
-                    distributorName = "Carlos Mendoza",
-                    items = listOf(
-                        OrderItem(productId = "grapes", productName = "Red Globe Grapes", kg = 150)
-                    ),
-                    dueDate = today,
-                    status = OrderStatus.IN_TRANSIT,
-                    dispatchedAtFormatted = "today · 08:30 AM",
-                    assignedTruck = AssignedTruck(
-                        plate = "FL-302",
-                        vehicleType = "Reefer Truck 2.5T",
-                        driverName = "Mario Rossi",
-                        driverPhone = "+51 912 345 678",
-                        etaMinutes = 135,
-                        etaFormatted = "2 h 15 min"
-                    )
-                ),
-                Order(
-                    id = "#1030",
-                    clientName = "Supermercados Wong",
-                    distributorName = "Carlos Mendoza",
-                    items = listOf(
-                        OrderItem(productId = "mango", productName = "Kent Mango", kg = 350)
-                    ),
-                    dueDate = today.minusDays(1),
-                    status = OrderStatus.DELIVERED,
-                    deliveredAtFormatted = "Oct 30"
-                )
-            )
-        }
     }
 }

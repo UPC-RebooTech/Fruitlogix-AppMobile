@@ -11,7 +11,8 @@ import java.time.LocalDateTime
 interface HarvestRepository {
     val recentHarvests: StateFlow<List<PlannedHarvest>>
     val scheduledHarvests: StateFlow<List<ScheduledHarvest>>
-    val weeklyForecast: HarvestForecast
+    /** null when there are no orders due this week. */
+    val weeklyForecast: HarvestForecast?
 
     /** Storage places on the farm where a harvest can be logged (names are data). */
     val storageSectors: List<String>

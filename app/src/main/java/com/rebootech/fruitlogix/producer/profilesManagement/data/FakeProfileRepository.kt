@@ -15,17 +15,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import java.time.YearMonth
 
 /**
  * Profile of the signed-in producer on the server (GET /producers/me, POST /producers, PUT /producers/{id}).
  * Field mapping: name ↔ fullName, legal name ↔ legalName, RUC ↔ taxId, farm ↔ address,
  * location "Ica, Valle Hermoso" ↔ city + region. The GLOBALG.A.P. date stays on this phone.
- * Without connection the last known profile (or the sample one) keeps the screens usable.
+ * Without connection the last known profile keeps the screens usable (it starts blank: no sample data).
  */
 class FakeProfileRepository : ProfileRepository {
 
-    private val _profile = MutableStateFlow(SAMPLE)
+    private val _profile = MutableStateFlow(EMPTY)
     override val profile: StateFlow<ProducerProfile> = _profile.asStateFlow()
 
     private val _status = MutableStateFlow(ProfileStatus.LOADING)
@@ -90,7 +89,7 @@ class FakeProfileRepository : ProfileRepository {
             legalName = dto.legalName.orEmpty(),
             ruc = dto.taxId.orEmpty(),
             location = listOf(dto.city, dto.region).filterNot { it.isNullOrBlank() }.joinToString(", "),
-            globalGapValidUntil = local?.globalGapValidUntil ?: _profile.value.globalGapValidUntil.takeIf { _profile.value != SAMPLE },
+            globalGapValidUntil = local?.globalGapValidUntil ?: _profile.value.globalGapValidUntil.takeIf { _profile.value != EMPTY },
             crop = dto.crop.orEmpty(),
             type = if (dto.producerType.equals("Individual", ignoreCase = true)) ProducerType.INDIVIDUAL else ProducerType.COMPANY
         )
@@ -135,17 +134,11 @@ class FakeProfileRepository : ProfileRepository {
         private const val COUNTRY = "Perú"
 
         /** Shown until the server answers (and offline): the demo farm. */
-        private val SAMPLE = ProducerProfile(
-            fullName = "Alexandra Jiménez",
-            email = "alexandra.jimenez@example.com",
-            phone = "+51 987 654 321",
-            farmName = "Fundo Los Laureles",
-            legalName = "Fundo Agrícola Los Laureles S.A.C.",
-            ruc = "20491823901",
-            location = "Ica, Valle Hermoso",
-            globalGapValidUntil = YearMonth.of(2027, 10),
-            crop = "Uva Red Globe"
+        private val EMPTY = ProducerProfile(
+            fullName = "", email = "", phone = "", farmName = "", legalName = "", ruc = "",
+            location = "", globalGapValidUntil = null, crop = ""
         )
 
-        val instance: ProfileRepository by lazy { FakeProfileRepository() }    }
+        val instance: ProfileRepository by lazy { FakeProfileRepository() }
+    }
 }

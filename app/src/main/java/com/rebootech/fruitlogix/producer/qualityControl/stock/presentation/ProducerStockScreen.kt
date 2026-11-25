@@ -48,6 +48,7 @@ import com.rebootech.fruitlogix.shared.ui.components.PrimaryButton
 import com.rebootech.fruitlogix.shared.ui.components.SecondaryButton
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadge
 import com.rebootech.fruitlogix.shared.ui.components.StatusBadgeType
+import com.rebootech.fruitlogix.shared.ui.components.EmptyState
 import com.rebootech.fruitlogix.shared.ui.theme.FruitLogixTheme
 import java.text.NumberFormat
 
@@ -156,6 +157,14 @@ fun ProducerStockScreen(
             }
 
             // Inventory lots (light)
+            if (stockList.isEmpty()) {
+                item {
+                    EmptyState(
+                        title = stringResource(R.string.producer_stock_empty_title),
+                        message = stringResource(R.string.producer_stock_empty_message)
+                    )
+                }
+            }
             items(stockList, key = { it.id }) { stock ->
                 InventoryCardItem(
                     item = stock,

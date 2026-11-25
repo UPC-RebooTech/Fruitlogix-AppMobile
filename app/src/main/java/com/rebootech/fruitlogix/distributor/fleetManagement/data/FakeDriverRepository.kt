@@ -49,10 +49,10 @@ class FakeDriverRepository(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val assignedOrders = MutableStateFlow(store?.loadAssignedOrders().orEmpty())
 
-    private val _drivers = MutableStateFlow(store?.loadDrivers() ?: initialDrivers())
+    private val _drivers = MutableStateFlow(store?.loadDrivers().orEmpty().filterNot { (it.id to it.name) in OLD_SAMPLE_DRIVERS })
     override val drivers: StateFlow<List<Driver>> = _drivers.asStateFlow()
 
-    private val _vehicles = MutableStateFlow(store?.loadVehicles() ?: initialVehicles())
+    private val _vehicles = MutableStateFlow(store?.loadVehicles().orEmpty().filterNot { (it.id to it.plate) in OLD_SAMPLE_VEHICLES })
     override val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
 
     override val pendingDispatches: StateFlow<List<PendingDispatch>> =
@@ -82,7 +82,7 @@ class FakeDriverRepository(
         assignedOrders.update { it + orderId }
         persist()
 
-        // Orders that exist on the server get a delivery there (POST /api/v1/deliveries); sample orders stay local
+        // Orders that exist on the server get a delivery there (POST /api/v1/deliveries); others stay on this phone
         val realOrderId = orderRepository.backendIdFor(order.orderId)
         if (realOrderId == null) {
             Log.i(TAG, "${order.orderId} is not on the server: assignment kept on this phone")
@@ -171,29 +171,14 @@ class FakeDriverRepository(
         const val TAG = "FruitLogix-Drivers"
         const val HUB_NAME = "Lima Central Hub"
 
-        fun initialDrivers(): List<Driver> {
-            val today = LocalDate.now()
-            return listOf(
-                Driver("d1", "Jorge Huamán", "+51 987 112 340", "A-IIIc", today.plusYears(1), true, DriverStatus.ON_ROUTE,
-                    Assignment("FL-102", "BQK-482", "FX-1041", "Ica → Lima Central Hub")),
-                Driver("d2", "Mateo Silva", "+51 956 410 228", "A-IIIc", today.plusYears(2), true, DriverStatus.ON_ROUTE,
-                    Assignment("FL-408", "C7X-915", "FX-1042", "Chavín de Huántar → Lima Central Hub")),
-                Driver("d3", "Luis Ramos", "+51 944 870 615", "A-IIIb", today.plusMonths(8), true, DriverStatus.ON_ROUTE,
-                    Assignment("FL-219", "AFR-307", "FX-1038", "Piura → Lima Central Hub")),
-                Driver("d4", "Pedro Salazar", "+51 933 210 456", "A-IIIc", today.plusDays(20), true, DriverStatus.AVAILABLE),
-                Driver("d5", "Ana Torres", "+51 922 678 901", "A-IIb", today.plusYears(1), false, DriverStatus.OFF_DUTY,
-                    restUntil = LocalDate.now().plusDays(1).atTime(6, 0)),
-                Driver("d6", "Ricardo Paredes", "+51 911 456 789", "A-IIIc", today.minusMonths(13), true, DriverStatus.AVAILABLE)
-            )
-        }
-
-        fun initialVehicles() = listOf(
-            Vehicle("v1", "FL-408", "C7X-915", VehicleType.HEAVY_REEFER, 12000.0, 0.0, 8.0, VehicleStatus.ON_ROUTE, "Mateo Silva"),
-            Vehicle("v2", "FL-102", "BQK-482", VehicleType.REEFER_TRUCK, 12000.0, -1.0, 8.0, VehicleStatus.ON_ROUTE, "Jorge Huamán"),
-            Vehicle("v3", "FL-219", "AFR-307", VehicleType.REEFER_TRUCK, 15000.0, 2.0, 14.0, VehicleStatus.ON_ROUTE, "Luis Ramos"),
-            Vehicle("v4", "FL-510", "HJK-264", VehicleType.HEAVY_REEFER, 14000.0, -1.0, 10.0, VehicleStatus.AVAILABLE),
-            Vehicle("v5", "FL-305", "CXP-112", VehicleType.MEDIUM_REEFER_VAN, 8000.0, 2.0, 8.0, VehicleStatus.AVAILABLE),
-            Vehicle("v6", "FL-607", "FGH-887", VehicleType.LIGHT_REEFER, 3500.0, 4.0, 10.0, VehicleStatus.MAINTENANCE)
+        /** The sample fleet of older versions, removed from phones that saved it (no sample data now). */
+        val OLD_SAMPLE_DRIVERS = setOf(
+            "d1" to "Jorge Huamán", "d2" to "Mateo Silva", "d3" to "Luis Ramos",
+            "d4" to "Pedro Salazar", "d5" to "Ana Torres", "d6" to "Ricardo Paredes"
+        )
+        val OLD_SAMPLE_VEHICLES = setOf(
+            "v1" to "C7X-915", "v2" to "BQK-482", "v3" to "AFR-307",
+            "v4" to "HJK-264", "v5" to "CXP-112", "v6" to "FGH-887"
         )
     }
 }

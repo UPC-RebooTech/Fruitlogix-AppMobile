@@ -40,7 +40,7 @@ data class ActiveDispatch(
     val reeferCheckedAt: LocalDateTime? = null,
     val rejectionReason: String? = null,
     val checkpoints: List<Checkpoint>,
-    /** Delivery id on the FruitLogix server; null for the sample trips that only live on this phone. */
+    /** Delivery id on the FruitLogix server; null only for trips that have not reached the server. */
     val remoteId: Int? = null
 ) {
     val remainingKm: Double get() = (totalKm - travelledKm).coerceAtLeast(0.0)

@@ -44,6 +44,7 @@ import com.rebootech.fruitlogix.producer.dashboard.presentation.components.Upcom
 import com.rebootech.fruitlogix.producer.dashboard.domain.model.ProducerTask
 import com.rebootech.fruitlogix.producer.infrastructureIot.ProducerInfrastructureIotRoutes
 import com.rebootech.fruitlogix.producer.navigation.ProducerRoute
+import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
 import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagementRoutes
 import com.rebootech.fruitlogix.producer.qualityControl.ProducerQualityControlRoutes
 import com.rebootech.fruitlogix.shared.ui.components.AppIcon
@@ -165,7 +166,7 @@ private fun HomeContent(
             GreetingHeader(
                 dayPart = uiState.dayPart,
                 userName = uiState.userName,
-                farmName = uiState.farmName,
+                farmName = uiState.farmName.ifBlank { FakeProfileRepository.instance.profile.collectAsState().value.farmName },
                 today = uiState.today
             )
         }

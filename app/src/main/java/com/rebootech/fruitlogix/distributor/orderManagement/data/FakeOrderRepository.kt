@@ -4,7 +4,6 @@ import android.util.Log
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DeleteOrderResult
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.DistributorOrder
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.LotScanResult
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderCatalog
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderDraft
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryItem
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryStatus
@@ -12,7 +11,6 @@ import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderSa
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderCatalogRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
-import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
 import com.rebootech.fruitlogix.shared.core.network.AssignProducerRequestDto
 import com.rebootech.fruitlogix.shared.core.network.ApiResult
 import com.rebootech.fruitlogix.shared.core.network.CancelOrderRequestDto
@@ -31,7 +29,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
@@ -40,8 +37,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * Distributor orders.
  * - Server orders (/api/v1/orders) are shown as "FX-<id>". Creating, changing the delivery date,
  *   deleting and assigning a producer are sent to the server.
- * - Sample orders (FX-1038…FX-1042) only live on this phone, so Fleet, Home and Invoices keep
- *   their sample trips with or without connection.
+ * - There is no sample data: without connection the lists stay as they were last read.
  */
 class FakeOrderRepository private constructor(
     /** Clients (/users) and products (/products) offered when creating an order. */
@@ -50,10 +46,10 @@ class FakeOrderRepository private constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val _orders = MutableStateFlow(initialOrders())
+    private val _orders = MutableStateFlow<List<DistributorOrder>>(emptyList())
     override val orders: StateFlow<List<DistributorOrder>> = _orders.asStateFlow()
 
-    private val _history = MutableStateFlow(initialHistory())
+    private val _history = MutableStateFlow<List<OrderHistoryItem>>(emptyList())
     override val history: StateFlow<List<OrderHistoryItem>> = _history.asStateFlow()
 
     /** Last server copy of each order, so an update keeps the address, total and notes. */
@@ -101,45 +97,30 @@ class FakeOrderRepository private constructor(
     override suspend fun updateOrder(orderId: String, draft: OrderDraft): Boolean {
         val current = orderById(orderId) ?: return false
         if (!current.isEditable) return false
-        val remoteId = current.remoteId
+        val remoteId = current.remoteId ?: return false
 
-        if (remoteId != null) {
-            // The server only changes the delivery date (and keeps address, total and notes)
-            val copy = serverCopies[remoteId]
-            val request = UpdateOrderRequestDto(
-                deliveryDueDate = draft.deliveryDate.toString(),
-                deliveryAddress = copy?.deliveryAddress ?: OrderCatalog.client(current.clientId)?.deliveryAddress.orEmpty(),
-                totalAmount = copy?.totalAmount ?: 0.0,
-                notes = copy?.notes
-            )
-            val ok = withContext(Dispatchers.IO) {
-                try {
-                    val response = RetrofitClient.api.updateOrder(remoteId, request)
-                    if (!response.isSuccessful) Log.w(TAG, "PUT orders/$remoteId answered ${response.code()}")
-                    response.isSuccessful
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Throwable) {
-                    Log.w(TAG, "PUT orders/$remoteId failed: ${e.javaClass.simpleName}")
-                    false
-                }
+        // The server only changes the delivery date (and keeps address, total and notes)
+        val copy = serverCopies[remoteId]
+        val request = UpdateOrderRequestDto(
+            deliveryDueDate = draft.deliveryDate.toString(),
+            deliveryAddress = copy?.deliveryAddress.orEmpty(),
+            totalAmount = copy?.totalAmount ?: 0.0,
+            notes = copy?.notes
+        )
+        val ok = withContext(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.api.updateOrder(remoteId, request)
+                if (!response.isSuccessful) Log.w(TAG, "PUT orders/$remoteId answered ${response.code()}")
+                response.isSuccessful
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Log.w(TAG, "PUT orders/$remoteId failed: ${e.javaClass.simpleName}")
+                false
             }
-            if (!ok) return false
-            replace(current.id) { it.copy(deliveryDate = draft.deliveryDate) }
-            return true
         }
-
-        // Sample orders: everything can change on this phone
-        replace(current.id) {
-            it.copy(
-                clientName = catalog.clientName(draft.clientId) ?: OrderCatalog.client(draft.clientId)?.name ?: it.clientName,
-                clientId = draft.clientId,
-                productName = draft.productName.trim(),
-                quantityKg = draft.quantityKg,
-                pallets = OrderValidator.estimatePallets(draft.quantityKg),
-                deliveryDate = draft.deliveryDate
-            )
-        }
+        if (!ok) return false
+        replace(current.id) { it.copy(deliveryDate = draft.deliveryDate) }
         return true
     }
 
@@ -234,7 +215,7 @@ class FakeOrderRepository private constructor(
                     id = order.id,
                     clientName = order.clientName,
                     clientId = order.clientId,
-                    producerName = order.producerName.ifBlank { PRODUCER_BY_ORDER[order.id].orEmpty() },
+                    producerName = order.producerName,
                     productName = order.productName,
                     completedAt = LocalDateTime.now(),
                     status = status
@@ -272,14 +253,10 @@ class FakeOrderRepository private constructor(
                 null -> Unit
             }
         }
-        val serverCodes = (active.map { it.id } + finished.map { it.id }).toSet()
-        // The server list replaces the previous server copy; sample orders stay
-        _orders.update { local -> active + local.filter { it.remoteId == null && it.id !in serverCodes } }
-        _history.update { local -> finished + local.filter { it.id !in serverCodes && isSampleCode(it.id) } }
+        // The server list is the whole list
+        _orders.value = active
+        _history.value = finished
     }
-
-    /** Sample orders and their history live only on this phone. */
-    private fun isSampleCode(code: String) = code in SAMPLE_HISTORY_CODES || code in PRODUCER_BY_ORDER.keys
 
     private fun replace(orderId: String, block: (DistributorOrder) -> DistributorOrder) =
         _orders.update { list -> list.map { if (it.id == orderId) block(it) else it } }
@@ -292,58 +269,10 @@ class FakeOrderRepository private constructor(
 
         val instance: FakeOrderRepository by lazy { FakeOrderRepository(catalog) }
 
-        const val DEMO_VALID_CODE = "LOT-FX-1041-UVA"
         const val DEMO_INVALID_CODE = "DAMAGED-CODE"
 
         private val LOT_REGEX = Regex("^LOT-(FX-\\d+)")
 
-        private val PRODUCER_BY_ORDER = mapOf(
-            "FX-1042" to "Fundo Santa Rosa",
-            "FX-1041" to "Viñedos de Ica",
-            "FX-1038" to "Campos del Norte",
-            "FX-1040" to "Agro Valle Verde",
-            "FX-1039" to "Campos del Norte"
-        )
 
-        private val SAMPLE_HISTORY_CODES = setOf("FX-1035", "FX-1032", "FX-1028")
-
-        private fun sample(
-            id: String, clientId: Int, product: String, kg: Double, pallets: Int,
-            delivery: LocalDate, status: OrderStatus, createdAt: LocalDateTime
-        ) = DistributorOrder(
-            id = id,
-            clientName = OrderCatalog.client(clientId)?.name.orEmpty(),
-            productName = product,
-            quantityKg = kg,
-            pallets = pallets,
-            deliveryDate = delivery,
-            status = status,
-            createdAt = createdAt,
-            clientId = clientId
-        )
-
-        private fun initialOrders(): List<DistributorOrder> {
-            val today = LocalDate.now()
-            val now = LocalDateTime.now()
-            return listOf(
-                sample("FX-1042", 101, "Palta Hass", 12_000.0, 18, today, OrderStatus.ON_ROUTE, now.minusHours(40)),
-                sample("FX-1041", 102, "Uva Red Globe", 10_400.0, 16, today, OrderStatus.ON_ROUTE, now.minusHours(52)),
-                sample("FX-1038", 104, "Mango Kent", 15_000.0, 20, today.plusDays(1), OrderStatus.ON_ROUTE, now.minusHours(70)),
-                sample("FX-1040", 103, "Fresa", 11_200.0, 14, today.plusDays(1), OrderStatus.IN_PREPARATION, now.minusHours(30)),
-                sample("FX-1039", 105, "Mango Kent", 15_000.0, 20, today.plusDays(4), OrderStatus.PENDING, now.minusHours(8))
-            )
-        }
-
-        private fun initialHistory(): List<OrderHistoryItem> {
-            val now = LocalDateTime.now()
-            return listOf(
-                OrderHistoryItem("FX-1035", "Supermercados Lima Centro", 102, "Finca Los Andes", "Uva Red Globe",
-                    now.minusDays(3).withHour(16).withMinute(20), OrderHistoryStatus.DELIVERED),
-                OrderHistoryItem("FX-1032", "Distribuidora Pacífico", 106, "Agro Valle Verde", "Arándano",
-                    now.minusDays(6).withHour(10).withMinute(45), OrderHistoryStatus.DELIVERED),
-                OrderHistoryItem("FX-1028", "Mercados Lima Sur", 103, "Campos del Norte", "Mango Kent",
-                    now.minusDays(10).withHour(9).withMinute(10), OrderHistoryStatus.CANCELLED)
-            )
-        }
     }
 }

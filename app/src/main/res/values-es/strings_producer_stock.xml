@@ -37,4 +37,6 @@
     <string name="prod_product_inactive">Inactivo</string>
     <string name="prod_product_deactivate">Desactivar producto</string>
     <string name="prod_product_reactivate">Reactivar producto</string>
+    <string name="producer_stock_empty_title">Aún no tienes productos</string>
+    <string name="producer_stock_empty_message">Publica un producto para que los clientes puedan pedirlo. Su stock aparece aquí.</string>
 </resources>

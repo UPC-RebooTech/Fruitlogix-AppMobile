@@ -23,7 +23,7 @@ data class StockItemModel(
     val minThresholdKg: Int = 100,
     val reservedKg: Int = 0,
     val chamberTempC: Double? = null,
-    /** Product id on the server (GET /products), null for the sample lots. */
+    /** Product id on the server (GET /products), null only before it reaches the server. */
     val remoteId: Int? = null,
     /** Price per kg (server products). */
     val unitPrice: Double? = null,
@@ -40,33 +40,11 @@ interface StockRepository {
     suspend fun getStockItem(productId: String): StockItem?
 
     companion object {
-        private val now = LocalDateTime.now()
-
-        val stockItems = mutableStateListOf(
-            StockItemModel("lot-104", "Kent Mango", "Grade A Export", 640, 900, "Optimal", "Chamber 01-A", reservedKg = 500, chamberTempC = 3.8),
-            StockItemModel("lot-882", "Hass Avocado", "Premium Caliber", 320, 500, "Optimal", "Chamber 02-B", reservedKg = 300, chamberTempC = 5.5),
-            StockItemModel("lot-094", "Blueberries", "Biloxi Fresh", 80, 150, "Review", "Staging Zone 4B", reservedKg = 80, chamberTempC = 2.1),
-            StockItemModel("lot-402", "Red Globe Grapes", "Table Grapes", 120, 300, "Optimal", "Vault Section C", chamberTempC = 1.5)
-        )
+        /** The producer's products from the server (/products); no sample lots. */
+        val stockItems = mutableStateListOf<StockItemModel>()
 
         /** Movements by lot id, newest first. */
-        val movements = mutableStateMapOf(
-            "lot-104" to listOf(
-                StockMovement(StockMovementType.HARVEST_INTAKE, "Cuadrilla A", 320, now.minusHours(5)),
-                StockMovement(StockMovementType.DISPATCH, "#1030", -350, now.minusDays(1))
-            ),
-            "lot-882" to listOf(
-                StockMovement(StockMovementType.HARVEST_INTAKE, "Cuadrilla B", 180, now.minusDays(1))
-            ),
-            "lot-094" to listOf(
-                StockMovement(StockMovementType.DISPATCH, "#1041", -120, now.minusHours(20)),
-                StockMovement(StockMovementType.HARVEST_INTAKE, "Cuadrilla B", 200, now.minusDays(2))
-            ),
-            "lot-402" to listOf(
-                StockMovement(StockMovementType.DISPATCH, "#1036", -150, now.minusHours(9)),
-                StockMovement(StockMovementType.HARVEST_INTAKE, "Cuadrilla A", 120, now.minusDays(3))
-            )
-        )
+        val movements = mutableStateMapOf<String, List<StockMovement>>()
 
         /** Sets the available kg and records the difference as a manual adjustment. */
         fun updateStockKg(id: String, newKg: Int) {

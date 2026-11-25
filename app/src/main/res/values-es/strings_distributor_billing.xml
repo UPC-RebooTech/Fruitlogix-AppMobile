@@ -107,4 +107,10 @@
     <string name="inv_pdf_total">Total %1$s</string>
     <string name="inv_pdf_subject">Reporte financiero FruitLogix</string>
     <string name="inv_pdf_share">Compartir el reporte</string>
+    <string name="inv_auto_error_unknown_client">“%1$s” no es una cuenta de cliente en el servidor. Elige uno de la lista.</string>
+    <string name="inv_save_offline">Sin conexión. La factura no se emitió; inténtalo cuando tengas señal.</string>
+    <string name="inv_save_failed">El servidor no aceptó la factura. Inténtalo de nuevo.</string>
+    <string name="inv_save_failed_reason">El servidor no aceptó la factura: %1$s</string>
+    <string name="inv_prices_empty">Aún no hay pedidos con precio. Los precios aparecen aquí a medida que los clientes hacen pedidos.</string>
+    <string name="inv_purchases_empty">Aún no hay pedidos de clientes.</string>
 </resources>

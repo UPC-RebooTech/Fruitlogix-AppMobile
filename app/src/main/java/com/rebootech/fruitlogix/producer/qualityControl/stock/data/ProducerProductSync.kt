@@ -32,8 +32,7 @@ data class ProductSaveResult(val ok: Boolean, val serverMessage: String? = null)
 
 /**
  * The producer's catalog on the server (/products). For a Producer, GET /products returns only
- * their own products, inactive ones too. Each one is shown in the Stock list as "prod-<id>",
- * next to the sample lots that only live on this phone.
+ * their own products, inactive ones too. Each one is shown in the Stock list as "prod-<id>", (no sample lots).
  */
 object ProducerProductSync {
     private const val TAG = "ProducerProducts"

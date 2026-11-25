@@ -41,7 +41,6 @@ import java.time.temporal.ChronoUnit
 
 /**
  * Trips in Fleet.
- * - Sample trips (FL-408, FL-102, FL-219) only live on this phone, so the app works offline.
  * - Server deliveries (/api/v1/deliveries) are shown as "D-<id>" trips. Starting a trip
  *   (start-dispatch, which also moves the order to InTransit), reporting a delay, checkpoints,
  *   GPS positions (tracking-logs), driver/truck changes and the arrival are sent to the server.
@@ -52,7 +51,7 @@ class FakeFleetRepository(
 ) : FleetRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val trips = MutableStateFlow(initialTrips())
+    private val trips = MutableStateFlow<List<ActiveDispatch>>(emptyList())
 
     init {
         scope.launch { refresh() }
@@ -62,7 +61,7 @@ class FakeFleetRepository(
         combine(trips, orderRepository.orders) { list, orders ->
             val activeOrderIds = orders.map { it.id }.toSet()
             list.map { trip ->
-                // Sample trips follow their sample order; server trips follow the server status
+                // Trips not yet on the server follow their order; server trips follow the server status
                 if (trip.remoteId == null && trip.isActive && trip.orderId !in activeOrderIds) {
                     trip.copy(deliveryState = DeliveryState.DELIVERED, deliveredAt = trip.deliveredAt ?: LocalDateTime.now())
                 } else trip
@@ -202,8 +201,8 @@ class FakeFleetRepository(
         RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
         val previous = trips.value.filter { it.remoteId != null }.associateBy { it.remoteId }
         val fromServer = result.value.map { dto -> build(dto, previous[dto.id]) }
-        // The server list replaces the previous server copy; sample trips stay
-        trips.update { list -> list.filter { it.remoteId == null } + fromServer }
+        // The server list is the whole list (no sample trips)
+        trips.value = fromServer
     }
 
     /** Reads one delivery again (after a GPS position, the geofence may have changed it). */
@@ -270,99 +269,5 @@ class FakeFleetRepository(
     private companion object {
         const val TAG = "FruitLogix-Fleet"
         const val ARRIVAL_NOTE = "Delivery proof registered in the FruitLogix app"
-
-        fun initialTrips(): List<ActiveDispatch> {
-            val now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-            val today = now.toLocalTime()
-            return listOf(
-                ActiveDispatch(
-                    unitId = "FL-408",
-                    plate = "C7X-915",
-                    truckModel = "International LT",
-                    driver = DriverInfo("Mateo Silva", "+51 956 410 228", "Q-41872093"),
-                    orderId = "FX-1042",
-                    productName = "Palta Hass",
-                    pallets = 18,
-                    producerName = "Fundo Santa Rosa",
-                    originName = "Chavín de Huántar",
-                    destinationName = "Lima Central Hub",
-                    dock = "A",
-                    sealId = "PE-99410-X",
-                    sensorId = "TH-408",
-                    totalKm = 223.0,
-                    travelledKm = 182.0,
-                    eta = today.plusMinutes(50),
-                    harvestedAt = now.minusDays(1).withHour(5).withMinute(30),
-                    inspectedAt = now.minusDays(1).withHour(7).withMinute(15),
-                    departedAt = now.minusMinutes(300),
-                    checkpoints = listOf(
-                        Checkpoint("Chavín de Huántar", CheckpointKind.ORIGIN, passedAt = today.minusMinutes(300)),
-                        Checkpoint("Huaraz", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(200)),
-                        Checkpoint("Pativilca", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(65)),
-                        Checkpoint("Panamericana Norte", CheckpointKind.CURRENT, km = 182),
-                        Checkpoint("Lima Central Hub", CheckpointKind.DESTINATION)
-                    )
-                ),
-                ActiveDispatch(
-                    unitId = "FL-102",
-                    plate = "BQK-482",
-                    truckModel = "Kenworth T680",
-                    driver = DriverInfo("Jorge Huamán", "+51 987 112 340", "Q-30551876"),
-                    orderId = "FX-1041",
-                    productName = "Uva Red Globe",
-                    pallets = 16,
-                    producerName = "Viñedos de Ica",
-                    originName = "Ica",
-                    destinationName = "Lima Central Hub",
-                    dock = "B",
-                    sealId = "PE-99387-K",
-                    sensorId = "TH-102",
-                    totalKm = 395.0,
-                    travelledKm = 394.6,
-                    eta = today.plusMinutes(3),
-                    harvestedAt = now.minusDays(1).withHour(4).withMinute(50),
-                    inspectedAt = now.minusDays(1).withHour(6).withMinute(40),
-                    departedAt = now.minusMinutes(360),
-                    reeferCheckedAt = now.minusMinutes(365),
-                    checkpoints = listOf(
-                        Checkpoint("Ica", CheckpointKind.ORIGIN, passedAt = today.minusMinutes(360)),
-                        Checkpoint("Chincha", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(290)),
-                        Checkpoint("Lurín", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(70)),
-                        Checkpoint("Av. Néstor Gambetta", CheckpointKind.CURRENT, km = 394),
-                        Checkpoint("Lima Central Hub", CheckpointKind.DESTINATION)
-                    )
-                ),
-                ActiveDispatch(
-                    unitId = "FL-219",
-                    plate = "AFR-307",
-                    truckModel = "Freightliner M2",
-                    driver = DriverInfo("Luis Ramos", "+51 944 870 615", "Q-27409318"),
-                    orderId = "FX-1038",
-                    productName = "Mango Kent",
-                    pallets = 20,
-                    producerName = "Campos del Norte",
-                    originName = "Piura",
-                    destinationName = "Lima Central Hub",
-                    dock = "C",
-                    sealId = "PE-99355-M",
-                    sensorId = "TH-219",
-                    totalKm = 980.0,
-                    travelledKm = 812.0,
-                    eta = today.plusMinutes(195),
-                    delayMinutes = 45,
-                    delayReason = DelayReason.WEIGH_STATION,
-                    harvestedAt = now.minusDays(2).withHour(5).withMinute(0),
-                    inspectedAt = now.minusDays(2).withHour(8).withMinute(20),
-                    departedAt = now.minusMinutes(600),
-                    checkpoints = listOf(
-                        Checkpoint("Piura", CheckpointKind.ORIGIN, passedAt = today.minusMinutes(600)),
-                        Checkpoint("Chiclayo", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(430)),
-                        Checkpoint("Huarmey", CheckpointKind.CHECKPOINT, passedAt = today.minusMinutes(240), hasIssue = true),
-                        Checkpoint("Panamericana Norte", CheckpointKind.CURRENT, km = 812),
-                        Checkpoint("Lima Central Hub", CheckpointKind.DESTINATION)
-                    )
-                )
-            )
-        }
     }
 }

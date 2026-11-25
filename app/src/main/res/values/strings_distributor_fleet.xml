@@ -252,4 +252,6 @@
     <string name="assignment_save">Save change</string>
     <string name="assignment_saved">Trip assigned to %1$s</string>
     <string name="assignment_error_required">Enter at least the driver and the plate</string>
+    <string name="sensors_devices_empty_title">No sensors connected</string>
+    <string name="sensors_devices_empty_message">Sensors appear here when the IoT service sends them.</string>
 </resources>

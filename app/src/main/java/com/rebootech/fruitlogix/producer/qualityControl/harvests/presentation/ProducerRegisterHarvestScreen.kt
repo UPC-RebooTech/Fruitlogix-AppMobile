@@ -148,23 +148,25 @@ fun ProducerRegisterHarvestScreen(
                         }
                     }
                 )
-                Spacer(modifier = Modifier.height(spacing.inner))
-                Text(
-                    text = stringResource(R.string.register_harvest_sector),
-                    style = FruitLogixTheme.typography.labelMedium,
-                    color = scheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(spacing.xs))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs)
-                ) {
-                    state.sectors.forEach { sector ->
-                        SelectableChip(
-                            label = sector,
-                            selected = input.sector == sector,
-                            onClick = { viewModel.onInputChange(HarvestField.SECTOR) { it.copy(sector = sector) } }
-                        )
+                if (state.sectors.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(spacing.inner))
+                    Text(
+                        text = stringResource(R.string.register_harvest_sector),
+                        style = FruitLogixTheme.typography.labelMedium,
+                        color = scheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(spacing.xs))
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(spacing.xs)
+                    ) {
+                        state.sectors.forEach { sector ->
+                            SelectableChip(
+                                label = sector,
+                                selected = input.sector == sector,
+                                onClick = { viewModel.onInputChange(HarvestField.SECTOR) { it.copy(sector = sector) } }
+                            )
+                        }
                     }
                 }
             }

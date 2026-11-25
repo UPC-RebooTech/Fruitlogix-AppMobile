@@ -243,6 +243,10 @@ fun PricesSheet(
     var client by rememberSaveable { mutableStateOf(clients.firstOrNull().orEmpty()) }
     val history = historyFor(product, client)
     val locale = appLocale()
+    if (products.isEmpty() || clients.isEmpty()) {
+        Text(stringResource(R.string.inv_prices_empty), style = FruitLogixTheme.typography.bodyLarge, color = scheme.onSurfaceVariant)
+        return
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.sm)) {
         Column { Label(stringResource(R.string.inv_prices_product)); ChipRow(products, product) { product = it } }
@@ -321,6 +325,10 @@ fun PurchasesSheet(
     var period by rememberSaveable { mutableStateOf(SummaryPeriod.MONTH) }
     val summary = summaryFor(client, period)
     val number = NumberFormat.getIntegerInstance(appLocale())
+    if (clients.isEmpty()) {
+        Text(stringResource(R.string.inv_purchases_empty), style = FruitLogixTheme.typography.bodyLarge, color = scheme.onSurfaceVariant)
+        return
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.sm)) {
         Column { Label(stringResource(R.string.inv_purchases_client)); ChipRow(clients, client) { client = it } }

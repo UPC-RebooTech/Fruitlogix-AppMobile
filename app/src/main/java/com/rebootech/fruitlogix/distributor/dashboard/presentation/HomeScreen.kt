@@ -143,6 +143,13 @@ private fun HomeContent(
                     actionText = stringResource(R.string.dist_home_fleet_see_all),
                     onActionClick = onOpenFleet
                 )
+                if (data.fleet.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.dist_home_fleet_empty),
+                        style = FruitLogixTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 data.fleet.forEach { truck ->
                     FleetUnitRow(truck = truck, onClick = { onOpenUnit(truck.dispatch.unitId) })
                 }

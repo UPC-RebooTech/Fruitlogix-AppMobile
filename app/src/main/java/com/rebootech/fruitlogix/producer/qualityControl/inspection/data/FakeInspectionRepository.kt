@@ -23,7 +23,7 @@ import java.util.Locale
 import kotlin.math.ceil
 
 /**
- * Lots to inspect: the sample lots, plus one built from each server order of the producer.
+ * Lots to inspect: one built from each server order of the producer (no sample lots).
  * Drafts are kept on the phone (work offline); a server order's report is sent with [sendReport].
  */
 class FakeInspectionRepository : InspectionRepository {
@@ -36,46 +36,11 @@ class FakeInspectionRepository : InspectionRepository {
     /** Generic sizes for other fruits (count per 10 kg box). */
     private val genericCalibers = listOf(Caliber(1, 400), Caliber(2, 250), Caliber(3, 150))
 
-    private val lots = listOf(
-        InspectionLot(
-            orderId = "1044",
-            lotCode = "KM-04",
-            clientName = "Mercado Central S.A.",
-            productName = "Kent Mango",
-            netWeightKg = 400,
-            crates = 20,
-            crateKg = 20,
-            previousRejectionReason = "Magulladuras sobre el límite de 4 % · se pidió reclasificar",
-            initialCoreTempC = 9.4,
-            initialMoisturePct = 74.0,
-            initialDefectsPct = 5.2,
-            initialVisualScore = 3,
-            calibers = mangoCalibers,
-            initialCalibers = setOf(9, 10)
-        ),
-        InspectionLot(
-            orderId = "1048",
-            lotCode = "HA-09",
-            clientName = "Supermercados Wong",
-            productName = "Hass Avocado",
-            netWeightKg = 300,
-            crates = 15,
-            crateKg = 20,
-            previousRejectionReason = null,
-            initialCoreTempC = 6.2,
-            initialMoisturePct = 78.5,
-            initialDefectsPct = 1.8,
-            initialVisualScore = 4,
-            calibers = avocadoCalibers,
-            initialCalibers = setOf(16, 18)
-        )
-    )
-
     private val drafts = mutableMapOf<String, InspectionDraft>()
 
     override fun lotForOrder(orderId: String): InspectionLot? {
         val id = orderId.removePrefix("#").removePrefix("ORD-").trim()
-        return lots.find { it.orderId == id } ?: serverLot(id)
+        return serverLot(id)
     }
 
     /** A server order ("FX-12") as a lot: weight and product from the order, measurements empty. */
@@ -112,8 +77,7 @@ class FakeInspectionRepository : InspectionRepository {
 
     override fun findByLotCode(code: String): InspectionLot? {
         val clean = code.uppercase().replace("LOT", "").replace("#", "").trim().removePrefix("-")
-        return lots.find { it.lotCode.equals(clean, ignoreCase = true) }
-            ?: FakeOrderRepository.instance.orderByBatch(clean.toIntOrNull())?.let { serverLot(it.id) }
+        return FakeOrderRepository.instance.orderByBatch(clean.toIntOrNull())?.let { serverLot(it.id) }
     }
 
     override fun draftFor(orderId: String): InspectionDraft? = drafts[orderId.removePrefix("#")]

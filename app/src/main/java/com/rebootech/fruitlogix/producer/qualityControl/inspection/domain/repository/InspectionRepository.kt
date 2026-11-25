@@ -20,7 +20,7 @@ interface InspectionRepository {
     /**
      * Sends the inspection of a server order: creates and links its harvest lot when it has none
      * (POST /harvest-batches + PATCH /orders/{id}/batch), registers the full inspection
-     * (POST /quality-inspections) and marks the lot as inspected. Sample orders stay on this phone.
+     * (POST /quality-inspections) and marks the lot as inspected. Lots without a server order are not sent.
      */
     suspend fun sendReport(orderId: String, draft: InspectionDraft, inspectorName: String): InspectionSendResult =
         InspectionSendResult(ok = true)

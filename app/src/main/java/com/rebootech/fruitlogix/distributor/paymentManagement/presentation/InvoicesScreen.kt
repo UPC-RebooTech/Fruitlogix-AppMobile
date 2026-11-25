@@ -283,7 +283,7 @@ private fun ToolSheet(tool: BillingTool, state: InvoicesUiState, viewModel: Invo
             Spacer(modifier = Modifier.height(FruitLogixTheme.spacing.sm))
             when (tool) {
                 BillingTool.AUTO_INVOICE -> AutoInvoiceSheet(
-                    clients = viewModel.purchaseClients,
+                    clients = viewModel.clientNames,
                     error = error,
                     onIssue = viewModel::issueAutoInvoice
                 )

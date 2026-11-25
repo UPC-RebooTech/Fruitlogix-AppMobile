@@ -36,4 +36,5 @@
     <string name="report_detail_export_pdf">Exportar PDF</string>
     <string name="report_detail_export_soon">La exportación a PDF estará disponible pronto</string>
     <string name="report_detail_share_text">Reporte de calidad FruitLogix %1$s\n%2$s · %3$s kg · Lote %4$s\nEstado: %5$s\nVisual %6$s/5 · Defectos %7$s%% · Temp. pulpa %8$s °C · Humedad %9$s%%</string>
+    <string name="report_detail_not_found">Este reporte no está disponible.</string>
 </resources>

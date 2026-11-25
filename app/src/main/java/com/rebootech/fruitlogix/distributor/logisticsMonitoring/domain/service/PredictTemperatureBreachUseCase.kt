@@ -16,8 +16,8 @@ class PredictTemperatureBreachUseCase {
     fun execute(
         readings: List<TemperatureReading>,
         thresholdCelsius: Double,
-        unitId: String = "FL-408",
-        cargoDescription: String = "Michoacán Hass avocado"
+        unitId: String,
+        cargoDescription: String
     ): PredictiveAlert? {
         if (readings.isEmpty()) return null
 

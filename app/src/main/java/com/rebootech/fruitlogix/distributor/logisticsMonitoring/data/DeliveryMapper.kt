@@ -21,7 +21,7 @@ import java.util.Locale
  */
 internal object DeliveryMapper {
 
-    /** Trips from the server use "D-" + their id, so they never collide with the sample units (FL-…). */
+    /** Trips from the server use "D-" + their id, so they never collide with local unit codes. */
     fun unitIdFor(remoteId: Int) = "D-$remoteId"
 
     /**

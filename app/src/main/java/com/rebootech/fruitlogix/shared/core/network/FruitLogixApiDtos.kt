@@ -165,6 +165,12 @@ data class QualityInspectionDto(
     val id: Int? = null,
     val batchId: Int? = null,
     val notes: String? = null,
+    val appearanceRating: Int? = null,
+    val wastePercentage: Double? = null,
+    val temperatureCelsius: Double? = null,
+    val humidityPercent: Double? = null,
+    val ph: Double? = null,
+    val brixDegrees: Double? = null,
     val inspectorName: String? = null,
     val createdAt: String? = null
 )

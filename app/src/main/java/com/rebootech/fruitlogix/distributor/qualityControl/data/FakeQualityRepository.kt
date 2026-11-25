@@ -38,7 +38,7 @@ import java.util.Locale
  *   incident on one creates an incident there (POST /incidents).
  * - The full inspection (ratings, pH, Brix…) is registered by the producer on their own lots; the
  *   distributor's quick field check (temperature and humidity) has no server endpoint, so it stays here.
- * - Sample lots (LOT-FX-…) only live on this phone.
+ * - Shrinkage has no server endpoint yet, so it starts empty (no sample data).
  */
 class FakeQualityRepository(
     /** Producer name for a server producer id (from the producer network). */
@@ -48,7 +48,7 @@ class FakeQualityRepository(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var nextId = 100
 
-    private val _lots = MutableStateFlow(initialLots())
+    private val _lots = MutableStateFlow<List<QualityLot>>(emptyList())
     override val lots: StateFlow<List<QualityLot>> = _lots.asStateFlow()
 
     private val thisMonth = YearMonth.now()
@@ -57,12 +57,7 @@ class FakeQualityRepository(
         scope.launch { refresh() }
     }
 
-    override val shrinkage: List<ShrinkageRecord> = listOf(
-        ShrinkageRecord("m1", thisMonth, ShrinkageStage.TRANSPORT, ShrinkageCause.THERMAL_EXCURSION, "Arándano", 45, 810.0),
-        ShrinkageRecord("m2", thisMonth, ShrinkageStage.RECEPTION, ShrinkageCause.MECHANICAL_DAMAGE, "Palta Hass", 62, 558.0),
-        ShrinkageRecord("m3", thisMonth, ShrinkageStage.HARVEST, ShrinkageCause.UNDERSIZE, "Mango Kent", 30, 210.0),
-        ShrinkageRecord("m4", thisMonth.minusMonths(1), ShrinkageStage.TRANSPORT, ShrinkageCause.ROUTE_DELAY, "Uva Red Globe", 28, 336.0)
-    )
+    override val shrinkage: List<ShrinkageRecord> = emptyList()
 
     override fun shrinkageMonths(): List<YearMonth> = listOf(thisMonth, thisMonth.minusMonths(1), thisMonth.minusMonths(2))
 
@@ -147,7 +142,7 @@ class FakeQualityRepository(
         RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
         val previous = _lots.value.filter { it.remoteId != null }.associateBy { it.remoteId }
         val fromServer = result.value.map { batch -> toLot(batch, previous[batch.id]) }
-        // The server list replaces the previous server copy; sample and field records stay
+        // The server list replaces the previous server copy; field records of this phone stay
         _lots.update { list -> fromServer + list.filter { it.remoteId == null } }
     }
 
@@ -184,19 +179,5 @@ class FakeQualityRepository(
         const val TAG = "FruitLogix-Quality"
 
         fun lotCodeFor(batchId: Int) = "LOT-$batchId"
-
-        fun initialLots(): List<QualityLot> {
-            val now = LocalDateTime.now()
-            return listOf(
-                QualityLot("q1", "LOT-FX-1041-UVA", "FX-1041", "Uva Red Globe", "Viñedos de Ica", 0.8, 92.0,
-                    LotStatus.PENDING, LotSource.RECEPTION, now.minusMinutes(5)),
-                QualityLot("q2", "LOT-FX-1042-PALTA", "FX-1042", "Palta Hass", "Fundo Santa Rosa", 6.4, 88.0,
-                    LotStatus.PENDING, LotSource.RECEPTION, now.minusMinutes(40)),
-                QualityLot("q3", "LOT-FX-1038-MANGO", "FX-1038", "Mango Kent", "Campos del Norte", 13.4, 86.0,
-                    LotStatus.PENDING, LotSource.RECEPTION, now.minusHours(2)),
-                QualityLot("q4", "LOT-FX-1035-UVA", "FX-1035", "Uva Red Globe", "Finca Los Andes", 0.9, 93.0,
-                    LotStatus.APPROVED, LotSource.RECEPTION, now.minusDays(3))
-            )
-        }
     }
 }

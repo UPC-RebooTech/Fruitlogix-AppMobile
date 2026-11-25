@@ -34,7 +34,7 @@ data class QualityLot(
     /** Voice note attached to an incident (US57). */
     val voiceNoteSeconds: Int? = null,
     val incidentDescription: String? = null,
-    /** Harvest batch id on the server; null for the sample lots that only live on this phone. */
+    /** Harvest batch id on the server; null for field records of this phone. */
     val remoteId: Int? = null
 )
 

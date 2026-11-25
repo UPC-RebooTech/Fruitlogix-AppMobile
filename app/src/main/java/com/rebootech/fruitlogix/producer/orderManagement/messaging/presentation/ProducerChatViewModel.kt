@@ -9,7 +9,6 @@ import com.rebootech.fruitlogix.producer.orderManagement.messaging.domain.model.
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.domain.model.MessageSender
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.domain.repository.ChatRepository
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,14 +71,5 @@ class ProducerChatViewModel(
 
         chatRepository.send(orderId, MessageSender.PRODUCER, text)
         if (quickReply == null) _uiState.update { it.copy(currentInput = "") }
-
-        // Simulated distributor reply until the messaging backend exists (sample user content)
-        viewModelScope.launch {
-            _uiState.update { it.copy(isDistributorTyping = true) }
-            delay(1500)
-            chatRepository.send(orderId, MessageSender.DISTRIBUTOR, "Perfecto, gracias. Coordinamos el recojo.")
-            chatRepository.markConversationRead(orderId)
-            _uiState.update { it.copy(isDistributorTyping = false) }
-        }
     }
 }

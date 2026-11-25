@@ -252,4 +252,6 @@
     <string name="assignment_save">Guardar cambio</string>
     <string name="assignment_saved">Viaje asignado a %1$s</string>
     <string name="assignment_error_required">Ingresa al menos el chofer y la placa</string>
+    <string name="sensors_devices_empty_title">No hay sensores conectados</string>
+    <string name="sensors_devices_empty_message">Los sensores aparecen aquí cuando el servicio IoT los envía.</string>
 </resources>

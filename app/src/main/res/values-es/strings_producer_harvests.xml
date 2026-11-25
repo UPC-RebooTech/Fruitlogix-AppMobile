@@ -41,4 +41,6 @@
     <string name="producer_harvests_status_ripening">En maduración</string>
     <string name="producer_harvests_status_scheduled">Cosecha programada</string>
     <string name="producer_harvests_status_registered">Registrado</string>
+    <string name="producer_harvests_empty_title">Aún no hay cosechas</string>
+    <string name="producer_harvests_empty_message">Registra una cosecha y se guarda como lote en el servidor.</string>
 </resources>
