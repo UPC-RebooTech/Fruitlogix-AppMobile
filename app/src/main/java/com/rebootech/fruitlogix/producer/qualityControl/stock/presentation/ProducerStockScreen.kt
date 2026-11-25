@@ -179,14 +179,16 @@ fun ProducerStockScreen(
                         if (canIncrement) {
                             val newAmount = (stock.availableKg + 10).coerceAtMost(stock.totalCapacityKg)
                             StockRepository.updateStockKg(stock.id, newAmount)
-                            ProducerProductSync.pushKg(stock)
+                            // Se envía la copia con el valor recién actualizado
+                            ProducerProductSync.pushKg(stock.copy(availableKg = newAmount))
                         }
                     },
                     onDecrement = {
                         if (canDecrement) {
                             val newAmount = (stock.availableKg - 10).coerceAtLeast(0)
                             StockRepository.updateStockKg(stock.id, newAmount)
-                            ProducerProductSync.pushKg(stock)
+                            // Se envía la copia con el valor recién actualizado
+                            ProducerProductSync.pushKg(stock.copy(availableKg = newAmount))
                         }
                     },
                     onClick = { onNavigateToDetail(stock.id) }
@@ -251,8 +253,9 @@ fun InventoryCardItem(
 ) {
     val scheme = MaterialTheme.colorScheme
     val colors = FruitLogixTheme.colors
-    val fillFraction = (item.availableKg.toFloat() / item.totalCapacityKg.toFloat()).coerceIn(0f, 1f)
-    val isCritical = item.isCritical
+    val safeCapacity = if (item.totalCapacityKg > 0) item.totalCapacityKg.toFloat() else 1f
+    val fillFraction = (item.availableKg.toFloat() / safeCapacity).coerceIn(0f, 1f)
+    val isCritical = item.availableKg <= item.minThresholdKg
 
     FruitLogixCard(
         variant = CardVariant.White,
@@ -304,7 +307,10 @@ fun InventoryCardItem(
 
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = stringResource(R.string.producer_orders_tile_volume_format, numberFormat.format(item.availableKg)),
+                    text = stringResource(
+                        R.string.producer_orders_tile_volume_format,
+                        numberFormat.format(item.availableKg.coerceAtLeast(0))
+                    ),
                     style = FruitLogixTheme.typography.titleLarge,
                     color = if (isCritical) scheme.error else scheme.onSurface
                 )
