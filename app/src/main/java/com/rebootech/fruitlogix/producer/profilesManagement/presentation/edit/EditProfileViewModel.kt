@@ -19,7 +19,9 @@ data class EditProfileUiState(
     val form: ProducerProfile,
     val errors: Map<ProfileField, ProfileError> = emptyMap(),
     val isSaving: Boolean = false,
-    val saved: Boolean = false
+    val saved: Boolean = false,
+    /** The server refused the change (its own text). */
+    val serverError: String? = null
 )
 
 class EditProfileViewModel(
@@ -47,9 +49,9 @@ class EditProfileViewModel(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
-            repository.updateProfile(form)
-            _uiState.update { it.copy(isSaving = false, saved = true) }
+            _uiState.update { it.copy(isSaving = true, serverError = null) }
+            val result = repository.updateProfile(form)
+            _uiState.update { it.copy(isSaving = false, saved = result.ok, serverError = if (result.ok) null else result.serverMessage ?: "") }
         }
     }
 }

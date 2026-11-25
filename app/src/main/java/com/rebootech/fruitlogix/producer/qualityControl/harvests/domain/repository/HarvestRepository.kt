@@ -1,6 +1,7 @@
 package com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.repository
 
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestForecast
+import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.HarvestSaveResult
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.PlannedHarvest
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.domain.model.ScheduledHarvest
 import kotlinx.coroutines.flow.Flow
@@ -26,5 +27,8 @@ interface HarvestRepository {
         sector: String,
         brix: Double? = null,
         notes: String? = null
-    )
+    ): HarvestSaveResult
+
+    /** Reads the producer's own harvest batches from the server again. */
+    suspend fun refresh() {}
 }

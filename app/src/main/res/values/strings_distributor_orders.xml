@@ -37,7 +37,7 @@
     <string name="dist_order_date_placeholder">Choose a date</string>
     <string name="dist_order_date_cd">Open the calendar to choose the delivery date</string>
     <string name="dist_order_date_ok">OK</string>
-    <string name="dist_order_error_client">Pick a client</string>
+    <string name="dist_order_error_client">Pick the client account</string>
     <string name="dist_order_error_product">Pick a product</string>
     <string name="dist_order_error_quantity">Enter between 1 and 100 000 kg</string>
     <string name="dist_order_error_date">Choose today or a later date</string>
@@ -112,4 +112,21 @@
     <string name="dist_order_producer_assign_hint">The order goes to \"In preparation\" and can then get a driver and a truck.</string>
     <string name="dist_order_producer_assign_failed">Could not assign the producer. Check your connection and try again.</string>
     <string name="dist_order_producer_assigned">Producer assigned: the order is in preparation</string>
+    <string name="dist_order_address">Delivery address</string>
+    <string name="dist_order_address_placeholder">e.g. Av. Industrial 123, Lima</string>
+    <string name="dist_order_error_address">Enter the delivery address</string>
+    <string name="dist_order_error_below_minimum">The producer\'s minimum order is %1$s kg</string>
+    <string name="dist_order_error_above_stock">Only %1$s kg available</string>
+    <string name="dist_order_product_price">S/ %1$s per kg</string>
+    <string name="dist_order_product_minimum">minimum %1$s</string>
+    <string name="dist_order_product_available">%1$s available</string>
+    <string name="dist_order_cancel">Cancel order</string>
+    <string name="dist_order_cancel_title">Cancel %1$s?</string>
+    <string name="dist_order_cancel_message">The client and the producer will see it as cancelled, with this reason.</string>
+    <string name="dist_order_cancel_reason">Reason</string>
+    <string name="dist_order_cancel_confirm">Cancel order</string>
+    <string name="dist_order_cancelled">%1$s cancelled</string>
+    <string name="dist_order_cancel_failed">Could not cancel the order. Check your connection and try again.</string>
+    <string name="dist_order_delete_blocked">It cannot be deleted: it already has a delivery, invoice or payment. Cancel it instead.</string>
+    <string name="dist_order_producer_waiting">Waiting for the producer to accept the order. Then it goes to \"In preparation\".</string>
 </resources>

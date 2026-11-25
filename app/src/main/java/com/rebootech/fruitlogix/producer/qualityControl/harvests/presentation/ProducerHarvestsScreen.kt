@@ -24,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -92,6 +93,8 @@ fun ProducerHarvestsScreen(
 ) {
     val repository = FakeHarvestRepository.instance
     val harvestList by repository.recentHarvests.collectAsState()
+    // The producer's own batches on the server
+    LaunchedEffect(Unit) { repository.refresh() }
     val scheduled by repository.scheduledHarvests.collectAsState()
     val forecast = repository.weeklyForecast
 

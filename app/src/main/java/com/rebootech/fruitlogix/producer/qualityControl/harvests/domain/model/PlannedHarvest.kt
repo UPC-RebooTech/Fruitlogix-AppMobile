@@ -26,13 +26,18 @@ data class PlannedHarvest(
     val status: HarvestStatus = HarvestStatus.REGISTERED,
     val brix: Double? = null,
     /** Free text written by the producer (data, not UI text). */
-    val notes: String? = null
+    val notes: String? = null,
+    /** Harvest batch id on the server (POST /harvest-batches), null for the sample harvests. */
+    val remoteId: Int? = null
 ) {
     // Bridge properties used by the Home "Next harvest" card
     val productName: String get() = fruitName
     val expectedKg: Int get() = weightKg
     val crewName: String get() = crewOrTransport
 }
+
+/** Result of logging a harvest; serverMessage is the server's own text when it refused it. */
+data class HarvestSaveResult(val ok: Boolean, val serverMessage: String? = null)
 
 /** Upcoming harvest planned in the field. */
 data class ScheduledHarvest(

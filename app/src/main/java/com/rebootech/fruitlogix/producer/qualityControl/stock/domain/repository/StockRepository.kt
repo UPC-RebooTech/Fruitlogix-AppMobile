@@ -22,7 +22,14 @@ data class StockItemModel(
     val chamberLocation: String,
     val minThresholdKg: Int = 100,
     val reservedKg: Int = 0,
-    val chamberTempC: Double? = null
+    val chamberTempC: Double? = null,
+    /** Product id on the server (GET /products), null for the sample lots. */
+    val remoteId: Int? = null,
+    /** Price per kg (server products). */
+    val unitPrice: Double? = null,
+    val minOrderKg: Int? = null,
+    /** false = deactivated on the server: clients do not see it. */
+    val isActive: Boolean = true
 ) {
     val isCritical: Boolean get() = availableKg < minThresholdKg
     val freeKg: Int get() = (availableKg - reservedKg).coerceAtLeast(0)

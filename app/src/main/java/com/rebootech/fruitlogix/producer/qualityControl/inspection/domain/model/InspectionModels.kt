@@ -19,7 +19,11 @@ data class InspectionLot(
     val initialDefectsPct: Double,
     val initialVisualScore: Int,
     val calibers: List<Caliber>,
-    val initialCalibers: Set<Int>
+    val initialCalibers: Set<Int>,
+    /** Built from a server order: the measurements start empty (nothing is pre-filled). */
+    val fromServer: Boolean = false,
+    val remoteOrderId: Int? = null,
+    val batchId: Int? = null
 ) {
     val isReinspection: Boolean get() = previousRejectionReason != null
 }
@@ -32,7 +36,17 @@ data class InspectionDraft(
     val coreTemp: String,
     val moisture: String,
     val defects: String,
-    val notes: String
+    val notes: String,
+    // Fields the server needs for a full inspection (CreateQualityInspectionResource)
+    val ph: String = "",
+    val brix: String = "",
+    val hasStains: Boolean = false,
+    val hasBruises: Boolean = false,
+    val hasDeformations: Boolean = false,
+    val hasRot: Boolean = false,
+    val dryCleaningDone: Boolean = false,
+    val packagingInspected: Boolean = false,
+    val boxesSealed: Boolean = false
 )
 
 enum class InspectionGrade { A, B }
@@ -44,16 +58,22 @@ object InspectionRules {
     const val DEFECTS_MAX_PCT = 4.0
     const val GRADE_A_MIN_SCORE = 4
     const val NOTES_MAX = 300
+    /** Fruit pulp pH and soluble solids (°Brix) accepted by the server form. */
+    val PH_RANGE = 2.0..8.0
+    val BRIX_RANGE = 0.0..40.0
 
     fun parse(value: String): Double? = value.trim().replace(',', '.').toDoubleOrNull()
 
     fun coreTempOk(value: String) = parse(value)?.let { it in CORE_TEMP_RANGE_C } ?: false
     fun moistureOk(value: String) = parse(value)?.let { it in MOISTURE_RANGE_PCT } ?: false
     fun defectsOk(value: String) = parse(value)?.let { it in 0.0..DEFECTS_MAX_PCT } ?: false
+    fun phOk(value: String) = parse(value)?.let { it in PH_RANGE } ?: false
+    fun brixOk(value: String) = parse(value)?.let { it in BRIX_RANGE } ?: false
 
     fun grade(visualScore: Int) = if (visualScore >= GRADE_A_MIN_SCORE) InspectionGrade.A else InspectionGrade.B
 
     /** True when every measurement is within range and at least one caliber is selected. */
     fun canSubmit(draft: InspectionDraft) =
-        coreTempOk(draft.coreTemp) && moistureOk(draft.moisture) && defectsOk(draft.defects) && draft.calibers.isNotEmpty()
+        coreTempOk(draft.coreTemp) && moistureOk(draft.moisture) && defectsOk(draft.defects) &&
+            phOk(draft.ph) && brixOk(draft.brix) && draft.calibers.isNotEmpty()
 }

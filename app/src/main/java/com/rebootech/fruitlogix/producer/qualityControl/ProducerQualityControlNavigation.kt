@@ -10,6 +10,7 @@ import com.rebootech.fruitlogix.producer.orderManagement.ProducerPlaceholderScre
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerHarvestsScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockScreen
 import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.ProducerStockDetailScreen
+import com.rebootech.fruitlogix.producer.qualityControl.stock.presentation.NewProductScreen
 import com.rebootech.fruitlogix.producer.qualityControl.harvests.presentation.ProducerRegisterHarvestScreen
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerReportDetailScreen
 import com.rebootech.fruitlogix.producer.qualityControl.reports.presentation.ProducerQualityScreen
@@ -33,6 +34,9 @@ fun NavGraphBuilder.producerQualityControlGraph(
             },
             onNavigateToHarvestsTab = {
                 navController.navigate(ProducerQualityControlRoutes.Harvests)
+            },
+            onNavigateToNewProduct = {
+                navController.navigate(ProducerQualityControlRoutes.NewProduct)
             }
         )
     }
@@ -72,6 +76,11 @@ fun NavGraphBuilder.producerQualityControlGraph(
         ProducerRegisterHarvestScreen(
             onNavigateBack = { navController.popBackStack() }
         )
+    }
+
+    // 4b. Publicar producto en el catálogo
+    composable(route = ProducerQualityControlRoutes.NewProduct) {
+        NewProductScreen(onNavigateBack = { navController.popBackStack() })
     }
 
     // 5. Detalle de Stock por Producto

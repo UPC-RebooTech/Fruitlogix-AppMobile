@@ -35,6 +35,8 @@ data class ActiveDispatch(
     val inspectedAt: LocalDateTime?,
     val departedAt: LocalDateTime?,
     val deliveredAt: LocalDateTime? = null,
+    /** The truck reached the client (server status Arrived): it waits at the gate for the reception. */
+    val arrivedAt: LocalDateTime? = null,
     val reeferCheckedAt: LocalDateTime? = null,
     val rejectionReason: String? = null,
     val checkpoints: List<Checkpoint>,
@@ -76,6 +78,9 @@ enum class DeliveryState { PENDING, ON_ROUTE, DELIVERED, REJECTED }
 
 /** Why a delivery is late (US17). Shown as one-tap choices. */
 enum class DelayReason { TRAFFIC, WEIGH_STATION, ROAD_WORKS, WEATHER, MECHANICAL, OTHER }
+
+/** Outcome of a change sent to the server; [serverMessage] is the server's own text when it refused. */
+data class FleetActionResult(val ok: Boolean, val serverMessage: String? = null, val onServer: Boolean = true)
 
 /** Evidence collected at the destination (US16 signature, US52 photo, US56 GPS). */
 data class DeliveryProof(

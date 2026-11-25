@@ -5,6 +5,7 @@ import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.Che
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.CheckpointKind
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DeliveryState
 import com.rebootech.fruitlogix.distributor.logisticsMonitoring.domain.model.DriverInfo
+import com.rebootech.fruitlogix.shared.core.network.DeliveryEventDto
 import com.rebootech.fruitlogix.shared.core.network.DeliveryResponseDto
 import com.rebootech.fruitlogix.shared.core.network.TrackingLogResponseDto
 import java.time.LocalDateTime
@@ -23,13 +24,18 @@ internal object DeliveryMapper {
     /** Trips from the server use "D-" + their id, so they never collide with the sample units (FL-…). */
     fun unitIdFor(remoteId: Int) = "D-$remoteId"
 
+    /**
+     * PendingDispatch → pending; InTransit, Delayed and Arrived → on route (Arrived waits at the gate
+     * for the client's reception); Delivered → delivered; Failed → rejected. Unknown values → on route.
+     */
     fun state(currentStatus: String?): DeliveryState = when (currentStatus?.lowercase(Locale.ROOT)) {
         "pendingdispatch" -> DeliveryState.PENDING
         "delivered" -> DeliveryState.DELIVERED
         "failed" -> DeliveryState.REJECTED
-        // InTransit and Delayed: the truck is on the road
         else -> DeliveryState.ON_ROUTE
     }
+
+    fun isArrived(currentStatus: String?) = currentStatus.equals("Arrived", ignoreCase = true)
 
     /** Accepts "2026-11-13T15:30:00", with fraction of seconds, or with a UTC offset ("…Z"). */
     fun parseDateTime(value: String?, zone: ZoneId = ZoneId.systemDefault()): LocalDateTime? {
@@ -45,26 +51,24 @@ internal object DeliveryMapper {
         pallets: Int,
         latestLog: TrackingLogResponseDto?,
         previous: ActiveDispatch?,
-        now: LocalDateTime = LocalDateTime.now()
+        events: List<DeliveryEventDto> = emptyList(),
+        now: LocalDateTime = LocalDateTime.now(),
+        zone: ZoneId = ZoneId.systemDefault()
     ): ActiveDispatch {
         val state = state(dto.currentStatus)
+        val arrived = isArrived(dto.currentStatus)
         val totalKm = dto.routeDistanceKm ?: 0.0
-        val eta = parseDateTime(dto.estimatedTimeOfArrival) ?: now
-        val origin = dto.routeOrigin.orEmpty()
-        val destination = dto.routeDestination.orEmpty()
-        val position = latestLog?.let { log ->
-            val lat = log.latitude
-            val lon = log.longitude
-            if (lat != null && lon != null) String.format(Locale.ROOT, "%.4f, %.4f", lat, lon) else null
-        }
-        val checkpoints = buildList {
-            add(Checkpoint(origin, CheckpointKind.ORIGIN))
-            if (position != null && state == DeliveryState.ON_ROUTE) add(Checkpoint(position, CheckpointKind.CURRENT))
-            add(Checkpoint(destination, CheckpointKind.DESTINATION))
-        }
+        val eta = parseDateTime(dto.estimatedTimeOfArrival, zone) ?: now
+        val dispatchedAt = parseDateTime(dto.dispatchedAt, zone)
+        val arrivedAt = parseDateTime(dto.arrivedAt, zone) ?: if (arrived) previous?.arrivedAt ?: now else null
+        val deliveredAt = parseDateTime(dto.deliveredAt, zone)
+
         // Delay minutes are only known when the ETA has already passed
         val minutesLate = java.time.Duration.between(eta, now).toMinutes().toInt()
         val delayed = dto.currentStatus.equals("Delayed", ignoreCase = true)
+
+        // Rejected stays on this phone (the server has no endpoint for it yet)
+        val keepRejected = previous?.deliveryState == DeliveryState.REJECTED && state != DeliveryState.DELIVERED
 
         return ActiveDispatch(
             unitId = unitIdFor(dto.id),
@@ -75,13 +79,14 @@ internal object DeliveryMapper {
             productName = productName,
             pallets = pallets,
             producerName = previous?.producerName.orEmpty(),
-            originName = origin,
-            destinationName = destination,
+            originName = dto.routeOrigin.orEmpty(),
+            destinationName = dto.routeDestination.orEmpty(),
             dock = "",
             sealId = "",
             sensorId = "",
             totalKm = totalKm,
-            travelledKm = if (state == DeliveryState.DELIVERED) totalKm else 0.0,
+            // Arrived or delivered: the whole route is done (the truck is at the client)
+            travelledKm = if (arrived || state == DeliveryState.DELIVERED) totalKm else 0.0,
             eta = eta.toLocalTime(),
             delayMinutes = when {
                 previous?.delayMinutes?.let { it > 0 } == true -> previous.delayMinutes
@@ -89,15 +94,52 @@ internal object DeliveryMapper {
                 else -> 0
             },
             delayReason = previous?.delayReason,
-            deliveryState = previous?.deliveryState?.takeIf { it == DeliveryState.DELIVERED || it == DeliveryState.REJECTED } ?: state,
+            deliveryState = if (keepRejected) DeliveryState.REJECTED else state,
             harvestedAt = null,
             inspectedAt = null,
-            departedAt = null,
-            deliveredAt = previous?.deliveredAt,
+            departedAt = dispatchedAt,
+            deliveredAt = deliveredAt ?: previous?.deliveredAt?.takeIf { state == DeliveryState.DELIVERED },
+            arrivedAt = arrivedAt,
             reeferCheckedAt = previous?.reeferCheckedAt,
             rejectionReason = previous?.rejectionReason,
-            checkpoints = checkpoints,
+            checkpoints = checkpoints(dto, state, arrived, dispatchedAt, arrivedAt, events, latestLog, zone),
             remoteId = dto.id
         )
+    }
+
+    /** Origin, the checkpoints registered on the server, the last GPS position and the destination. */
+    private fun checkpoints(
+        dto: DeliveryResponseDto,
+        state: DeliveryState,
+        arrived: Boolean,
+        dispatchedAt: LocalDateTime?,
+        arrivedAt: LocalDateTime?,
+        events: List<DeliveryEventDto>,
+        latestLog: TrackingLogResponseDto?,
+        zone: ZoneId
+    ): List<Checkpoint> = buildList {
+        add(Checkpoint(dto.routeOrigin.orEmpty(), CheckpointKind.ORIGIN, passedAt = dispatchedAt?.toLocalTime()))
+        events
+            .filter { it.type.equals("Checkpoint", ignoreCase = true) }
+            .sortedBy { parseDateTime(it.occurredAt, zone) }
+            .forEach { event ->
+                add(
+                    Checkpoint(
+                        name = event.name?.takeIf { it.isNotBlank() } ?: position(event.latitude, event.longitude).orEmpty(),
+                        kind = CheckpointKind.CHECKPOINT,
+                        passedAt = parseDateTime(event.occurredAt, zone)?.toLocalTime()
+                    )
+                )
+            }
+        val gps = latestLog?.let { position(it.latitude, it.longitude) }
+        if (gps != null && state == DeliveryState.ON_ROUTE && !arrived) add(Checkpoint(gps, CheckpointKind.CURRENT))
+        add(Checkpoint(dto.routeDestination.orEmpty(), CheckpointKind.DESTINATION, passedAt = arrivedAt?.toLocalTime()))
+    }
+
+    /** "-12.0464, -77.0428"; null without coordinates or at (0,0), which means "no GPS signal". */
+    fun position(latitude: Double?, longitude: Double?): String? {
+        if (latitude == null || longitude == null) return null
+        if (latitude == 0.0 && longitude == 0.0) return null
+        return String.format(Locale.ROOT, "%.4f, %.4f", latitude, longitude)
     }
 }

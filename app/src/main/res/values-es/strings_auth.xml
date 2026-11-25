@@ -77,6 +77,5 @@
     <string name="iam_server_waking">Despertando el servidor… El primer ingreso del día puede tardar hasta un minuto.</string>
 
     <!-- Rol en un teléfono nuevo -->
-    <string name="login_role_title">Un paso más</string>
-    <string name="login_role_subtitle">Este teléfono aún no conoce tu cuenta. ¿Cómo usas FruitLogix?</string>
+    <string name="login_error_wrong_app">Esta cuenta es de cliente comercial. Ingresa desde la app de clientes de FruitLogix.</string>
 </resources>

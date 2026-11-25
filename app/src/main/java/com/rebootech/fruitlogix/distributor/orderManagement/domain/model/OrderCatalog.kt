@@ -1,16 +1,26 @@
 package com.rebootech.fruitlogix.distributor.orderManagement.domain.model
 
-/** A commercial client of the distributor. [id] is the server's commercialClientId. */
-data class CommercialClient(val id: Int, val name: String, val deliveryAddress: String)
-
-/** A product that can be ordered. [id] is the server's productId; prices are per kg (soles). */
-data class CatalogProduct(val id: Int, val name: String, val pricePerKg: Double)
+/** An account that receives orders. [id] is the server's commercialClientId (the client's user id). */
+data class CommercialClient(val id: Int, val name: String, val deliveryAddress: String = "")
 
 /**
- * Fixed list of clients and products with their server ids.
- * The server stores only numbers (commercialClientId, productId) and has no endpoint to list
- * clients or products yet, so the app keeps this list. When the server adds those endpoints,
- * this becomes a repository call.
+ * A product that can be ordered. [id] is the server's productId; prices are per kg (soles).
+ * Catalog products (/products) belong to one producer and have a minimum order and stock.
+ */
+data class CatalogProduct(
+    val id: Int,
+    val name: String,
+    val pricePerKg: Double,
+    val producerId: Int? = null,
+    val producerName: String = "",
+    val minOrderKg: Double = 0.0,
+    /** null when the stock is not known (offline list). */
+    val availableKg: Double? = null
+)
+
+/**
+ * Offline list of clients and products, used only when the server cannot be reached. The real
+ * lists come from the server: clients from /users and products from /products.
  */
 object OrderCatalog {
 

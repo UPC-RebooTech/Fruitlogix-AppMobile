@@ -199,6 +199,15 @@ fun ProducerRegisterHarvestScreen(
             }
         }
 
+        state.serverError?.let { message ->
+            Text(
+                text = message.ifBlank { stringResource(R.string.register_harvest_save_failed) },
+                style = FruitLogixTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = spacing.sm)
+            )
+        }
+
         PrimaryButton(
             text = stringResource(R.string.register_harvest_save),
             onClick = viewModel::onSave,

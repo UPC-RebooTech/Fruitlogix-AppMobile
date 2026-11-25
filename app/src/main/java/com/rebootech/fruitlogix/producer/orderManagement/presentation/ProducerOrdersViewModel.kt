@@ -35,6 +35,7 @@ class ProducerOrdersViewModel(
     val uiState: StateFlow<ProducerOrdersUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch { orderRepository.refresh() }
         loadOrders()
     }
 

@@ -10,9 +10,14 @@ import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHi
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderHistoryStatus
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderSaveException
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.model.OrderStatus
+import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderCatalogRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.repository.OrderRepository
 import com.rebootech.fruitlogix.distributor.orderManagement.domain.validation.OrderValidator
 import com.rebootech.fruitlogix.shared.core.network.AssignProducerRequestDto
+import com.rebootech.fruitlogix.shared.core.network.ApiResult
+import com.rebootech.fruitlogix.shared.core.network.CancelOrderRequestDto
+import com.rebootech.fruitlogix.shared.core.network.ConfirmReceptionRequestDto
+import com.rebootech.fruitlogix.shared.core.network.apiCall
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
 import com.rebootech.fruitlogix.shared.core.network.OrderResponseDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
@@ -38,7 +43,10 @@ import kotlin.coroutines.cancellation.CancellationException
  * - Sample orders (FX-1038…FX-1042) only live on this phone, so Fleet, Home and Invoices keep
  *   their sample trips with or without connection.
  */
-class FakeOrderRepository private constructor() : OrderRepository {
+class FakeOrderRepository private constructor(
+    /** Clients (/users) and products (/products) offered when creating an order. */
+    private val catalog: OrderCatalogRepository
+) : OrderRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -65,31 +73,28 @@ class FakeOrderRepository private constructor() : OrderRepository {
             ?: _history.value.firstOrNull { it.id == OrderMapper.codeFor(backendId) }?.id
 
     override suspend fun createOrder(draft: OrderDraft): DistributorOrder {
-        val request = OrderMapper.toCreateRequest(draft) ?: throw OrderSaveException(OrderSaveException.Reason.REJECTED)
-        val response = withContext(Dispatchers.IO) {
-            try {
-                RetrofitClient.api.createOrder(request)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                Log.w(TAG, "POST orders failed: ${e.javaClass.simpleName}")
-                RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, "POST /orders: ${e.javaClass.simpleName}")
-                throw OrderSaveException(OrderSaveException.Reason.NO_CONNECTION, e)
+        val product = catalog.products.value.firstOrNull { it.id == draft.productId }
+            ?: throw OrderSaveException(OrderSaveException.Reason.REJECTED)
+        val request = OrderMapper.toCreateRequest(draft, product)
+        val dto = when (val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.createOrder(request) } }) {
+            is ApiResult.Ok -> result.value
+            is ApiResult.Failed -> {
+                if (result.failure.isNetwork) {
+                    RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, "POST /orders")
+                    throw OrderSaveException(OrderSaveException.Reason.NO_CONNECTION)
+                }
+                // 400 (below the minimum, inactive product, two producers) or 409 (not enough stock)
+                throw OrderSaveException(OrderSaveException.Reason.REJECTED, result.failure.serverMessage)
             }
         }
-        val dto = response.body()
-        if (!response.isSuccessful || dto?.id == null) {
-            Log.w(TAG, "POST orders answered ${response.code()}")
-            throw OrderSaveException(OrderSaveException.Reason.REJECTED)
-        }
         RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-        serverCopies[dto.id] = dto
-        val created = (OrderMapper.map(dto) as? OrderMapper.Mapped.Active)?.order
+        dto.id?.let { serverCopies[it] = dto }
+        val created = (OrderMapper.map(dto, catalog::clientName) as? OrderMapper.Mapped.Active)?.order
             ?: throw OrderSaveException(OrderSaveException.Reason.REJECTED)
         _orders.update { listOf(created) + it.filterNot { existing -> existing.id == created.id } }
 
-        // Picking a producer in the form moves the new order to "in preparation"
-        draft.producerId?.let { assignProducer(created.id, it) }
+        // Catalog products bring their producer; otherwise the producer picked in the form is assigned
+        if (created.producerId == null) draft.producerId?.let { assignProducer(created.id, it) }
         return orderById(created.id) ?: created
     }
 
@@ -127,7 +132,7 @@ class FakeOrderRepository private constructor() : OrderRepository {
         // Sample orders: everything can change on this phone
         replace(current.id) {
             it.copy(
-                clientName = OrderCatalog.client(draft.clientId)?.name ?: it.clientName,
+                clientName = catalog.clientName(draft.clientId) ?: OrderCatalog.client(draft.clientId)?.name ?: it.clientName,
                 clientId = draft.clientId,
                 productName = draft.productName.trim(),
                 quantityKg = draft.quantityKg,
@@ -143,23 +148,34 @@ class FakeOrderRepository private constructor() : OrderRepository {
         if (!order.canBeDeleted()) return DeleteOrderResult.WINDOW_EXPIRED
         val remoteId = order.remoteId
         if (remoteId != null) {
-            val removed = withContext(Dispatchers.IO) {
-                try {
-                    val response = RetrofitClient.api.deleteOrder(remoteId)
-                    // 404: someone else already removed it
-                    response.isSuccessful || response.code() == 404
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Throwable) {
-                    Log.w(TAG, "DELETE orders/$remoteId failed: ${e.javaClass.simpleName}")
-                    false
+            when (val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.deleteOrder(remoteId) } }) {
+                is ApiResult.Ok -> Unit
+                is ApiResult.Failed -> when {
+                    // Someone else already removed it
+                    result.failure.isNotFound -> Unit
+                    // It has a delivery, invoice or payment: the server asks to cancel it instead
+                    result.failure.isConflict -> return DeleteOrderResult.HAS_DEPENDENCIES
+                    else -> return DeleteOrderResult.NOT_FOUND
                 }
             }
-            if (!removed) return DeleteOrderResult.NOT_FOUND
             serverCopies.remove(remoteId)
         }
         _orders.update { list -> list.filterNot { it.id == order.id } }
         return DeleteOrderResult.SUCCESS
+    }
+
+    override suspend fun cancelOrder(orderId: String, reason: String): Boolean {
+        val order = orderById(orderId) ?: return false
+        if (order.status != OrderStatus.PENDING && order.status != OrderStatus.IN_PREPARATION) return false
+        val remoteId = order.remoteId
+        if (remoteId != null) {
+            val result = withContext(Dispatchers.IO) {
+                apiCall { RetrofitClient.api.cancelOrder(remoteId, CancelOrderRequestDto(reason.trim())) }
+            }
+            if (result !is ApiResult.Ok) return false
+        }
+        moveToHistory(order, OrderHistoryStatus.CANCELLED)
+        return true
     }
 
     override suspend fun assignProducer(orderId: String, producerId: Int): Boolean {
@@ -181,7 +197,8 @@ class FakeOrderRepository private constructor() : OrderRepository {
             } ?: return false
             serverCopies[remoteId] = dto
         }
-        replace(order.id) { it.copy(producerId = producerId, status = OrderStatus.IN_PREPARATION) }
+        val producerName = order.remoteId?.let { serverCopies[it]?.producerName }.orEmpty()
+        replace(order.id) { it.copy(producerId = producerId, producerName = producerName.ifBlank { it.producerName }, status = OrderStatus.IN_PREPARATION) }
         return true
     }
 
@@ -196,8 +213,20 @@ class FakeOrderRepository private constructor() : OrderRepository {
     override suspend fun confirmReception(orderId: String): Boolean {
         val order = orderById(orderId) ?: return false
         if (order.status != OrderStatus.ON_ROUTE) return false
-        // Kept on this phone for now. The server has POST /orders/{id}/reception, but it only accepts
-        // orders in InTransit and no endpoint moves an order to InTransit yet (backend gap).
+        val remoteId = order.remoteId
+        if (remoteId != null) {
+            // Received at the hub without incidents and without rating (rating null = not rated).
+            // The server moves the order to Delivered and its delivery too (409 if not in transit).
+            val result = withContext(Dispatchers.IO) {
+                apiCall { RetrofitClient.api.confirmOrderReception(remoteId, ConfirmReceptionRequestDto(rating = null, hasIncidence = false, sealAndTemperatureOk = true)) }
+            }
+            if (result !is ApiResult.Ok) return false
+        }
+        moveToHistory(order, OrderHistoryStatus.DELIVERED)
+        return true
+    }
+
+    private fun moveToHistory(order: DistributorOrder, status: OrderHistoryStatus) {
         _orders.update { list -> list.filterNot { it.id == order.id } }
         _history.update {
             listOf(
@@ -205,14 +234,13 @@ class FakeOrderRepository private constructor() : OrderRepository {
                     id = order.id,
                     clientName = order.clientName,
                     clientId = order.clientId,
-                    producerName = PRODUCER_BY_ORDER[order.id].orEmpty(),
+                    producerName = order.producerName.ifBlank { PRODUCER_BY_ORDER[order.id].orEmpty() },
                     productName = order.productName,
                     completedAt = LocalDateTime.now(),
-                    status = OrderHistoryStatus.DELIVERED
+                    status = status
                 )
             ) + it
         }
-        return true
     }
 
     override suspend fun refresh() {
@@ -238,7 +266,7 @@ class FakeOrderRepository private constructor() : OrderRepository {
         val finished = mutableListOf<OrderHistoryItem>()
         dtos.forEach { dto ->
             dto.id?.let { serverCopies[it] = dto }
-            when (val mapped = OrderMapper.map(dto)) {
+            when (val mapped = OrderMapper.map(dto, catalog::clientName)) {
                 is OrderMapper.Mapped.Active -> active += mapped.order
                 is OrderMapper.Mapped.Finished -> finished += mapped.item
                 null -> Unit
@@ -259,7 +287,10 @@ class FakeOrderRepository private constructor() : OrderRepository {
     companion object {
         private const val TAG = "FruitLogix-Orders"
 
-        val instance: FakeOrderRepository by lazy { FakeOrderRepository() }
+        /** Clients and products for new orders (shared with the composition root). */
+        val catalog: OrderCatalogRepository by lazy { RemoteOrderCatalogRepository() }
+
+        val instance: FakeOrderRepository by lazy { FakeOrderRepository(catalog) }
 
         const val DEMO_VALID_CODE = "LOT-FX-1041-UVA"
         const val DEMO_INVALID_CODE = "DAMAGED-CODE"

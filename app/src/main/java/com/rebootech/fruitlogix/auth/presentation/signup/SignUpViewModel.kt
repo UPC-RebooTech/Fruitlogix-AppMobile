@@ -161,8 +161,6 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                     sessionRepository.save(result.session, remember = true)
                     _uiState.update { it.copy(isLoading = false) }
                 }
-                // Not expected: the role was saved right before signing in
-                is AuthResult.NeedsRole -> _uiState.update { it.copy(isLoading = false, generalError = R.string.iam_error_unknown) }
                 is AuthResult.Failure -> _uiState.update {
                     when (result.error) {
                         AuthError.UsernameTaken -> it.copy(isLoading = false, usernameError = R.string.signup_error_username_taken)
@@ -174,6 +172,7 @@ class SignUpViewModel(application: Application) : AndroidViewModel(application) 
                         )
                         AuthError.WeakPassword -> it.copy(isLoading = false, passwordError = R.string.signup_error_password)
                         AuthError.Network -> it.copy(isLoading = false, generalError = R.string.iam_error_network)
+                        AuthError.WrongApp -> it.copy(isLoading = false, generalError = R.string.login_error_wrong_app)
                         else -> it.copy(isLoading = false, generalError = R.string.iam_error_unknown)
                     }
                 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -25,6 +26,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.rebootech.fruitlogix.shared.ui.components.LabeledTextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,12 +71,14 @@ fun EditOrderScreen(
 
     val savedMessage = stringResource(R.string.dist_order_saved)
     val assignedMessage = stringResource(R.string.dist_order_producer_assigned)
+    val cancelledMessage = order?.let { stringResource(R.string.dist_order_cancelled, it.id) }.orEmpty()
     val deletedMessage = order?.let { stringResource(R.string.dist_orders_deleted, it.id) }.orEmpty()
     LaunchedEffect(state.outcome) {
         when (state.outcome) {
             EditOutcome.SAVED -> Toast.makeText(context, savedMessage, Toast.LENGTH_SHORT).show()
             EditOutcome.DELETED -> Toast.makeText(context, deletedMessage, Toast.LENGTH_SHORT).show()
             EditOutcome.PRODUCER_ASSIGNED -> Toast.makeText(context, assignedMessage, Toast.LENGTH_SHORT).show()
+            EditOutcome.CANCELLED -> Toast.makeText(context, cancelledMessage, Toast.LENGTH_SHORT).show()
             null -> return@LaunchedEffect
         }
         onOrderUpdated()
@@ -123,6 +131,9 @@ fun EditOrderScreen(
 
         OrderFormFields(
             form = state.form,
+            clients = state.clients,
+            products = state.products,
+            onAddressChange = viewModel::onAddressChange,
             onClientChange = viewModel::onClientChange,
             onProductChange = viewModel::onProductChange,
             onQuantityChange = viewModel::onQuantityChange,
@@ -132,6 +143,12 @@ fun EditOrderScreen(
             currentClientLabel = clientLabel(order)
         )
 
+        if (state.deleteBlocked) {
+            Text(stringResource(R.string.dist_order_delete_blocked), style = FruitLogixTheme.typography.bodyMedium, color = scheme.error)
+        }
+        if (state.cancelFailed) {
+            Text(stringResource(R.string.dist_order_cancel_failed), style = FruitLogixTheme.typography.bodyMedium, color = scheme.error)
+        }
         if (state.deleteExpired) {
             Text(stringResource(R.string.dist_order_delete_expired), style = FruitLogixTheme.typography.bodyMedium, color = scheme.error)
         }
@@ -159,6 +176,14 @@ fun EditOrderScreen(
                 Text(stringResource(R.string.dist_order_delete), style = FruitLogixTheme.typography.labelLarge, color = scheme.error)
             }
         }
+        if (state.canCancel && order.remoteId != null) {
+            SecondaryButton(
+                text = stringResource(R.string.dist_order_cancel),
+                onClick = viewModel::askCancel,
+                enabled = !state.isSaving,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 
     if (state.choosingProducer) {
@@ -167,6 +192,10 @@ fun EditOrderScreen(
             onPick = viewModel::assignProducer,
             onDismiss = viewModel::closeProducerChoice
         )
+    }
+
+    if (state.showCancelDialog && order != null) {
+        CancelOrderDialog(order.id, busy = state.isSaving, onConfirm = viewModel::confirmCancel, onDismiss = viewModel::dismissCancel)
     }
 
     if (state.showDeleteDialog && order != null) {
@@ -246,6 +275,9 @@ private fun ProducerSection(
             style = FruitLogixTheme.typography.bodyLarge,
             color = if (producerId != null) scheme.onSurface else scheme.onSurfaceVariant
         )
+        if (canAssign && producerId != null) {
+            Text(stringResource(R.string.dist_order_producer_waiting), style = FruitLogixTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+        }
         if (canAssign && producerId == null) {
             Text(stringResource(R.string.dist_order_producer_assign_hint), style = FruitLogixTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
             SecondaryButton(
@@ -298,4 +330,31 @@ private fun ProducerChoiceSheet(
             }
         }
     }
+}
+
+/** Cancel with a reason (the server keeps it in cancellationReason). */
+@Composable
+private fun CancelOrderDialog(orderId: String, busy: Boolean, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+    var reason by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.dist_order_cancel_title, orderId), style = FruitLogixTheme.typography.titleLarge) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(FruitLogixTheme.spacing.xs)) {
+                Text(stringResource(R.string.dist_order_cancel_message), style = FruitLogixTheme.typography.bodyMedium)
+                LabeledTextField(
+                    label = stringResource(R.string.dist_order_cancel_reason),
+                    value = reason,
+                    onValueChange = { reason = it.take(200) },
+                    capitalization = KeyboardCapitalization.Sentences
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(reason) }, enabled = reason.isNotBlank() && !busy) {
+                Text(stringResource(R.string.dist_order_cancel_confirm), color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } }
+    )
 }

@@ -10,12 +10,13 @@ import com.rebootech.fruitlogix.distributor.qualityControl.domain.model.Shrinkag
 import com.rebootech.fruitlogix.distributor.qualityControl.domain.model.ShrinkageRecord
 import com.rebootech.fruitlogix.distributor.qualityControl.domain.model.ShrinkageStage
 import com.rebootech.fruitlogix.distributor.qualityControl.domain.repository.QualityRepository
+import com.rebootech.fruitlogix.shared.core.network.ApiResult
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
-import com.rebootech.fruitlogix.shared.core.network.CreateQualityInspectionRequestDto
-import com.rebootech.fruitlogix.shared.core.network.QualityChecklistDto
-import com.rebootech.fruitlogix.shared.core.network.QualityInspectionResponseDto
+import com.rebootech.fruitlogix.shared.core.network.CreateIncidentRequestDto
+import com.rebootech.fruitlogix.shared.core.network.HarvestBatchDto
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
-import com.rebootech.fruitlogix.shared.core.network.TechnicalParametersDto
+import com.rebootech.fruitlogix.shared.core.network.UpdateHarvestBatchStatusRequestDto
+import com.rebootech.fruitlogix.shared.core.network.apiCall
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,34 +26,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
-import java.util.concurrent.ConcurrentHashMap
+import java.util.Locale
 
 /**
- * Control de Calidad del Distribuidor conectado a:
- * - POST /api/v1/quality-inspections (con batchId numérico real, notas, inspección visual, parámetros técnicos y checklist)
- * - GET /api/v1/quality-inspections/batch/{batchId}
- *
- * NOTA TÉCNICA DE BACKEND:
- * El backend no expone un GET /api/v1/quality-inspections general sin batchId ni un PUT para editar inspecciones,
- * ni subida de archivos de voz (US57), ni un endpoint para mermas (US73). Por ello, refresh() consulta por los
- * batchId conocidos y las operaciones mantienen `pendingSync = true` si el servidor devuelve error.
+ * Distributor quality control.
+ * - Server lots are the harvest batches (GET /harvest-batches), shown as "LOT-<id>". Approving or
+ *   rejecting one changes its status on the server (PATCH /harvest-batches/{id}/status), and a voice
+ *   incident on one creates an incident there (POST /incidents).
+ * - The full inspection (ratings, pH, Brix…) is registered by the producer on their own lots; the
+ *   distributor's quick field check (temperature and humidity) has no server endpoint, so it stays here.
+ * - Sample lots (LOT-FX-…) only live on this phone.
  */
-class FakeQualityRepository : QualityRepository {
+class FakeQualityRepository(
+    /** Producer name for a server producer id (from the producer network). */
+    private val producerName: (Int) -> String? = { null }
+) : QualityRepository {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var nextId = 100
-
-    // Mapeo entre el código de lote ("LOT-FX-1041-UVA") y el batchId numérico real de la BD
-    private val batchIdByLotCode = ConcurrentHashMap<String, Int>(
-        mapOf(
-            "LOT-FX-1041-UVA" to 1,
-            "LOT-FX-1042-PALTA" to 2,
-            "LOT-FX-1038-MANGO" to 3,
-            "LOT-FX-1035-UVA" to 4
-        )
-    )
 
     private val _lots = MutableStateFlow(initialLots())
     override val lots: StateFlow<List<QualityLot>> = _lots.asStateFlow()
@@ -74,36 +68,26 @@ class FakeQualityRepository : QualityRepository {
 
     override suspend fun approve(lotId: String) {
         val current = _lots.value.firstOrNull { it.id == lotId } ?: return
-        change(lotId) { it.copy(status = LotStatus.APPROVED, rejection = null, pendingSync = true) }
-
-        val synced = postInspectionToBackend(
-            lotCode = current.lotCode,
-            visualInspection = "APPROVED",
-            celsius = current.celsius ?: 5.0,
-            humidity = current.humidityPercent ?: 88.0,
-            checklistPassed = true,
-            notes = "Lote ${current.lotCode} (${current.productName}) aprobado en recepción"
-        )
-        if (synced) {
-            change(lotId) { it.copy(pendingSync = false) }
-        }
+        change(lotId) { it.copy(status = LotStatus.APPROVED, rejection = null, pendingSync = current.remoteId != null) }
+        current.remoteId?.let { sendStatus(lotId, it, "Approved") }
     }
 
     override suspend fun reject(lotId: String, reason: RejectionReason) {
         val current = _lots.value.firstOrNull { it.id == lotId } ?: return
         val cleanReason = reason.copy(note = reason.note.trim())
-        change(lotId) { it.copy(status = LotStatus.REJECTED, rejection = cleanReason, pendingSync = true) }
+        change(lotId) { it.copy(status = LotStatus.REJECTED, rejection = cleanReason, pendingSync = current.remoteId != null) }
+        // The server keeps only the status; the reason stays on this phone
+        current.remoteId?.let { sendStatus(lotId, it, "Rejected") }
+    }
 
-        val synced = postInspectionToBackend(
-            lotCode = current.lotCode,
-            visualInspection = "REJECTED",
-            celsius = current.celsius ?: 12.0,
-            humidity = current.humidityPercent ?: 85.0,
-            checklistPassed = false,
-            notes = "Rechazado [${cleanReason.kind.name}]: ${cleanReason.note}"
-        )
-        if (synced) {
-            change(lotId) { it.copy(pendingSync = false) }
+    private suspend fun sendStatus(lotId: String, batchId: Int, status: String) {
+        val result = withContext(Dispatchers.IO) {
+            apiCall { RetrofitClient.api.updateHarvestBatchStatus(batchId, UpdateHarvestBatchStatusRequestDto(status)) }
+        }
+        when (result) {
+            is ApiResult.Ok -> change(lotId) { it.copy(pendingSync = false) }
+            // Stays "pending sync" so the person sees it was not saved on the server
+            is ApiResult.Failed -> Log.w(TAG, "PATCH harvest-batches/$batchId/status answered ${result.failure.code}")
         }
     }
 
@@ -111,194 +95,96 @@ class FakeQualityRepository : QualityRepository {
         _lots.update { list -> list.map { if (it.id == id) block(it) else it } }
 
     override suspend fun addFieldInspection(lotCode: String, productName: String, celsius: Double, humidityPercent: Double) {
-        val normalizedCode = lotCode.trim().uppercase()
-        val newLot = QualityLot(
-            id = "q${nextId++}",
-            lotCode = normalizedCode,
-            orderId = null,
-            productName = productName.trim(),
-            producerName = "Inspección en Campo",
-            celsius = celsius,
-            humidityPercent = humidityPercent,
-            status = LotStatus.PENDING,
-            source = LotSource.FIELD_INSPECTION,
-            recordedAt = LocalDateTime.now(),
-            pendingSync = true
+        add(
+            QualityLot(
+                id = "q${nextId++}",
+                lotCode = lotCode.trim().uppercase(),
+                orderId = null,
+                productName = productName.trim(),
+                producerName = "",
+                celsius = celsius,
+                humidityPercent = humidityPercent,
+                status = LotStatus.PENDING,
+                source = LotSource.FIELD_INSPECTION,
+                recordedAt = LocalDateTime.now()
+            )
         )
-        add(newLot)
-
-        val synced = postInspectionToBackend(
-            lotCode = normalizedCode,
-            visualInspection = "OBSERVED",
-            celsius = celsius,
-            humidity = humidityPercent,
-            checklistPassed = celsius in -1.0..15.0,
-            notes = "Inspección de campo para ${productName.trim()} ($normalizedCode)"
-        )
-        if (synced) {
-            change(newLot.id) { it.copy(pendingSync = false) }
-        }
     }
 
     override suspend fun addVoiceIncident(lotCode: String, description: String, voiceNoteSeconds: Int) {
         val normalizedCode = lotCode.trim().uppercase()
+        val batchId = serverBatchId(normalizedCode)
         val newLot = QualityLot(
             id = "q${nextId++}",
             lotCode = normalizedCode,
             orderId = null,
-            productName = "Incidencia por Voz",
-            producerName = "Audio (${voiceNoteSeconds}s)",
+            productName = _lots.value.firstOrNull { it.lotCode == normalizedCode }?.productName.orEmpty(),
+            producerName = "",
             celsius = null,
             humidityPercent = null,
             status = LotStatus.PENDING,
             source = LotSource.VOICE_INCIDENT,
             recordedAt = LocalDateTime.now(),
-            pendingSync = true,
+            pendingSync = batchId != null,
             voiceNoteSeconds = voiceNoteSeconds,
             incidentDescription = description.trim()
         )
         add(newLot)
-
-        val synced = postInspectionToBackend(
-            lotCode = normalizedCode,
-            visualInspection = "OBSERVED",
-            celsius = 0.0,
-            humidity = 0.0,
-            checklistPassed = false,
-            notes = "Incidencia por voz (${voiceNoteSeconds}s): ${description.trim()}"
-        )
-        if (synced) {
-            change(newLot.id) { it.copy(pendingSync = false) }
+        if (batchId == null) return
+        // The audio itself is not uploaded (the server stores images only); the written description is
+        val result = withContext(Dispatchers.IO) {
+            apiCall { RetrofitClient.api.createIncident(CreateIncidentRequestDto(batchId, description.trim())) }
         }
+        if (result is ApiResult.Ok) change(newLot.id) { it.copy(pendingSync = false) }
     }
 
     override suspend fun refresh() {
-        withContext(Dispatchers.IO) {
-            var anySuccess = false
-            for ((lotCode, batchId) in batchIdByLotCode.entries) {
-                val result = runCatching { RetrofitClient.api.getQualityInspectionsByBatch(batchId) }
-                result.onSuccess { response ->
-                    if (response.isSuccessful) {
-                        anySuccess = true
-                        val inspections = response.body().orEmpty()
-                        inspections.lastOrNull()?.let { latest ->
-                            applyRemoteInspectionToLot(lotCode, batchId, latest)
-                        }
-                    }
-                }.onFailure { err ->
-                    Log.w("FruitLogix-API", "GET /quality-inspections/batch/$batchId falló: ${err.message}")
-                }
-            }
-            if (anySuccess) {
-                RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-            }
+        val result = withContext(Dispatchers.IO) { apiCall { RetrofitClient.api.getHarvestBatches() } }
+        if (result !is ApiResult.Ok) {
+            RetrofitClient.updateSyncStatus(BackendSyncStatus.OFFLINE_FALLBACK, "GET /harvest-batches")
+            return
         }
+        RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
+        val previous = _lots.value.filter { it.remoteId != null }.associateBy { it.remoteId }
+        val fromServer = result.value.map { batch -> toLot(batch, previous[batch.id]) }
+        // The server list replaces the previous server copy; sample and field records stay
+        _lots.update { list -> fromServer + list.filter { it.remoteId == null } }
     }
 
-    private suspend fun postInspectionToBackend(
-        lotCode: String,
-        visualInspection: String,
-        celsius: Double,
-        humidity: Double,
-        checklistPassed: Boolean,
-        notes: String
-    ): Boolean = withContext(Dispatchers.IO) {
-        val realBatchId = resolveBatchId(lotCode)
-        val dto = CreateQualityInspectionRequestDto(
-            batchId = realBatchId,
-            notes = notes,
-            visualInspection = visualInspection,
-            technicalParameters = TechnicalParametersDto(
-                temperatureCelsius = celsius,
-                humidityPercent = humidity
-            ),
-            checklist = QualityChecklistDto(
-                packagingIntact = checklistPassed,
-                labelingCorrect = true,
-                pestFree = true,
-                coldChainMaintained = checklistPassed
-            )
-        )
-
-        val result = runCatching { RetrofitClient.api.createQualityInspection(dto) }
-        result.fold(
-            onSuccess = { response ->
-                if (response.isSuccessful) {
-                    RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
-                    true
-                } else {
-                    Log.w("FruitLogix-API", "POST /quality-inspections rechazado (HTTP ${response.code()}); se conserva pendingSync=true")
-                    false
-                }
-            },
-            onFailure = { err ->
-                Log.w("FruitLogix-API", "POST /quality-inspections falló (${err.message}); se conserva pendingSync=true")
-                false
-            }
-        )
-    }
-
-    private fun applyRemoteInspectionToLot(
-        lotCode: String,
-        batchId: Int,
-        dto: QualityInspectionResponseDto
-    ) {
-        val statusString = (dto.visualInspection ?: dto.status).orEmpty().uppercase()
-        val mappedStatus = when {
-            statusString.contains("APPROV") -> LotStatus.APPROVED
-            statusString.contains("REJECT") -> LotStatus.REJECTED
+    private fun toLot(batch: HarvestBatchDto, previous: QualityLot?): QualityLot {
+        val status = when (batch.status?.lowercase(Locale.ROOT)) {
+            "approved" -> LotStatus.APPROVED
+            "rejected" -> LotStatus.REJECTED
             else -> LotStatus.PENDING
         }
-        val temp = dto.technicalParameters?.temperatureCelsius ?: dto.temperatureCelsius
-        val hum = dto.technicalParameters?.humidityPercent ?: dto.humidityPercent
-
-        _lots.update { currentList ->
-            val exists = currentList.any { it.lotCode.equals(lotCode, ignoreCase = true) }
-            if (exists) {
-                currentList.map { lot ->
-                    if (lot.lotCode.equals(lotCode, ignoreCase = true)) {
-                        lot.copy(
-                            celsius = temp ?: lot.celsius,
-                            humidityPercent = hum ?: lot.humidityPercent,
-                            status = mappedStatus,
-                            pendingSync = false,
-                            rejection = if (mappedStatus == LotStatus.REJECTED) {
-                                lot.rejection ?: RejectionReason(RejectionKind.OTHER, dto.notes.orEmpty())
-                            } else null
-                        )
-                    } else lot
-                }
-            } else {
-                listOf(
-                    QualityLot(
-                        id = "q-api-${dto.id ?: batchId}",
-                        lotCode = lotCode,
-                        orderId = null,
-                        productName = "Lote #$batchId",
-                        producerName = dto.notes ?: "Sincronizado con Render",
-                        celsius = temp,
-                        humidityPercent = hum,
-                        status = mappedStatus,
-                        source = LotSource.RECEPTION,
-                        recordedAt = LocalDateTime.now().minusMinutes(5),
-                        pendingSync = false
-                    )
-                ) + currentList
-            }
-        }
+        val harvested = batch.harvestDate?.take(10)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        return QualityLot(
+            id = "q-b${batch.id}",
+            lotCode = lotCodeFor(batch.id),
+            orderId = null,
+            productName = batch.fruitType.orEmpty(),
+            producerName = batch.producerId?.let(producerName).orEmpty(),
+            celsius = previous?.celsius,
+            humidityPercent = previous?.humidityPercent,
+            status = status,
+            source = LotSource.RECEPTION,
+            recordedAt = harvested?.atStartOfDay() ?: previous?.recordedAt ?: LocalDateTime.now(),
+            rejection = if (status == LotStatus.REJECTED) previous?.rejection else null,
+            remoteId = batch.id
+        )
     }
 
-    private fun resolveBatchId(lotCode: String): Int {
-        batchIdByLotCode[lotCode]?.let { return it }
-        val digits = Regex("\\d+").find(lotCode)?.value?.toIntOrNull()
-        val resolved = if (digits != null && digits > 0) (digits % 10) + 1 else 1
-        batchIdByLotCode[lotCode] = resolved
-        return resolved
-    }
+    /** "LOT-12" → 12 when that batch came from the server. */
+    private fun serverBatchId(lotCode: String): Int? =
+        _lots.value.firstOrNull { it.lotCode.equals(lotCode, ignoreCase = true) && it.remoteId != null }?.remoteId
 
     private fun add(lot: QualityLot) = _lots.update { listOf(lot) + it }
 
     private companion object {
+        const val TAG = "FruitLogix-Quality"
+
+        fun lotCodeFor(batchId: Int) = "LOT-$batchId"
+
         fun initialLots(): List<QualityLot> {
             val now = LocalDateTime.now()
             return listOf(

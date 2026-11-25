@@ -96,4 +96,14 @@
     <string name="help_contact_messages">Abrir Mensajes</string>
     <string name="help_cd_expand">Mostrar respuesta</string>
     <string name="help_cd_collapse">Ocultar respuesta</string>
+    <string name="prof_create_title">Crea tu perfil de productor</string>
+    <string name="prof_create_message">Lo ven los distribuidores y los clientes, y se necesita antes de agregar productos, lotes de cosecha o recibir pedidos.</string>
+    <string name="prof_create_type">Tipo</string>
+    <string name="prof_type_individual">Persona natural</string>
+    <string name="prof_type_company">Empresa</string>
+    <string name="prof_create_legal_name_person">Razón social (opcional)</string>
+    <string name="prof_create_legal_name_helper">Si lo dejas vacío, se usa tu nombre completo</string>
+    <string name="profile_field_crop">Cultivo principal</string>
+    <string name="prof_create_submit">Crear perfil</string>
+    <string name="profile_save_failed">No se pudo guardar en el servidor. Revisa tu conexión e inténtalo de nuevo.</string>
 </resources>

@@ -28,4 +28,5 @@
     <string name="register_harvest_error_lot">Usa al menos %1$d caracteres</string>
     <string name="register_harvest_error_weight">Ingresa un peso entre 0 y %1$s kg</string>
     <string name="register_harvest_error_brix">El Brix debe estar entre 0 y %1$s °Bx</string>
+    <string name="register_harvest_save_failed">No se pudo registrar la cosecha. Inténtalo de nuevo.</string>
 </resources>

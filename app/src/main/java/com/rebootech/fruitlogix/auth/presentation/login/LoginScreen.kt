@@ -87,47 +87,6 @@ fun LoginScreen(
         modifier = modifier
     )
 
-    if (state.pendingRole != null) {
-        RoleChoiceSheet(onChoose = viewModel::chooseRole, onDismiss = viewModel::dismissRoleChoice)
-    }
-}
-
-/** First sign in on this phone: the server does not store the role, so the person picks it once. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RoleChoiceSheet(onChoose: (UserRole) -> Unit, onDismiss: () -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    val spacing = FruitLogixTheme.spacing
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = scheme.surface
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.md)
-                .padding(bottom = spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(spacing.inner)
-        ) {
-            Text(stringResource(R.string.login_role_title), style = FruitLogixTheme.typography.titleLarge, color = scheme.onSurface)
-            Text(stringResource(R.string.login_role_subtitle), style = FruitLogixTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
-            RoleCard(
-                iconRes = R.drawable.ic_leaf,
-                title = stringResource(R.string.signup_role_producer),
-                description = stringResource(R.string.signup_role_producer_desc),
-                selected = false,
-                onClick = { onChoose(UserRole.PRODUCER) }
-            )
-            RoleCard(
-                iconRes = R.drawable.ic_dispatch_truck,
-                title = stringResource(R.string.signup_role_distributor),
-                description = stringResource(R.string.signup_role_distributor_desc),
-                selected = false,
-                onClick = { onChoose(UserRole.DISTRIBUTOR) }
-            )
-        }
-    }
 }
 
 @Composable

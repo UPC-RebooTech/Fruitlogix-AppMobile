@@ -33,7 +33,9 @@ data class QualityLot(
     val pendingSync: Boolean = false,
     /** Voice note attached to an incident (US57). */
     val voiceNoteSeconds: Int? = null,
-    val incidentDescription: String? = null
+    val incidentDescription: String? = null,
+    /** Harvest batch id on the server; null for the sample lots that only live on this phone. */
+    val remoteId: Int? = null
 )
 
 enum class ShrinkageStage { HARVEST, TRANSPORT, RECEPTION }

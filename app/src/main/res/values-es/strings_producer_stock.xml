@@ -20,4 +20,21 @@
     <string name="producer_stock_cd_increase">Agregar 10 kg a %1$s</string>
 
     <string name="producer_stock_register_harvest">Registrar cosecha</string>
+    <string name="prod_product_new">Publicar un producto</string>
+    <string name="prod_product_new_subtitle">Los clientes piden desde tu catálogo</string>
+    <string name="prod_product_name">Nombre del producto</string>
+    <string name="prod_product_name_placeholder">Ej. Mango Kent</string>
+    <string name="prod_product_fruit_type">Fruta</string>
+    <string name="prod_product_fruit_type_placeholder">Ej. Mango</string>
+    <string name="prod_product_variety">Variedad (opcional)</string>
+    <string name="prod_product_price">Precio por kg (S/)</string>
+    <string name="prod_product_available">Disponible (kg)</string>
+    <string name="prod_product_min_order">Pedido mínimo (kg)</string>
+    <string name="prod_product_description">Descripción (opcional)</string>
+    <string name="prod_product_publish">Publicar producto</string>
+    <string name="prod_product_error_number">Ingresa un número válido</string>
+    <string name="prod_product_save_failed">No se pudo guardar el producto. Inténtalo de nuevo.</string>
+    <string name="prod_product_inactive">Inactivo</string>
+    <string name="prod_product_deactivate">Desactivar producto</string>
+    <string name="prod_product_reactivate">Reactivar producto</string>
 </resources>

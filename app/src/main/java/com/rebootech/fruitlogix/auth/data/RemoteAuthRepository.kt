@@ -7,8 +7,10 @@ import com.rebootech.fruitlogix.auth.domain.model.AuthError
 import com.rebootech.fruitlogix.auth.domain.model.AuthResult
 import com.rebootech.fruitlogix.auth.domain.model.Session
 import com.rebootech.fruitlogix.auth.domain.model.SignUpRequest
+import com.rebootech.fruitlogix.auth.domain.model.UserRole
 import com.rebootech.fruitlogix.auth.domain.repository.AccountProfileStore
 import com.rebootech.fruitlogix.auth.domain.repository.AuthRepository
+import com.rebootech.fruitlogix.auth.domain.validation.AuthValidators
 import com.rebootech.fruitlogix.shared.core.network.BackendSyncStatus
 import com.rebootech.fruitlogix.shared.core.network.FruitLogixApiService
 import com.rebootech.fruitlogix.shared.core.network.RetrofitClient
@@ -18,12 +20,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
+import java.util.Locale
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Sign in and sign up against the FruitLogix server (IAM).
- * The server stores username and password only; role, name and email stay on the phone
- * in [AccountProfileStore].
+ * The server stores the role and returns it on sign-in (it is not inside the JWT). This app is for
+ * producers and distributors: commercial clients use the client app, Admin is internal.
+ * Name, email and organization typed at sign-up stay on the phone in [AccountProfileStore].
  */
 class RemoteAuthRepository(
     private val api: FruitLogixApiService,
@@ -43,16 +47,18 @@ class RemoteAuthRepository(
             ?: return@withContext AuthResult.Failure(AuthError.Unknown)
         RetrofitClient.updateSyncStatus(BackendSyncStatus.ONLINE)
 
+        val role = roleFromServer(response.role)
+            ?: return@withContext AuthResult.Failure(AuthError.WrongApp)
         val name = response.username?.takeIf { it.isNotBlank() }?.lowercase() ?: user
-        val profile = accounts.get(name) ?: return@withContext AuthResult.NeedsRole(name, token)
-        AuthResult.Success(Session(username = name, displayName = profile.displayName, role = profile.role, token = token))
+        val displayName = accounts.get(name)?.displayName ?: AuthValidators.nameFromUsername(name)
+        AuthResult.Success(Session(username = name, displayName = displayName, role = role, token = token))
     }
 
     override suspend fun signUp(request: SignUpRequest): AuthResult {
         val user = request.username.trim().lowercase()
         val created = withContext(Dispatchers.IO) {
             try {
-                val response = api.signUp(SignUpRequestDto(user, request.password))
+                val response = api.signUp(SignUpRequestDto(user, request.password, roleForServer(request.role)))
                 response.errorBody()?.close()
                 response.body()?.close()
                 if (response.isSuccessful) null else statusToError(response.code())
@@ -77,12 +83,6 @@ class RemoteAuthRepository(
         return signIn(user, request.password)
     }
 
-    /** Used after [AuthResult.NeedsRole]: remembers the role on this phone and opens the session. */
-    fun completeWithRole(username: String, token: String, profile: AccountProfile): Session {
-        accounts.save(profile)
-        return Session(username = username, displayName = profile.displayName, role = profile.role, token = token)
-    }
-
     private fun Throwable.toAuthError(): AuthError {
         // Only the exception type and status code: no usernames, passwords or tokens in logcat
         Log.w(TAG, "Auth call failed: ${javaClass.simpleName} ${(this as? HttpException)?.code() ?: ""}")
@@ -94,6 +94,7 @@ class RemoteAuthRepository(
     }
 
     private fun statusToError(code: Int): AuthError = when (code) {
+        // Sign-in answers 400 for wrong credentials (not 401)
         400, 401 -> AuthError.InvalidCredentials
         409 -> AuthError.UsernameTaken
         // Render answers these while the server is waking up
@@ -103,6 +104,18 @@ class RemoteAuthRepository(
 
     companion object {
         private const val TAG = "FruitLogix-Auth"
+
+        /** Producer and Distributor open their part of the app; any other role belongs elsewhere. */
+        fun roleFromServer(role: String?): UserRole? = when (role?.lowercase(Locale.ROOT)) {
+            "producer" -> UserRole.PRODUCER
+            "distributor" -> UserRole.DISTRIBUTOR
+            else -> null
+        }
+
+        fun roleForServer(role: UserRole): String = when (role) {
+            UserRole.PRODUCER -> "Producer"
+            UserRole.DISTRIBUTOR -> "Distributor"
+        }
 
         @Volatile private var instance: RemoteAuthRepository? = null
 

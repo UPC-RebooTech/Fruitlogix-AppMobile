@@ -25,7 +25,9 @@ data class ReviewUiState(
     val draft: InspectionDraft? = null,
     val distributorName: String? = null,
     val isSending: Boolean = false,
-    val sentAt: LocalDateTime? = null
+    val sentAt: LocalDateTime? = null,
+    /** The server refused the report: its own text (blank = generic message). */
+    val error: String? = null
 ) {
     val isSent: Boolean get() = sentAt != null
 }
@@ -60,7 +62,13 @@ class ReviewResultViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         val lot = state.lot ?: return
         val draft = state.draft ?: return
         viewModelScope.launch {
-            _uiState.update { it.copy(isSending = true) }
+            _uiState.update { it.copy(isSending = true, error = null) }
+            val inspector = FakeProfileRepository.instance.profile.value.fullName
+            val sent = inspectionRepository.sendReport(orderId, draft, inspector)
+            if (!sent.ok) {
+                _uiState.update { it.copy(isSending = false, error = sent.serverMessage.orEmpty()) }
+                return@launch
+            }
             val now = LocalDateTime.now()
             orderRepository.submitQualityReport(orderId)
             QualityReportRepository.submit(

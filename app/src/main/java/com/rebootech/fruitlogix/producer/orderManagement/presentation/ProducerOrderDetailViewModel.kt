@@ -24,6 +24,25 @@ class ProducerOrderDetailViewModel(
         .map { orders -> orders.find { it.id.removePrefix("#") == orderId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
+    init {
+        viewModelScope.launch { repository.refresh() }
+    }
+
+    private val _rejectFailed = kotlinx.coroutines.flow.MutableStateFlow(false)
+    /** The server did not accept the rejection (connection or state). */
+    val rejectFailed: StateFlow<Boolean> = _rejectFailed
+
+    /** Declines the order with a reason; the distributor and the client see it as rejected. */
+    fun rejectOrder(reason: String, onDone: () -> Unit) {
+        val id = order.value?.id ?: return
+        if (reason.isBlank()) return
+        viewModelScope.launch {
+            val ok = repository.rejectOrder(id, reason)
+            _rejectFailed.value = !ok
+            if (ok) onDone()
+        }
+    }
+
     fun acceptOrder(onDone: () -> Unit) {
         val id = order.value?.id ?: return
         viewModelScope.launch {

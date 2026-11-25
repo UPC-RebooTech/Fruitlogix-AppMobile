@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,6 +28,8 @@ import com.rebootech.fruitlogix.producer.orderManagement.ProducerOrderManagement
 import com.rebootech.fruitlogix.producer.orderManagement.messaging.data.FakeChatRepository
 import com.rebootech.fruitlogix.producer.profilesManagement.ProducerProfilesManagementRoutes
 import com.rebootech.fruitlogix.producer.profilesManagement.data.FakeProfileRepository
+import com.rebootech.fruitlogix.producer.profilesManagement.domain.model.ProfileStatus
+import com.rebootech.fruitlogix.producer.profilesManagement.presentation.create.CreateProducerProfileScreen
 import com.rebootech.fruitlogix.shared.ui.format.initialsOf
 import com.rebootech.fruitlogix.shared.core.locale.AppLocale
 import com.rebootech.fruitlogix.shared.ui.components.FruitLogixTopBar
@@ -45,6 +48,9 @@ fun ProducerShell(
     // Read once per composition of the activity; changing the language recreates the activity.
     val selectedLanguage = remember { AppLocale.current(context) }
     val profile by FakeProfileRepository.instance.profile.collectAsState()
+    val profileStatus by FakeProfileRepository.instance.status.collectAsState()
+    // The producer profile on the server is needed before products, lots and orders
+    LaunchedEffect(Unit) { FakeProfileRepository.instance.refresh() }
     val alerts by FakeIotAlertRepository.instance.alerts.collectAsState()
     val unreadByOrder by FakeChatRepository.instance.unreadByOrder.collectAsState()
 
@@ -99,10 +105,14 @@ fun ProducerShell(
             )
         }
     ) { innerPadding ->
-        ProducerNavHost(
-            navController = navController,
-            onSignOut = onSignOut,
-            modifier = Modifier.padding(innerPadding)
-        )
+        if (profileStatus == ProfileStatus.MISSING) {
+            CreateProducerProfileScreen(onSignOut = onSignOut, modifier = Modifier.padding(innerPadding))
+        } else {
+            ProducerNavHost(
+                navController = navController,
+                onSignOut = onSignOut,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
     }
 }

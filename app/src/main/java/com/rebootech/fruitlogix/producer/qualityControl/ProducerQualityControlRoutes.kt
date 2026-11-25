@@ -12,6 +12,7 @@ object ProducerQualityControlRoutes {
     const val StockDetail = "quality_stock/{productId}"         // stock
     const val Harvests = "quality_harvests"                     // harvests
     const val RegisterHarvest = "quality_harvest_register"      // harvests
+    const val NewProduct = "quality_product_new"                // stock: POST /products
 
     fun reports() = "quality_reports_main"
     fun prepareOrder(id: String) = "quality_prepare/${id.removePrefix("#")}"

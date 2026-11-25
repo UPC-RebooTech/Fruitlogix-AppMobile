@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -250,6 +251,49 @@ fun ProducerInspectionScreen(
                     ok = state.defectsOk,
                     onValueChange = { v -> viewModel.update { it.copy(defects = v) } }
                 )
+                Spacer(modifier = Modifier.height(spacing.inner))
+                MeasurementField(
+                    label = stringResource(R.string.inspection_ph),
+                    hint = stringResource(
+                        R.string.inspection_range,
+                        formatDecimal(InspectionRules.PH_RANGE.start),
+                        formatDecimal(InspectionRules.PH_RANGE.endInclusive),
+                        "pH"
+                    ),
+                    unit = "pH",
+                    value = draft.ph,
+                    ok = state.phOk,
+                    onValueChange = { v -> viewModel.update { it.copy(ph = v) } }
+                )
+                Spacer(modifier = Modifier.height(spacing.inner))
+                MeasurementField(
+                    label = stringResource(R.string.inspection_brix),
+                    hint = stringResource(
+                        R.string.inspection_range,
+                        formatDecimal(InspectionRules.BRIX_RANGE.start),
+                        formatDecimal(InspectionRules.BRIX_RANGE.endInclusive),
+                        "°Bx"
+                    ),
+                    unit = "°Bx",
+                    value = draft.brix,
+                    ok = state.brixOk,
+                    onValueChange = { v -> viewModel.update { it.copy(brix = v) } }
+                )
+            }
+
+            // Damage seen on the fruit (server: hasStains, hasBruises, hasDeformations, hasRot)
+            DetailSection(title = stringResource(R.string.inspection_section_damage)) {
+                CheckLine(stringResource(R.string.inspection_damage_stains), draft.hasStains) { c -> viewModel.update { it.copy(hasStains = c) } }
+                CheckLine(stringResource(R.string.inspection_damage_bruises), draft.hasBruises) { c -> viewModel.update { it.copy(hasBruises = c) } }
+                CheckLine(stringResource(R.string.inspection_damage_deformations), draft.hasDeformations) { c -> viewModel.update { it.copy(hasDeformations = c) } }
+                CheckLine(stringResource(R.string.inspection_damage_rot), draft.hasRot) { c -> viewModel.update { it.copy(hasRot = c) } }
+            }
+
+            // Preparation before loading (caliber sorting comes from the selected calibers)
+            DetailSection(title = stringResource(R.string.inspection_section_checklist)) {
+                CheckLine(stringResource(R.string.inspection_check_dry_cleaning), draft.dryCleaningDone) { c -> viewModel.update { it.copy(dryCleaningDone = c) } }
+                CheckLine(stringResource(R.string.inspection_check_packaging), draft.packagingInspected) { c -> viewModel.update { it.copy(packagingInspected = c) } }
+                CheckLine(stringResource(R.string.inspection_check_sealing), draft.boxesSealed) { c -> viewModel.update { it.copy(boxesSealed = c) } }
             }
 
             // Notes
@@ -449,4 +493,18 @@ private fun MeasurementField(
             .fillMaxWidth()
             .defaultMinSize(minHeight = FruitLogixTheme.sizing.fieldTouch)
     )
+}
+
+@Composable
+private fun CheckLine(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = FruitLogixTheme.sizing.minTouch)
+            .clickable(role = Role.Checkbox) { onChange(!checked) },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(checked = checked, onCheckedChange = null)
+        Text(label, style = FruitLogixTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+    }
 }
