@@ -14,13 +14,14 @@ android {
         minSdk = 26
         targetSdk = 37
         versionCode = 30
-        versionName = "3.0.1"
+        versionName = "3.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("debug")
             optimization {
                 enable = false
             }
